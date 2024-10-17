@@ -1,6 +1,9 @@
 'use strict';
 
 (function($) {
+  var $gallery = null;
+  var gallery_loading = false;
+
   $(function() {
     if ($('.wooco-wrap').length) {
       wooco_init_selector();
@@ -49,6 +52,10 @@
           } else {
             $all_gallery.block(block_ui_params);
 
+            if (gallery_loading && ($gallery != null)) {
+              $gallery.abort();
+            }
+
             var data = {
               action: 'wooco_load_gallery',
               nonce: wooco_vars.nonce,
@@ -57,39 +64,47 @@
               ids: ids,
             };
 
-            $.post(wooco_vars.ajax_url, data, function(response) {
-              if (response.gallery) {
-                var $wooco_gallery = $(response.gallery);
+            gallery_loading = true;
 
-                $all_gallery.unblock().hide();
-                $wooco_gallery.insertAfter($main_gallery);
+            $gallery = $.post(wooco_vars.wc_ajax_url.toString().
+                    replace('%%endpoint%%', 'wooco_load_gallery'), data,
+                function(response) {
+                  if (response.gallery) {
+                    var $wooco_gallery = $(response.gallery);
 
-                $wooco_gallery.imagesLoaded(function() {
-                  $wooco_gallery.wc_product_gallery();
+                    $all_gallery.unblock().hide();
+                    $wooco_gallery.insertAfter($main_gallery);
 
-                  // scroll to selected image
-                  if ($selected) {
-                    var selected_image = $selected.data('image_gallery');
-                    var $gallery_nav = $wooco_gallery.find('.flex-control-nav');
+                    $wooco_gallery.imagesLoaded(function() {
+                      $wooco_gallery.wc_product_gallery();
 
-                    if ($gallery_nav.length && (selected_image !== undefined) &&
-                        (selected_image !== '')) {
-                      var $scroll_image = $gallery_nav.find(
-                          'li img[src="' + selected_image + '"]');
+                      // scroll to selected image
+                      if ($selected) {
+                        var selected_image = $selected.data('image_gallery');
+                        var $gallery_nav = $wooco_gallery.find(
+                            '.flex-control-nav');
 
-                      if ($scroll_image.length) {
-                        window.setTimeout(function() {
-                          $scroll_image.trigger('click');
-                          $(window).trigger('resize');
-                        }, 100);
+                        if ($gallery_nav.length &&
+                            (selected_image !== undefined) &&
+                            (selected_image !== '')) {
+                          var $scroll_image = $gallery_nav.find(
+                              'li img[src="' + selected_image + '"]');
+
+                          if ($scroll_image.length) {
+                            window.setTimeout(function() {
+                              $scroll_image.trigger('click');
+                              $(window).trigger('resize');
+                            }, 100);
+                          }
+                        }
                       }
-                    }
+                    });
+                  } else {
+                    $all_gallery.unblock();
                   }
+
+                  gallery_loading = false;
                 });
-              } else {
-                $all_gallery.unblock();
-              }
-            });
           }
         }
       }

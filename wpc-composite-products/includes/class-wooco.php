@@ -41,8 +41,7 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
 			add_action( 'wp_ajax_wooco_search_product', [ $this, 'ajax_search_product' ] );
 
 			// AJAX gallery
-			add_action( 'wp_ajax_wooco_load_gallery', [ $this, 'ajax_load_gallery' ] );
-			add_action( 'wp_ajax_nopriv_wooco_load_gallery', [ $this, 'ajax_load_gallery' ] );
+			add_action( 'wc_ajax_wooco_load_gallery', [ $this, 'ajax_load_gallery' ] );
 
 			// Add to selector
 			add_filter( 'product_type_selector', [ $this, 'product_type_selector' ] );
@@ -1504,7 +1503,7 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
 				'imagesloaded'
 			], WOOCO_VERSION, true );
 			wp_localize_script( 'wooco-frontend', 'wooco_vars', apply_filters( 'wooco_vars', [
-					'ajax_url'                 => admin_url( 'admin-ajax.php' ),
+					'wc_ajax_url'              => WC_AJAX::get_endpoint( '%%endpoint%%' ),
 					'nonce'                    => wp_create_nonce( 'wooco_nonce' ),
 					'price_decimals'           => wc_get_price_decimals(),
 					'price_format'             => get_woocommerce_price_format(),
