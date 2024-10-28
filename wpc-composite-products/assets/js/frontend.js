@@ -32,6 +32,7 @@
     if ((wooco_vars.change_image === 'yes') &&
         (context === 'loaded' || context === 'on_select' || context ===
             'on_click')) {
+      var product_id = $wrap.data('id');
       var $all_gallery = $(wooco_vars.gallery_selector);
       var $main_gallery = $(wooco_vars.main_gallery_selector);
 
@@ -59,7 +60,7 @@
             var data = {
               action: 'wooco_load_gallery',
               nonce: wooco_vars.nonce,
-              product_id: $wrap.data('id'),
+              product_id: product_id,
               key: key,
               ids: ids,
             };
@@ -74,6 +75,8 @@
 
                     $all_gallery.unblock().hide();
                     $wooco_gallery.insertAfter($main_gallery);
+                    $(document).
+                        trigger('wooco_gallery_loaded', product_id, key, ids);
 
                     $wooco_gallery.imagesLoaded(function() {
                       $wooco_gallery.wc_product_gallery();
@@ -98,6 +101,10 @@
                           }
                         }
                       }
+
+                      $(document).
+                          trigger('wooco_gallery_images_loaded', product_id,
+                              key, ids);
                     });
                   } else {
                     $all_gallery.unblock();

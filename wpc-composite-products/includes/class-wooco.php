@@ -620,7 +620,7 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
 				wp_send_json_error();
 			}
 
-			$main_product_id = 0;
+			$main_product_id = absint( $_POST['product_id'] ?? 0 );
 			$key             = sanitize_text_field( $_POST['key'] ?? '' );
 			$image_ids       = [];
 
@@ -638,7 +638,7 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
 							// get images from WPC Additional Variation Images
 							$_images = array_filter( explode( ',', get_post_meta( $_id, 'wpcvi_images', true ) ) );
 
-							if ( ! empty( $_images ) && is_array( $_images ) ) {
+							if ( ! empty( $_images ) ) {
 								$image_ids = array_merge( $image_ids, $_images );
 							}
 						}
@@ -674,10 +674,11 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
 				}
 			}
 
-			if ( isset( $_POST['product_id'] ) && ( $main_product = wc_get_product( absint( $_POST['product_id'] ) ) ) ) {
-				$main_product_id = absint( $_POST['product_id'] );
+			$include_main_images   = apply_filters( 'wooco_gallery_include_main_images', false, $main_product_id );
+			$include_main_featured = apply_filters( 'wooco_gallery_include_main_featured', false, $main_product_id );
 
-				if ( apply_filters( 'wooco_gallery_include_main_images', false, $main_product ) ) {
+			if ( ( $include_main_images || $include_main_featured ) && ( $main_product = wc_get_product( $main_product_id ) ) ) {
+				if ( $include_main_images ) {
 					$main_images = $main_product->get_gallery_image_ids();
 
 					if ( ! empty( $main_images ) && is_array( $main_images ) ) {
@@ -685,7 +686,7 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
 					}
 				}
 
-				if ( apply_filters( 'wooco_gallery_include_main_featured', true, $main_product ) ) {
+				if ( $include_main_featured ) {
 					$main_featured = $main_product->get_image_id();
 
 					if ( ! empty( $main_featured ) ) {
@@ -702,15 +703,18 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
 			}
 
 			$gallery_html = '<div class="woocommerce-product-gallery woocommerce-product-gallery--wooco woocommerce-product-gallery--wooco-' . esc_attr( $key ) . ' woocommerce-product-gallery--wooco-' . absint( $main_product_id ) . ' woocommerce-product-gallery--with-images woocommerce-product-gallery--columns-' . esc_attr( apply_filters( 'woocommerce_product_thumbnails_columns', 4 ) ) . ' images" data-columns="' . esc_attr( apply_filters( 'woocommerce_product_thumbnails_columns', 4 ) ) . '" style="opacity: 0; transition: opacity .25s ease-in-out;">';
+			$gallery_html .= apply_filters( 'wooco_gallery_before', '', $image_ids, $main_product_id );
 			$gallery_html .= '<figure class="woocommerce-product-gallery__wrapper">';
 
 			foreach ( $image_ids as $id ) {
 				$gallery_html .= apply_filters( 'woocommerce_single_product_image_thumbnail_html', wc_get_gallery_image_html( $id ), $id );
 			}
 
-			$gallery_html .= '</figure></div>';
+			$gallery_html .= '</figure>';
+			$gallery_html .= apply_filters( 'wooco_gallery_after', '', $image_ids, $main_product_id );
+			$gallery_html .= '</div>';
 
-			wp_send_json( [ 'gallery' => $gallery_html ] );
+			wp_send_json( [ 'gallery' => apply_filters( 'wooco_gallery', $gallery_html, $image_ids, $main_product_id ) ] );
 		}
 
 		function ajax_search_product() {

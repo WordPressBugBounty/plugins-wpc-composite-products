@@ -3,9 +3,9 @@ Contributors: wpclever
 Donate link: https://wpclever.net
 Tags: woocommerce, wpc, composite, component, kits
 Requires at least: 4.0
-Tested up to: 6.6
-Version: 7.3.7
-Stable tag: 7.3.7
+Tested up to: 6.7
+Version: 7.3.8
+Stable tag: 7.3.8
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -64,8 +64,11 @@ Please try other plugins from us:
 
 == Changelog ==
 
+= 7.3.8 =
+* Fixed: Minor JS/CSS issues on the frontend
+
 = 7.3.7 =
-* Fixed: Minor JS/CSS issues
+* Fixed: Minor JS/CSS issues on the backend
 
 = 7.3.6 =
 * Fixed: Remove option none for required components that have only one product
