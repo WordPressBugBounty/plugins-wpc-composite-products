@@ -3,7 +3,7 @@
 Plugin Name: WPC Composite Products for WooCommerce
 Plugin URI: https://wpclever.net/
 Description: WPC Composite Products provide a powerful kit-building solution for WooCommerce store.
-Version: 7.3.8
+Version: 7.3.9
 Author: WPClever
 Author URI: https://wpclever.net
 Text Domain: wpc-composite-products
@@ -12,12 +12,14 @@ Requires Plugins: woocommerce
 Requires at least: 4.0
 Tested up to: 6.7
 WC requires at least: 3.0
-WC tested up to: 9.3
+WC tested up to: 9.4
+License: GPLv2 or later
+License URI: http://www.gnu.org/licenses/gpl-2.0.html
 */
 
 defined( 'ABSPATH' ) || exit;
 
-! defined( 'WOOCO_VERSION' ) && define( 'WOOCO_VERSION', '7.3.8' );
+! defined( 'WOOCO_VERSION' ) && define( 'WOOCO_VERSION', '7.3.9' );
 ! defined( 'WOOCO_LITE' ) && define( 'WOOCO_LITE', __FILE__ );
 ! defined( 'WOOCO_FILE' ) && define( 'WOOCO_FILE', __FILE__ );
 ! defined( 'WOOCO_URI' ) && define( 'WOOCO_URI', plugin_dir_url( __FILE__ ) );
@@ -37,9 +39,6 @@ if ( ! function_exists( 'wooco_init' ) ) {
 	add_action( 'plugins_loaded', 'wooco_init', 11 );
 
 	function wooco_init() {
-		// load text-domain
-		load_plugin_textdomain( 'wpc-composite-products', false, basename( __DIR__ ) . '/languages/' );
-
 		if ( ! function_exists( 'WC' ) || ! version_compare( WC()->version, '3.0', '>=' ) ) {
 			add_action( 'admin_notices', 'wooco_notice_wc' );
 

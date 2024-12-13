@@ -164,6 +164,9 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
 		}
 
 		function init() {
+			// load text-domain
+			load_plugin_textdomain( 'wpc-composite-products', false, basename( WOOCO_DIR ) . '/languages/' );
+
 			// image size
 			self::$image_size = apply_filters( 'wooco_image_size', self::$image_size );
 		}
@@ -1795,7 +1798,7 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
 							}
 						}
 
-						if ( $item_product->is_type( 'variable' ) || $item_product->is_type( 'composite' ) ) {
+						if ( $item_product->is_type( 'variable' ) || ( $item_product->is_type( 'composite' ) && ! apply_filters( 'wooco_allow_composite_product', false ) ) ) {
 							wc_add_notice( sprintf( /* translators: product name */ esc_html__( '"%s" is un-purchasable.', 'wpc-composite-products' ), esc_html( $item_product->get_name() ) ), 'error' );
 							wc_add_notice( esc_html__( 'You cannot add this composite products to the cart.', 'wpc-composite-products' ), 'error' );
 
@@ -3308,7 +3311,7 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
 
 			if ( is_array( $_products ) && ! empty( $_products ) ) {
 				foreach ( $_products as $_product ) {
-					if ( $_product->is_type( 'composite' ) ) {
+					if ( $_product->is_type( 'composite' ) && ! apply_filters( 'wooco_allow_composite_product', false ) ) {
 						continue;
 					}
 
