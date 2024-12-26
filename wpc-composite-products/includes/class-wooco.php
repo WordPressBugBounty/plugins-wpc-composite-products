@@ -285,6 +285,7 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                     <option value="date" <?php selected( $component['orderby'], 'date' ); ?>><?php esc_html_e( 'Date', 'wpc-composite-products' ); ?></option>
                     <option value="price" <?php selected( $component['orderby'], 'price' ); ?>><?php esc_html_e( 'Price', 'wpc-composite-products' ); ?></option>
                     <option value="modified" <?php selected( $component['orderby'], 'modified' ); ?>><?php esc_html_e( 'Modified', 'wpc-composite-products' ); ?></option>
+                    <option value="menu_order" <?php selected( $component['orderby'], 'menu_order' ); ?>><?php esc_html_e( 'Menu order', 'wpc-composite-products' ); ?></option>
                 </select>
 </label></span> &nbsp; <span><?php esc_html_e( 'Order', 'wpc-composite-products' ); ?> <label>
 <select name="<?php echo esc_attr( 'wooco_components[' . $key . '][order]' ); ?>" class="wooco_component_order_val">
@@ -3204,6 +3205,10 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
 
 			if ( $orderby === 'name' ) {
 				$orderby = 'title';
+			}
+
+			if ( $orderby === 'menu_order' ) {
+				$orderby = 'menu_order title';
 			}
 
 			if ( ! is_numeric( $default ) ) {

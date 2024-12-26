@@ -4,8 +4,8 @@ Donate link: https://wpclever.net
 Tags: woocommerce, wpc, composite, component, kits
 Requires at least: 4.0
 Tested up to: 6.7
-Version: 7.3.9
-Stable tag: 7.3.9
+Version: 7.4.0
+Stable tag: 7.4.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -63,6 +63,9 @@ Please try other plugins from us:
 5. Almost done! click Save and see the result
 
 == Changelog ==
+
+= 7.4.0 =
+* Added: Order by 'menu_order'
 
 = 7.3.9 =
 * Updated: Compatible with WP 6.7 & Woo 9.4
