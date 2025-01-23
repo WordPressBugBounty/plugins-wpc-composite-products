@@ -130,9 +130,12 @@
 
   $(document).on('click touch', '.wooco-plus, .wooco-minus', function() {
     // get values
-    var $qty = $(this).closest('.wooco-qty').find('.qty'),
-        val = parseFloat($qty.val()), max = parseFloat($qty.attr('max')),
-        min = parseFloat($qty.attr('min')), step = $qty.attr('step');
+    var $qty = $(this).closest('.wooco-qty').find('.wooco_qty').length ? $(
+            this).closest('.wooco-qty').find('.wooco_qty') : $(this).
+            closest('.wooco-qty').
+            find('.qty'), val = parseFloat($qty.val()),
+        max = parseFloat($qty.attr('max')), min = parseFloat($qty.attr('min')),
+        step = $qty.attr('step');
 
     // format values
     if (!val || val === '' || val === 'NaN') {
@@ -156,13 +159,13 @@
 
     // change the value
     if ($(this).is('.wooco-plus')) {
-      if (max && (max == val || val > max)) {
+      if (max && (val >= max)) {
         $qty.val(max);
       } else {
         $qty.val((val + step).toFixed(wooco_decimal_places(step)));
       }
     } else {
-      if (min && (min == val || val < min)) {
+      if (min && (val <= min)) {
         $qty.val(min);
       } else if (val > 0) {
         $qty.val((val - step).toFixed(wooco_decimal_places(step)));
@@ -174,7 +177,7 @@
   });
 
   $(document).
-      on('keyup change', '.wooco_component_product_qty_input', function() {
+      on('keyup change', '.wooco_qty', function() {
         var $this = $(this);
         var $wrap = $this.closest('.wooco-wrap');
         var val = parseFloat($this.val());
@@ -208,7 +211,11 @@
 function wooco_init($wrap, context = null, $selected = null) {
   if (context === 'loaded' || context === 'woosq_loaded') {
     // update qty
-    $wrap.find('.qty').trigger('change');
+    if ($wrap.find('.wooco_qty').length) {
+      $wrap.find('.wooco_qty').trigger('change');
+    } else {
+      $wrap.find('.qty').trigger('change');
+    }
   }
 
   wooco_check_ready($wrap, context, $selected);
@@ -799,8 +806,12 @@ function wooco_selected($selected, $selection, $component) {
   $component.attr('data-price-html', price_html);
   $component.attr('data-regular-price', regular_price);
 
-  if (custom_qty === 'yes' && $selected.find('.qty').length) {
-    $component.attr('data-qty', $selected.find('.qty').val());
+  if (custom_qty === 'yes') {
+    if ($selected.find('.wooco_qty').length) {
+      $component.attr('data-qty', $selected.find('.wooco_qty').val());
+    } else if ($selected.find('.qty').length) {
+      $component.attr('data-qty', $selected.find('.qty').val());
+    }
   }
 
   if ((wooco_vars.quickview_variation === 'parent') && pid) {

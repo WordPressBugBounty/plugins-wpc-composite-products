@@ -59,7 +59,7 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
 
 			// Add to cart
 			add_filter( 'woocommerce_add_to_cart_sold_individually_found_in_cart', [ $this, 'found_in_cart' ], 10, 2 );
-			add_filter( 'woocommerce_add_to_cart_validation', [ $this, 'add_to_cart_validation' ], 10, 2 );
+			add_filter( 'woocommerce_add_to_cart_validation', [ $this, 'add_to_cart_validation' ], 10, 3 );
 			add_action( 'woocommerce_add_to_cart', [ $this, 'add_to_cart' ], 10, 6 );
 			add_filter( 'woocommerce_add_cart_item_data', [ $this, 'add_cart_item_data' ], 10, 2 );
 			add_filter( 'woocommerce_get_cart_item_from_session', [ $this, 'get_cart_item_from_session' ], 10, 2 );
@@ -1755,7 +1755,7 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
 			return $found_in_cart;
 		}
 
-		function add_to_cart_validation( $passed, $product_id ) {
+		function add_to_cart_validation( $passed, $product_id, $qty ) {
 			if ( ( $_product = wc_get_product( $product_id ) ) && $_product->is_type( 'composite' ) && ( $components = $_product->get_components() ) ) {
 				$ids   = '';
 				$items = [];
@@ -1765,12 +1765,12 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
 				}
 
 				$ids = self::clean_ids( $ids );
-				$qty = (float) ( $_REQUEST['quantity'] ?? 1 );
 
 				if ( ! empty( $ids ) && ( $items = self::get_items( $ids ) ) ) {
 					foreach ( $items as $item ) {
 						$item_id      = $item['id'];
 						$item_key     = $item['key'];
+						$item_qty     = $item['qty'];
 						$item_product = wc_get_product( $item_id );
 
 						if ( ! isset( $components[ $item_key ] ) ) {
@@ -1784,6 +1784,17 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
 							wc_add_notice( esc_html__( 'You cannot add this composite products to the cart.', 'wpc-composite-products' ), 'error' );
 
 							return false;
+						}
+
+						if ( $item_product->is_type( 'woosb' ) ) {
+							$bundle_validation = apply_filters( 'woocommerce_add_to_cart_validation', true, $item_id, $qty * $item_qty );
+
+							if ( ! $bundle_validation ) {
+								wc_add_notice( sprintf( /* translators: product name */ esc_html__( '"%s" is un-purchasable.', 'wpc-composite-products' ), esc_html( $item_product->get_name() ) ), 'error' );
+								wc_add_notice( esc_html__( 'You cannot add this composite products to the cart.', 'wpc-composite-products' ), 'error' );
+
+								return false;
+							}
 						}
 
 						if ( $item_product->is_type( 'variation' ) ) {
@@ -2159,7 +2170,7 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
 					$item_data[] = [
 						'key'     => self::localization( 'cart_components', esc_html__( 'Components', 'wpc-composite-products' ) ),
 						'value'   => esc_html( $cart_item['wooco_ids'] ),
-						'display' => apply_filters( 'wooco_order_component_product_names', '<ul>' . implode( '', $items_str ) . '</ul>', $items ),
+						'display' => apply_filters( 'wooco_order_component_product_names', '<ul>' . implode( '', $items_str ) . '</ul>', $items, $cart_item ),
 					];
 				}
 			} else {
@@ -2181,7 +2192,7 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
 					$item_data[] = [
 						'key'     => self::localization( 'cart_components', esc_html__( 'Components', 'wpc-composite-products' ) ),
 						'value'   => esc_html( $cart_item['wooco_ids'] ),
-						'display' => apply_filters( 'wooco_order_component_product_names', implode( '; ', $items_str ), $items ),
+						'display' => apply_filters( 'wooco_order_component_product_names', implode( '; ', $items_str ), $items, $cart_item ),
 					];
 				}
 			}
@@ -2969,7 +2980,7 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
 															$max = $max_purchase;
 														}
 
-														echo '<div class="wooco_component_product_selection_list_item_qty wooco_component_product_selection_item_qty wooco-qty">';
+														echo '<div class="wooco_component_product_selection_list_item_qty wooco_component_product_selection_item_qty wooco-qty-wrap">';
 														echo '<span class="wooco-qty-label">' . esc_html( self::localization( 'qty_label', esc_html__( 'Qty:', 'wpc-composite-products' ) ) ) . '</span>';
 														echo '<span class="wooco-qty-input">';
 														echo '<span class="wooco_component_product_qty_btn wooco_component_product_qty_minus wooco-minus">-</span>';
@@ -2985,6 +2996,7 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
 															'classes'     => apply_filters( 'wooco_qty_classes', [
 																'input-text',
 																'wooco_component_product_qty_input',
+																'wooco_qty',
 																'qty',
 																'text'
 															], $component ),
@@ -3051,7 +3063,7 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
 															$max = $max_purchase;
 														}
 
-														echo '<div class="wooco_component_product_selection_grid_item_qty wooco_component_product_selection_item_qty wooco-qty">';
+														echo '<div class="wooco_component_product_selection_grid_item_qty wooco_component_product_selection_item_qty wooco-qty-wrap">';
 														echo '<span class="wooco-qty-label">' . esc_html( self::localization( 'qty_label', esc_html__( 'Qty:', 'wpc-composite-products' ) ) ) . '</span>';
 														echo '<span class="wooco-qty-input">';
 														echo '<span class="wooco_component_product_qty_btn wooco_component_product_qty_minus wooco-minus">-</span>';
@@ -3067,6 +3079,7 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
 															'classes'     => apply_filters( 'wooco_qty_classes', [
 																'input-text',
 																'wooco_component_product_qty_input',
+																'wooco_qty',
 																'qty',
 																'text'
 															], $component ),
@@ -3144,11 +3157,11 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
 										$max  = (int) $max;
 									}
 
-									echo '<div class="wooco_component_product_qty wooco-qty">';
+									echo '<div class="wooco_component_product_qty wooco-qty-wrap">';
 									echo '<span class="wooco-qty-label">' . esc_html( self::localization( 'qty_label', esc_html__( 'Qty:', 'wpc-composite-products' ) ) ) . '</span>';
 									echo '<span class="wooco-qty-input">';
 									echo '<span class="wooco_component_product_qty_btn wooco_component_product_qty_minus wooco-minus">-</span>';
-									echo '<input class="wooco_component_product_qty_input input-text text qty" type="number" min="' . esc_attr( $min ) . '" max="' . esc_attr( $max ) . '" step="' . esc_attr( $step ) . '" value="' . esc_attr( $qty ) . '"/>';
+									echo '<input class="wooco_component_product_qty_input wooco_qty input-text text qty" type="number" min="' . esc_attr( $min ) . '" max="' . esc_attr( $max ) . '" step="' . esc_attr( $step ) . '" value="' . esc_attr( $qty ) . '"/>';
 									echo '<span class="wooco_component_product_qty_btn wooco_component_product_qty_plus wooco-plus">+</span>';
 									echo '</span>';
 									echo '</div>';

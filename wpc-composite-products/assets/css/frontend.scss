@@ -238,12 +238,12 @@ body.woocommerce-no-js .wooco-wrap + form.cart {
   opacity: .3;
 }
 
-.wooco-qty, .wooco-qty-input {
+.wooco-qty-wrap, .wooco-qty-input {
   display: flex;
   align-items: center;
 }
 
-.wooco-qty .quantity {
+.wooco-qty-wrap .quantity {
   margin: 0;
 }
 

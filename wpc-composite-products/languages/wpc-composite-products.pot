@@ -1,15 +1,15 @@
-# Copyright (C) 2024 WPClever
+# Copyright (C) 2025 WPClever
 # This file is distributed under the GPLv2 or later.
 msgid ""
 msgstr ""
-"Project-Id-Version: WPC Composite Products for WooCommerce 7.4.0\n"
+"Project-Id-Version: WPC Composite Products for WooCommerce 7.4.1\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/wpc-composite-products\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2024-12-26T17:07:27+00:00\n"
+"POT-Creation-Date: 2025-01-23T04:54:14+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.5.0\n"
 "X-Domain: wpc-composite-products\n"
@@ -211,7 +211,7 @@ msgid "Set a new price using a number (eg. \"49\" for $49) or a percentage (eg. 
 msgstr ""
 
 #: includes/class-wooco.php:448
-#: includes/class-wooco.php:2486
+#: includes/class-wooco.php:2497
 msgid "Quantity"
 msgstr ""
 
@@ -644,7 +644,7 @@ msgid "Option none (optional component)"
 msgstr ""
 
 #: includes/class-wooco.php:1170
-#: includes/class-wooco.php:2892
+#: includes/class-wooco.php:2903
 msgid "No, thanks. I don't need this"
 msgstr ""
 
@@ -658,7 +658,7 @@ msgid "Option none (required component)"
 msgstr ""
 
 #: includes/class-wooco.php:1179
-#: includes/class-wooco.php:2892
+#: includes/class-wooco.php:2903
 msgid "Please make your choice here"
 msgstr ""
 
@@ -698,9 +698,9 @@ msgid "Quantity label"
 msgstr ""
 
 #: includes/class-wooco.php:1213
-#: includes/class-wooco.php:2973
-#: includes/class-wooco.php:3055
-#: includes/class-wooco.php:3148
+#: includes/class-wooco.php:2984
+#: includes/class-wooco.php:3067
+#: includes/class-wooco.php:3161
 msgid "Qty:"
 msgstr ""
 
@@ -726,27 +726,27 @@ msgstr ""
 
 #: includes/class-wooco.php:1253
 #: includes/class-wooco.php:1256
-#: includes/class-wooco.php:2160
-#: includes/class-wooco.php:2182
-#: includes/class-wooco.php:2374
+#: includes/class-wooco.php:2171
+#: includes/class-wooco.php:2193
+#: includes/class-wooco.php:2385
 msgid "Components"
 msgstr ""
 
 #. translators: components
 #: includes/class-wooco.php:1262
 #: includes/class-wooco.php:1266
-#: includes/class-wooco.php:2268
-#: includes/class-wooco.php:2298
+#: includes/class-wooco.php:2279
+#: includes/class-wooco.php:2309
 msgid "Components: %s"
 msgstr ""
 
 #. translators: composite
 #: includes/class-wooco.php:1271
 #: includes/class-wooco.php:1275
-#: includes/class-wooco.php:2274
-#: includes/class-wooco.php:2276
-#: includes/class-wooco.php:2304
-#: includes/class-wooco.php:2306
+#: includes/class-wooco.php:2285
+#: includes/class-wooco.php:2287
+#: includes/class-wooco.php:2315
+#: includes/class-wooco.php:2317
 msgid "Composite: %s"
 msgstr ""
 
@@ -857,16 +857,17 @@ msgstr ""
 #. translators: product name
 #: includes/class-wooco.php:1777
 #: includes/class-wooco.php:1784
-#: includes/class-wooco.php:1795
-#: includes/class-wooco.php:1804
-#: includes/class-wooco.php:1811
-#: includes/class-wooco.php:1819
-#: includes/class-wooco.php:1825
-#: includes/class-wooco.php:1832
-#: includes/class-wooco.php:1840
-#: includes/class-wooco.php:1858
-#: includes/class-wooco.php:1866
-#: includes/class-wooco.php:1878
+#: includes/class-wooco.php:1794
+#: includes/class-wooco.php:1806
+#: includes/class-wooco.php:1815
+#: includes/class-wooco.php:1822
+#: includes/class-wooco.php:1830
+#: includes/class-wooco.php:1836
+#: includes/class-wooco.php:1843
+#: includes/class-wooco.php:1851
+#: includes/class-wooco.php:1869
+#: includes/class-wooco.php:1877
+#: includes/class-wooco.php:1889
 msgid "You cannot add this composite products to the cart."
 msgstr ""
 
@@ -875,173 +876,174 @@ msgid "One of the component products is unavailable."
 msgstr ""
 
 #. translators: product name
-#: includes/class-wooco.php:1794
-#: includes/class-wooco.php:1803
-#: includes/class-wooco.php:1810
+#: includes/class-wooco.php:1793
+#: includes/class-wooco.php:1805
+#: includes/class-wooco.php:1814
+#: includes/class-wooco.php:1821
 msgid "\"%s\" is un-purchasable."
 msgstr ""
 
 #. translators: product name
-#: includes/class-wooco.php:1839
+#: includes/class-wooco.php:1850
 msgid "You cannot add another \"%s\" to your cart."
 msgstr ""
 
 #. translators: product name
-#: includes/class-wooco.php:1857
+#: includes/class-wooco.php:1868
 msgid "\"%s\" has not enough stock."
 msgstr ""
 
 #. translators: product name
-#: includes/class-wooco.php:1865
+#: includes/class-wooco.php:1876
 msgid "\"%s\" is protected and cannot be purchased."
 msgstr ""
 
-#: includes/class-wooco.php:1877
+#: includes/class-wooco.php:1888
 msgid "Missing a required component product."
 msgstr ""
 
 #. translators: count
-#: includes/class-wooco.php:2338
+#: includes/class-wooco.php:2349
 msgid "Composite (%d)"
 msgstr ""
 
-#: includes/class-wooco.php:2367
+#: includes/class-wooco.php:2378
 msgid "Smart composite"
 msgstr ""
 
-#: includes/class-wooco.php:2398
+#: includes/class-wooco.php:2409
 msgid "Product wasn't returned."
 msgstr ""
 
-#: includes/class-wooco.php:2426
+#: includes/class-wooco.php:2437
 msgid "+ Add component"
 msgstr ""
 
-#: includes/class-wooco.php:2428
+#: includes/class-wooco.php:2439
 msgid "Expand All"
 msgstr ""
 
-#: includes/class-wooco.php:2430
+#: includes/class-wooco.php:2441
 msgid "Collapse All"
 msgstr ""
 
-#: includes/class-wooco.php:2435
+#: includes/class-wooco.php:2446
 msgid "Remember to save current components before exporting to get the latest version."
 msgstr ""
 
-#: includes/class-wooco.php:2436
+#: includes/class-wooco.php:2447
 msgid "Export"
 msgstr ""
 
-#: includes/class-wooco.php:2440
+#: includes/class-wooco.php:2451
 msgid "Save components"
 msgstr ""
 
-#: includes/class-wooco.php:2449
+#: includes/class-wooco.php:2460
 msgid "Pricing"
 msgstr ""
 
-#: includes/class-wooco.php:2452
+#: includes/class-wooco.php:2463
 msgid "Only base price"
 msgstr ""
 
-#: includes/class-wooco.php:2453
+#: includes/class-wooco.php:2464
 msgid "Include base price"
 msgstr ""
 
-#: includes/class-wooco.php:2454
+#: includes/class-wooco.php:2465
 msgid "Exclude base price"
 msgstr ""
 
-#: includes/class-wooco.php:2456
+#: includes/class-wooco.php:2467
 msgid "\"Base price\" is the price set in the General tab. When \"Only base price\" is chosen, the total price won't change despite the price changes in variable components."
 msgstr ""
 
-#: includes/class-wooco.php:2457
+#: includes/class-wooco.php:2468
 msgid "Always put a price in the General tab to display the Add to Cart button. This is also the base price."
 msgstr ""
 
-#: includes/class-wooco.php:2461
+#: includes/class-wooco.php:2472
 msgid "Discount"
 msgstr ""
 
-#: includes/class-wooco.php:2464
+#: includes/class-wooco.php:2475
 msgid "The universal percentage discount will be applied equally on each component's price, not on the total."
 msgstr ""
 
-#: includes/class-wooco.php:2496
+#: includes/class-wooco.php:2507
 msgid "Total limits"
 msgstr ""
 
-#: includes/class-wooco.php:2499
+#: includes/class-wooco.php:2510
 msgid "Configure total limits for the current composite."
 msgstr ""
 
-#: includes/class-wooco.php:2507
+#: includes/class-wooco.php:2518
 msgid "Same products"
 msgstr ""
 
-#: includes/class-wooco.php:2510
+#: includes/class-wooco.php:2521
 msgid "Allow"
 msgstr ""
 
-#: includes/class-wooco.php:2511
+#: includes/class-wooco.php:2522
 msgid "Do not allow"
 msgstr ""
 
-#: includes/class-wooco.php:2513
+#: includes/class-wooco.php:2524
 msgid "Allow/Do not allow the buyer to choose the same products in the components."
 msgstr ""
 
-#: includes/class-wooco.php:2517
+#: includes/class-wooco.php:2528
 msgid "Shipping fee"
 msgstr ""
 
-#: includes/class-wooco.php:2520
+#: includes/class-wooco.php:2531
 msgid "Apply to the whole composite"
 msgstr ""
 
-#: includes/class-wooco.php:2521
+#: includes/class-wooco.php:2532
 msgid "Apply to each component product"
 msgstr ""
 
-#: includes/class-wooco.php:2526
+#: includes/class-wooco.php:2537
 msgid "Custom display price"
 msgstr ""
 
-#: includes/class-wooco.php:2534
+#: includes/class-wooco.php:2545
 msgid "Above text"
 msgstr ""
 
-#: includes/class-wooco.php:2544
+#: includes/class-wooco.php:2555
 msgid "Under text"
 msgstr ""
 
-#: includes/class-wooco.php:2672
-#: includes/class-wooco.php:2674
+#: includes/class-wooco.php:2683
+#: includes/class-wooco.php:2685
 msgid "From"
 msgstr ""
 
-#: includes/class-wooco.php:3560
+#: includes/class-wooco.php:3573
 msgid "Before container"
 msgstr ""
 
-#: includes/class-wooco.php:3561
+#: includes/class-wooco.php:3574
 msgid "After container"
 msgstr ""
 
-#: includes/class-wooco.php:3562
+#: includes/class-wooco.php:3575
 msgid "Before component list"
 msgstr ""
 
-#: includes/class-wooco.php:3563
+#: includes/class-wooco.php:3576
 msgid "After component list"
 msgstr ""
 
-#: includes/class-wooco.php:3564
+#: includes/class-wooco.php:3577
 msgid "Before component"
 msgstr ""
 
-#: includes/class-wooco.php:3565
+#: includes/class-wooco.php:3578
 msgid "After component"
 msgstr ""
