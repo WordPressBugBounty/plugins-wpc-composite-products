@@ -130,9 +130,9 @@
 
   $(document).on('click touch', '.wooco-plus, .wooco-minus', function() {
     // get values
-    var $qty = $(this).closest('.wooco-qty').find('.wooco_qty').length ? $(
-            this).closest('.wooco-qty').find('.wooco_qty') : $(this).
-            closest('.wooco-qty').
+    var $qty = $(this).closest('.wooco-qty-wrap').find('.wooco_qty').length ? $(
+            this).closest('.wooco-qty-wrap').find('.wooco_qty') : $(this).
+            closest('.wooco-qty-wrap').
             find('.qty'), val = parseFloat($qty.val()),
         max = parseFloat($qty.attr('max')), min = parseFloat($qty.attr('min')),
         step = $qty.attr('step');
