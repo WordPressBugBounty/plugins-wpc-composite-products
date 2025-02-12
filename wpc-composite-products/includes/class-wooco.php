@@ -233,8 +233,10 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                         <div class="wooco_component_heading">
                             <span class="wooco_move_component"></span>
                             <span class="wooco_component_name"><?php echo esc_html( wp_strip_all_tags( $component['name'] ) ); ?></span>
-                            <a class="wooco_duplicate_component" href="#"><?php esc_html_e( 'duplicate', 'wpc-composite-products' ); ?></a>
-                            <a class="wooco_remove_component" href="#"><?php esc_html_e( 'remove', 'wpc-composite-products' ); ?></a>
+                            <a class="wooco_duplicate_component"
+                               href="#"><?php esc_html_e( 'duplicate', 'wpc-composite-products' ); ?></a>
+                            <a class="wooco_remove_component"
+                               href="#"><?php esc_html_e( 'remove', 'wpc-composite-products' ); ?></a>
                         </div>
                         <div class="wooco_component_content">
                             <div class="wooco_component_content_line">
@@ -243,7 +245,10 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                                 </div>
                                 <div class="wooco_component_content_line_value">
                                     <label>
-                                        <input name="<?php echo esc_attr( 'wooco_components[' . $key . '][name]' ); ?>" type="text" class="wooco_component_name_val" value="<?php echo esc_attr( $component['name'] ); ?>" placeholder="<?php esc_attr_e( 'Name', 'wpc-composite-products' ); ?>"/>
+                                        <input name="<?php echo esc_attr( 'wooco_components[' . $key . '][name]' ); ?>"
+                                               type="text" class="wooco_component_name_val"
+                                               value="<?php echo esc_attr( $component['name'] ); ?>"
+                                               placeholder="<?php esc_attr_e( 'Name', 'wpc-composite-products' ); ?>"/>
                                     </label>
                                 </div>
                             </div>
@@ -253,7 +258,9 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                                 </div>
                                 <div class="wooco_component_content_line_value">
                                     <label>
-                                        <textarea class="wooco_component_desc_val" name="<?php echo esc_attr( 'wooco_components[' . $key . '][desc]' ); ?>" placeholder="<?php esc_attr_e( 'Description', 'wpc-composite-products' ); ?>"><?php echo esc_textarea( $component['desc'] ); ?></textarea>
+                                        <textarea class="wooco_component_desc_val"
+                                                  name="<?php echo esc_attr( 'wooco_components[' . $key . '][desc]' ); ?>"
+                                                  placeholder="<?php esc_attr_e( 'Description', 'wpc-composite-products' ); ?>"><?php echo esc_textarea( $component['desc'] ); ?></textarea>
                                     </label>
                                 </div>
                             </div>
@@ -263,7 +270,8 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                                 </div>
                                 <div class="wooco_component_content_line_value">
                                     <label>
-                                        <select name="<?php echo esc_attr( 'wooco_components[' . $key . '][type]' ); ?>" class="wooco_component_type wooco_component_type_val">
+                                        <select name="<?php echo esc_attr( 'wooco_components[' . $key . '][type]' ); ?>"
+                                                class="wooco_component_type wooco_component_type_val">
                                             <option value=""><?php esc_html_e( 'Select source', 'wpc-composite-products' ); ?></option>
                                             <option value="products" <?php selected( $component['type'], 'products' ); ?>><?php esc_html_e( 'Products', 'wpc-composite-products' ); ?></option>
 											<?php
@@ -310,7 +318,9 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
 									}
 									?>
                                     <label>
-                                        <select class="wooco_terms wooco_component_other_val" multiple="multiple" name="<?php echo esc_attr( 'wooco_components[' . $key . '][other][]' ); ?>" data-<?php echo esc_attr( $component['type'] ); ?>="<?php echo esc_attr( implode( ',', $other ) ); ?>">
+                                        <select class="wooco_terms wooco_component_other_val" multiple="multiple"
+                                                name="<?php echo esc_attr( 'wooco_components[' . $key . '][other][]' ); ?>"
+                                                data-<?php echo esc_attr( $component['type'] ); ?>="<?php echo esc_attr( implode( ',', $other ) ); ?>">
 											<?php
 											if ( ! empty( $other ) ) {
 												foreach ( $other as $t ) {
@@ -329,7 +339,11 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                                 </div>
                                 <div class="wooco_component_content_line_value">
                                     <label>
-                                        <select class="wooco_products wooco_component_products_val" data-allow_clear="false" style="width: 100%;" data-sortable="1" multiple="multiple" name="<?php echo esc_attr( 'wooco_components[' . $key . '][products][]' ); ?>" data-placeholder="<?php esc_attr_e( 'Search for a product&hellip;', 'wpc-composite-products' ); ?>">
+                                        <select class="wooco_products wooco_component_products_val"
+                                                data-allow_clear="false" style="width: 100%;" data-sortable="1"
+                                                multiple="multiple"
+                                                name="<?php echo esc_attr( 'wooco_components[' . $key . '][products][]' ); ?>"
+                                                data-placeholder="<?php esc_attr_e( 'Search for a product&hellip;', 'wpc-composite-products' ); ?>">
 											<?php
 											if ( ! is_array( $component['products'] ) ) {
 												// old versions before 6.0
@@ -365,7 +379,11 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                                 </div>
                                 <div class="wooco_component_content_line_value">
                                     <label>
-                                        <select class="wooco_products wooco_component_exclude_val" data-allow_clear="false" style="width: 100%;" data-sortable="1" multiple="multiple" name="<?php echo esc_attr( 'wooco_components[' . $key . '][exclude][]' ); ?>" data-placeholder="<?php esc_attr_e( 'Search for a product&hellip;', 'wpc-composite-products' ); ?>">
+                                        <select class="wooco_products wooco_component_exclude_val"
+                                                data-allow_clear="false" style="width: 100%;" data-sortable="1"
+                                                multiple="multiple"
+                                                name="<?php echo esc_attr( 'wooco_components[' . $key . '][exclude][]' ); ?>"
+                                                data-placeholder="<?php esc_attr_e( 'Search for a product&hellip;', 'wpc-composite-products' ); ?>">
 											<?php
 											if ( ! is_array( $component['exclude'] ) ) {
 												// old versions before 6.0
@@ -401,7 +419,9 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                                 </div>
                                 <div class="wooco_component_content_line_value">
                                     <label>
-                                        <select class="wooco_products" style="width: 100%;" data-allow_clear="true" name="<?php echo esc_attr( 'wooco_components[' . $key . '][default]' ); ?>" data-placeholder="<?php esc_attr_e( 'Search for a product&hellip;', 'wpc-composite-products' ); ?>">
+                                        <select class="wooco_products" style="width: 100%;" data-allow_clear="true"
+                                                name="<?php echo esc_attr( 'wooco_components[' . $key . '][default]' ); ?>"
+                                                data-placeholder="<?php esc_attr_e( 'Search for a product&hellip;', 'wpc-composite-products' ); ?>">
 											<?php
 											if ( ! empty( $component['default'] ) ) {
 												if ( is_numeric( $component['default'] ) ) {
@@ -426,7 +446,8 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                                 </div>
                                 <div class="wooco_component_content_line_value">
                                     <label>
-                                        <select name="<?php echo esc_attr( 'wooco_components[' . $key . '][optional]' ); ?>" class="wooco_component_optional_val">
+                                        <select name="<?php echo esc_attr( 'wooco_components[' . $key . '][optional]' ); ?>"
+                                                class="wooco_component_optional_val">
                                             <option value="no" <?php selected( $component['optional'], 'no' ); ?>><?php esc_html_e( 'Yes', 'wpc-composite-products' ); ?></option>
                                             <option value="yes" <?php selected( $component['optional'], 'yes' ); ?>><?php esc_html_e( 'No', 'wpc-composite-products' ); ?></option>
                                         </select> </label>
@@ -438,9 +459,13 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                                 </div>
                                 <div class="wooco_component_content_line_value">
                                     <label>
-                                        <input name="<?php echo esc_attr( 'wooco_components[' . $key . '][price]' ); ?>" class="wooco_component_price_val" type="text" style="width: 60px; display: inline-block" value="<?php echo esc_attr( self::format_price( $component['price'] ) ); ?>"/>
+                                        <input name="<?php echo esc_attr( 'wooco_components[' . $key . '][price]' ); ?>"
+                                               class="wooco_component_price_val" type="text"
+                                               style="width: 60px; display: inline-block"
+                                               value="<?php echo esc_attr( self::format_price( $component['price'] ) ); ?>"/>
                                     </label>
-                                    <span class="woocommerce-help-tip" data-tip="<?php esc_html_e( 'Set a new price using a number (eg. "49" for $49) or a percentage (eg. "90%" of the original price).', 'wpc-composite-products' ); ?>"></span>
+                                    <span class="woocommerce-help-tip"
+                                          data-tip="<?php esc_html_e( 'Set a new price using a number (eg. "49" for $49) or a percentage (eg. "90%" of the original price).', 'wpc-composite-products' ); ?>"></span>
                                 </div>
                             </div>
                             <div class="wooco_component_content_line">
@@ -449,7 +474,10 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                                 </div>
                                 <div class="wooco_component_content_line_value">
                                     <label>
-                                        <input name="<?php echo esc_attr( 'wooco_components[' . $key . '][qty]' ); ?>" class="wooco_component_qty_val" type="number" min="0" step="<?php echo esc_attr( $step ); ?>" value="<?php echo esc_attr( $component['qty'] ); ?>"/>
+                                        <input name="<?php echo esc_attr( 'wooco_components[' . $key . '][qty]' ); ?>"
+                                               class="wooco_component_qty_val" type="number" min="0"
+                                               step="<?php echo esc_attr( $step ); ?>"
+                                               value="<?php echo esc_attr( $component['qty'] ); ?>"/>
                                     </label>
                                 </div>
                             </div>
@@ -459,7 +487,8 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                                 </div>
                                 <div class="wooco_component_content_line_value">
                                     <label>
-                                        <select name="<?php echo esc_attr( 'wooco_components[' . $key . '][custom_qty]' ); ?>" class="wooco_component_custom_qty_val">
+                                        <select name="<?php echo esc_attr( 'wooco_components[' . $key . '][custom_qty]' ); ?>"
+                                                class="wooco_component_custom_qty_val">
                                             <option value="no" <?php selected( $component['custom_qty'], 'no' ); ?>><?php esc_html_e( 'No', 'wpc-composite-products' ); ?></option>
                                             <option value="yes" <?php selected( $component['custom_qty'], 'yes' ); ?>><?php esc_html_e( 'Yes', 'wpc-composite-products' ); ?></option>
                                         </select> </label>
@@ -472,11 +501,17 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                                 <div class="wooco_component_content_line_value">
 									<?php esc_html_e( 'Min', 'wpc-composite-products' ); ?>
                                     <label>
-                                        <input name="<?php echo esc_attr( 'wooco_components[' . $key . '][min]' ); ?>" class="wooco_component_min_val" type="number" min="0" step="<?php echo esc_attr( $step ); ?>" value="<?php echo esc_attr( $component['min'] ); ?>"/>
+                                        <input name="<?php echo esc_attr( 'wooco_components[' . $key . '][min]' ); ?>"
+                                               class="wooco_component_min_val" type="number" min="0"
+                                               step="<?php echo esc_attr( $step ); ?>"
+                                               value="<?php echo esc_attr( $component['min'] ); ?>"/>
                                     </label>
 									<?php esc_html_e( 'Max', 'wpc-composite-products' ); ?>
                                     <label>
-                                        <input name="<?php echo esc_attr( 'wooco_components[' . $key . '][max]' ); ?>" class="wooco_component_max_val" type="number" min="0" step="<?php echo esc_attr( $step ); ?>" value="<?php echo esc_attr( $component['max'] ); ?>"/>
+                                        <input name="<?php echo esc_attr( 'wooco_components[' . $key . '][max]' ); ?>"
+                                               class="wooco_component_max_val" type="number" min="0"
+                                               step="<?php echo esc_attr( $step ); ?>"
+                                               value="<?php echo esc_attr( $component['max'] ); ?>"/>
                                     </label>
                                 </div>
                             </div>
@@ -487,13 +522,20 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                                 <div class="wooco_component_content_line_value">
 									<?php esc_html_e( 'Min', 'wpc-composite-products' ); ?>
                                     <label>
-                                        <input name="<?php echo esc_attr( 'wooco_components[' . $key . '][m_min]' ); ?>" class="wooco_component_m_min_val" type="number" min="0" step="<?php echo esc_attr( $step ); ?>" value="<?php echo esc_attr( $component['m_min'] ); ?>"/>
+                                        <input name="<?php echo esc_attr( 'wooco_components[' . $key . '][m_min]' ); ?>"
+                                               class="wooco_component_m_min_val" type="number" min="0"
+                                               step="<?php echo esc_attr( $step ); ?>"
+                                               value="<?php echo esc_attr( $component['m_min'] ); ?>"/>
                                     </label>
 									<?php esc_html_e( 'Max', 'wpc-composite-products' ); ?>
                                     <label>
-                                        <input name="<?php echo esc_attr( 'wooco_components[' . $key . '][m_max]' ); ?>" class="wooco_component_m_max_val" type="number" min="0" step="<?php echo esc_attr( $step ); ?>" value="<?php echo esc_attr( $component['m_max'] ); ?>"/>
+                                        <input name="<?php echo esc_attr( 'wooco_components[' . $key . '][m_max]' ); ?>"
+                                               class="wooco_component_m_max_val" type="number" min="0"
+                                               step="<?php echo esc_attr( $step ); ?>"
+                                               value="<?php echo esc_attr( $component['m_max'] ); ?>"/>
                                     </label>
-                                    <span class="woocommerce-help-tip" data-tip="<?php esc_html_e( 'For multiple selection only.', 'wpc-composite-products' ); ?>"></span>
+                                    <span class="woocommerce-help-tip"
+                                          data-tip="<?php esc_html_e( 'For multiple selection only.', 'wpc-composite-products' ); ?>"></span>
                                 </div>
                             </div>
                             <div class="wooco_component_content_line">
@@ -502,7 +544,8 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                                 </div>
                                 <div class="wooco_component_content_line_value">
                                     <label>
-                                        <select name="<?php echo esc_attr( 'wooco_components[' . $key . '][multiple]' ); ?>" class="wooco_component_multiple_val">
+                                        <select name="<?php echo esc_attr( 'wooco_components[' . $key . '][multiple]' ); ?>"
+                                                class="wooco_component_multiple_val">
                                             <option value="no" <?php selected( $component['multiple'], 'no' ); ?>><?php esc_html_e( 'No', 'wpc-composite-products' ); ?></option>
                                             <option value="yes" <?php selected( $component['multiple'], 'yes' ); ?>><?php esc_html_e( 'Yes', 'wpc-composite-products' ); ?></option>
                                         </select> </label>
@@ -514,14 +557,16 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                                 </div>
                                 <div class="wooco_component_content_line_value">
                                     <label>
-                                        <select name="<?php echo esc_attr( 'wooco_components[' . $key . '][selector]' ); ?>" class="wooco_component_selector_val">
+                                        <select name="<?php echo esc_attr( 'wooco_components[' . $key . '][selector]' ); ?>"
+                                                class="wooco_component_selector_val">
                                             <option value="default" <?php selected( $component['selector'], 'default' ); ?>><?php esc_html_e( 'Default', 'wpc-composite-products' ); ?></option>
                                             <option value="list" <?php selected( $component['selector'], 'list' ); ?>><?php esc_html_e( 'List', 'wpc-composite-products' ); ?></option>
                                             <option value="grid_2" <?php selected( $component['selector'], 'grid_2' ); ?>><?php esc_html_e( 'Grid - 2 columns', 'wpc-composite-products' ); ?></option>
                                             <option value="grid_3" <?php selected( $component['selector'], 'grid_3' ); ?>><?php esc_html_e( 'Grid - 3 columns', 'wpc-composite-products' ); ?></option>
                                             <option value="grid_4" <?php selected( $component['selector'], 'grid_4' ); ?>><?php esc_html_e( 'Grid - 4 columns', 'wpc-composite-products' ); ?></option>
                                         </select> </label>
-                                    <span class="woocommerce-help-tip" data-tip="<?php esc_html_e( 'Specify selector interface for this component. If not, the default selector interface will be used.', 'wpc-composite-products' ); ?>"></span>
+                                    <span class="woocommerce-help-tip"
+                                          data-tip="<?php esc_html_e( 'Specify selector interface for this component. If not, the default selector interface will be used.', 'wpc-composite-products' ); ?>"></span>
                                 </div>
                             </div>
                         </div>
@@ -789,9 +834,12 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                     <p>
 						<?php printf( /* translators: stars */ esc_html__( 'Thank you for using our plugin! If you are satisfied, please reward it a full five-star %s rating.', 'wpc-composite-products' ), '<span style="color:#ffb900">&#9733;&#9733;&#9733;&#9733;&#9733;</span>' ); ?>
                         <br/>
-                        <a href="<?php echo esc_url( WOOCO_REVIEWS ); ?>" target="_blank"><?php esc_html_e( 'Reviews', 'wpc-composite-products' ); ?></a> |
-                        <a href="<?php echo esc_url( WOOCO_CHANGELOG ); ?>" target="_blank"><?php esc_html_e( 'Changelog', 'wpc-composite-products' ); ?></a> |
-                        <a href="<?php echo esc_url( WOOCO_DISCUSSION ); ?>" target="_blank"><?php esc_html_e( 'Discussion', 'wpc-composite-products' ); ?></a>
+                        <a href="<?php echo esc_url( WOOCO_REVIEWS ); ?>"
+                           target="_blank"><?php esc_html_e( 'Reviews', 'wpc-composite-products' ); ?></a> |
+                        <a href="<?php echo esc_url( WOOCO_CHANGELOG ); ?>"
+                           target="_blank"><?php esc_html_e( 'Changelog', 'wpc-composite-products' ); ?></a> |
+                        <a href="<?php echo esc_url( WOOCO_DISCUSSION ); ?>"
+                           target="_blank"><?php esc_html_e( 'Discussion', 'wpc-composite-products' ); ?></a>
                     </p>
                 </div>
 				<?php if ( isset( $_GET['settings-updated'] ) && $_GET['settings-updated'] ) { ?>
@@ -801,18 +849,23 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
 				<?php } ?>
                 <div class="wpclever_settings_page_nav">
                     <h2 class="nav-tab-wrapper">
-                        <a href="<?php echo esc_url( admin_url( 'admin.php?page=wpclever-wooco&tab=how' ) ); ?>" class="<?php echo $active_tab === 'how' ? 'nav-tab nav-tab-active' : 'nav-tab'; ?>">
+                        <a href="<?php echo esc_url( admin_url( 'admin.php?page=wpclever-wooco&tab=how' ) ); ?>"
+                           class="<?php echo $active_tab === 'how' ? 'nav-tab nav-tab-active' : 'nav-tab'; ?>">
 							<?php esc_html_e( 'How to use?', 'wpc-composite-products' ); ?>
                         </a>
-                        <a href="<?php echo esc_url( admin_url( 'admin.php?page=wpclever-wooco&tab=settings' ) ); ?>" class="<?php echo $active_tab === 'settings' ? 'nav-tab nav-tab-active' : 'nav-tab'; ?>">
+                        <a href="<?php echo esc_url( admin_url( 'admin.php?page=wpclever-wooco&tab=settings' ) ); ?>"
+                           class="<?php echo $active_tab === 'settings' ? 'nav-tab nav-tab-active' : 'nav-tab'; ?>">
 							<?php esc_html_e( 'Settings', 'wpc-composite-products' ); ?>
                         </a>
-                        <a href="<?php echo esc_url( admin_url( 'admin.php?page=wpclever-wooco&tab=localization' ) ); ?>" class="<?php echo $active_tab === 'localization' ? 'nav-tab nav-tab-active' : 'nav-tab'; ?>">
+                        <a href="<?php echo esc_url( admin_url( 'admin.php?page=wpclever-wooco&tab=localization' ) ); ?>"
+                           class="<?php echo $active_tab === 'localization' ? 'nav-tab nav-tab-active' : 'nav-tab'; ?>">
 							<?php esc_html_e( 'Localization', 'wpc-composite-products' ); ?>
                         </a> <a href="<?php echo esc_url( WOOCO_DOCS ); ?>" class="nav-tab" target="_blank">
 							<?php esc_html_e( 'Docs', 'wpc-composite-products' ); ?>
                         </a>
-                        <a href="<?php echo esc_url( admin_url( 'admin.php?page=wpclever-wooco&tab=premium' ) ); ?>" class="<?php echo $active_tab === 'premium' ? 'nav-tab nav-tab-active' : 'nav-tab'; ?>" style="color: #c9356e">
+                        <a href="<?php echo esc_url( admin_url( 'admin.php?page=wpclever-wooco&tab=premium' ) ); ?>"
+                           class="<?php echo $active_tab === 'premium' ? 'nav-tab nav-tab-active' : 'nav-tab'; ?>"
+                           style="color: #c9356e">
 							<?php esc_html_e( 'Premium Version', 'wpc-composite-products' ); ?>
                         </a>
                         <a href="<?php echo esc_url( admin_url( 'admin.php?page=wpclever-kit' ) ); ?>" class="nav-tab">
@@ -900,7 +953,11 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                                                 <option value="select2" <?php selected( $selector, 'select2' ); ?>><?php esc_html_e( 'Dropdown - Select2', 'wpc-composite-products' ); ?></option>
                                                 <option value="select" <?php selected( $selector, 'select' ); ?>><?php esc_html_e( 'Dropdown - HTML select tag', 'wpc-composite-products' ); ?></option>
                                             </select> </label>
-                                        <span class="description">Read more about <a href="https://designwithpc.com/Plugins/ddSlick" target="_blank">ddSlick</a>, <a href="https://select2.org/" target="_blank">Select2</a> and <a href="https://www.w3schools.com/tags/tag_select.asp" target="_blank">HTML select tag</a></span>
+                                        <span class="description">Read more about <a
+                                                    href="https://designwithpc.com/Plugins/ddSlick" target="_blank">ddSlick</a>, <a
+                                                    href="https://select2.org/" target="_blank">Select2</a> and <a
+                                                    href="https://www.w3schools.com/tags/tag_select.asp"
+                                                    target="_blank">HTML select tag</a></span>
                                     </td>
                                 </tr>
                                 <tr>
@@ -1013,7 +1070,8 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                                     <th><?php esc_html_e( '"Option none" image', 'wpc-composite-products' ); ?></th>
                                     <td>
                                         <label>
-                                            <select name="wooco_settings[option_none_image]" class="wooco_option_none_image">
+                                            <select name="wooco_settings[option_none_image]"
+                                                    class="wooco_option_none_image">
                                                 <option value="placeholder" <?php selected( $option_none_image, 'placeholder' ); ?>><?php esc_html_e( 'Placeholder image', 'wpc-composite-products' ); ?></option>
                                                 <option value="product" <?php selected( $option_none_image, 'product' ); ?>><?php esc_html_e( 'Main product\'s image', 'wpc-composite-products' ); ?></option>
                                                 <option value="custom" <?php selected( $option_none_image, 'custom' ); ?>><?php esc_html_e( 'Custom image', 'wpc-composite-products' ); ?></option>
@@ -1022,13 +1080,17 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                                         <span class="description"><?php esc_html_e( 'If you choose "Placeholder image", you can change it in WooCommerce > Settings > Products > Placeholder image.', 'wpc-composite-products' ); ?></span>
                                         <div class="wooco_option_none_image_custom" style="display: none">
 											<?php wp_enqueue_media(); ?>
-                                            <span class="wooco_option_none_image_preview" id="wooco_option_none_image_preview">
+                                            <span class="wooco_option_none_image_preview"
+                                                  id="wooco_option_none_image_preview">
                                                         <?php if ( $option_none_image_id ) {
 	                                                        echo '<img src="' . esc_url( wp_get_attachment_url( $option_none_image_id ) ) . '"/>';
                                                         } ?>
                                                     </span>
-                                            <input id="wooco_option_none_image_upload" type="button" class="button" value="<?php esc_attr_e( 'Upload image', 'wpc-composite-products' ); ?>"/>
-                                            <input type="hidden" name="wooco_settings[option_none_image_id]" id="wooco_option_none_image_id" value="<?php echo esc_attr( $option_none_image_id ); ?>"/>
+                                            <input id="wooco_option_none_image_upload" type="button" class="button"
+                                                   value="<?php esc_attr_e( 'Upload image', 'wpc-composite-products' ); ?>"/>
+                                            <input type="hidden" name="wooco_settings[option_none_image_id]"
+                                                   id="wooco_option_none_image_id"
+                                                   value="<?php echo esc_attr( $option_none_image_id ); ?>"/>
                                         </div>
                                     </td>
                                 </tr>
@@ -1050,7 +1112,9 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                                                 <option value="yes_custom" <?php selected( $change_price, 'yes_custom' ); ?>><?php esc_html_e( 'Yes, custom selector', 'wpc-composite-products' ); ?></option>
                                                 <option value="no" <?php selected( $change_price, 'no' ); ?>><?php esc_html_e( 'No', 'wpc-composite-products' ); ?></option>
                                             </select> </label> <label>
-                                            <input type="text" name="wooco_settings[change_price_custom]" value="<?php echo esc_attr( $change_price_custom ); ?>" placeholder=".summary > .price" class="wooco_change_price_custom"/>
+                                            <input type="text" name="wooco_settings[change_price_custom]"
+                                                   value="<?php echo esc_attr( $change_price_custom ); ?>"
+                                                   placeholder=".summary > .price" class="wooco_change_price_custom"/>
                                         </label>
                                         <p class="description"><?php esc_html_e( 'Change the main product’s price based on the changes in prices of selected variations in a grouped products. This uses Javascript to change the main product’s price to it depends heavily on theme’s HTML. If the price doesn\'t change when this option is enabled, please contact us and we can help you adjust the JS file.', 'wpc-composite-products' ); ?></p>
                                     </td>
@@ -1064,8 +1128,11 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                                                 <option value="yes_popup" <?php selected( $product_link, 'yes_popup' ); ?>><?php esc_html_e( 'Yes, open quick view popup', 'wpc-composite-products' ); ?></option>
                                                 <option value="no" <?php selected( $product_link, 'no' ); ?>><?php esc_html_e( 'No', 'wpc-composite-products' ); ?></option>
                                             </select> </label>
-                                        <p class="description"><?php esc_html_e( 'Add a link to the target individual product below this selection.', 'wpc-composite-products' ); ?> If you choose "Open quick view popup", please install
-                                            <a href="<?php echo esc_url( admin_url( 'plugin-install.php?tab=plugin-information&plugin=woo-smart-quick-view&TB_iframe=true&width=800&height=550' ) ); ?>" class="thickbox" title="WPC Smart Quick View">WPC Smart Quick View</a> to make it work.
+                                        <p class="description"><?php esc_html_e( 'Add a link to the target individual product below this selection.', 'wpc-composite-products' ); ?>
+                                            If you choose "Open quick view popup", please install
+                                            <a href="<?php echo esc_url( admin_url( 'plugin-install.php?tab=plugin-information&plugin=woo-smart-quick-view&TB_iframe=true&width=800&height=550' ) ); ?>"
+                                               class="thickbox" title="WPC Smart Quick View">WPC Smart Quick View</a> to
+                                            make it work.
                                         </p>
                                     </td>
                                 </tr>
@@ -1167,7 +1234,10 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                                     <th><?php esc_html_e( 'Option none (optional component)', 'wpc-composite-products' ); ?></th>
                                     <td>
                                         <label>
-                                            <input type="text" class="regular-text" name="wooco_localization[option_none]" value="<?php echo esc_attr( self::localization( 'option_none' ) ); ?>" placeholder="<?php esc_attr_e( 'No, thanks. I don\'t need this', 'wpc-composite-products' ); ?>"/>
+                                            <input type="text" class="regular-text"
+                                                   name="wooco_localization[option_none]"
+                                                   value="<?php echo esc_attr( self::localization( 'option_none' ) ); ?>"
+                                                   placeholder="<?php esc_attr_e( 'No, thanks. I don\'t need this', 'wpc-composite-products' ); ?>"/>
                                         </label>
                                         <span class="description"><?php esc_html_e( 'Text to display for showing a "Don\'t choose any product" option.', 'wpc-composite-products' ); ?></span>
                                     </td>
@@ -1176,7 +1246,10 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                                     <th><?php esc_html_e( 'Option none (required component)', 'wpc-composite-products' ); ?></th>
                                     <td>
                                         <label>
-                                            <input type="text" class="regular-text" name="wooco_localization[option_none_required]" value="<?php echo esc_attr( self::localization( 'option_none_required' ) ); ?>" placeholder="<?php esc_attr_e( 'Please make your choice here', 'wpc-composite-products' ); ?>"/>
+                                            <input type="text" class="regular-text"
+                                                   name="wooco_localization[option_none_required]"
+                                                   value="<?php echo esc_attr( self::localization( 'option_none_required' ) ); ?>"
+                                                   placeholder="<?php esc_attr_e( 'Please make your choice here', 'wpc-composite-products' ); ?>"/>
                                         </label>
                                         <span class="description"><?php esc_html_e( 'Text to display for showing a "Don\'t choose any product" option.', 'wpc-composite-products' ); ?></span>
                                     </td>
@@ -1185,7 +1258,9 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                                     <th><?php esc_html_e( 'Total text', 'wpc-composite-products' ); ?></th>
                                     <td>
                                         <label>
-                                            <input type="text" name="wooco_localization[total]" class="regular-text" value="<?php echo esc_attr( self::localization( 'total' ) ); ?>" placeholder="<?php esc_attr_e( 'Total price:', 'wpc-composite-products' ); ?>"/>
+                                            <input type="text" name="wooco_localization[total]" class="regular-text"
+                                                   value="<?php echo esc_attr( self::localization( 'total' ) ); ?>"
+                                                   placeholder="<?php esc_attr_e( 'Total price:', 'wpc-composite-products' ); ?>"/>
                                         </label>
                                     </td>
                                 </tr>
@@ -1193,7 +1268,9 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                                     <th><?php esc_html_e( 'Selected text', 'wpc-composite-products' ); ?></th>
                                     <td>
                                         <label>
-                                            <input type="text" name="wooco_localization[selected]" class="regular-text" value="<?php echo esc_attr( self::localization( 'selected' ) ); ?>" placeholder="<?php esc_attr_e( 'Selected:', 'wpc-composite-products' ); ?>"/>
+                                            <input type="text" name="wooco_localization[selected]" class="regular-text"
+                                                   value="<?php echo esc_attr( self::localization( 'selected' ) ); ?>"
+                                                   placeholder="<?php esc_attr_e( 'Selected:', 'wpc-composite-products' ); ?>"/>
                                         </label>
                                     </td>
                                 </tr>
@@ -1201,7 +1278,9 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                                     <th><?php esc_html_e( 'Saved text', 'wpc-composite-products' ); ?></th>
                                     <td>
                                         <label>
-                                            <input type="text" name="wooco_localization[saved]" class="regular-text" value="<?php echo esc_attr( self::localization( 'saved' ) ); ?>" placeholder="<?php esc_attr_e( '(saved [d])', 'wpc-composite-products' ); ?>"/>
+                                            <input type="text" name="wooco_localization[saved]" class="regular-text"
+                                                   value="<?php echo esc_attr( self::localization( 'saved' ) ); ?>"
+                                                   placeholder="<?php esc_attr_e( '(saved [d])', 'wpc-composite-products' ); ?>"/>
                                         </label>
                                         <span class="description"><?php esc_html_e( 'Use [d] to show the saved percentage.', 'wpc-composite-products' ); ?></span>
                                     </td>
@@ -1210,7 +1289,9 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                                     <th><?php esc_html_e( 'Quantity label', 'wpc-composite-products' ); ?></th>
                                     <td>
                                         <label>
-                                            <input type="text" class="regular-text" name="wooco_localization[qty_label]" value="<?php echo esc_attr( self::localization( 'qty_label' ) ); ?>" placeholder="<?php esc_attr_e( 'Qty:', 'wpc-composite-products' ); ?>"/>
+                                            <input type="text" class="regular-text" name="wooco_localization[qty_label]"
+                                                   value="<?php echo esc_attr( self::localization( 'qty_label' ) ); ?>"
+                                                   placeholder="<?php esc_attr_e( 'Qty:', 'wpc-composite-products' ); ?>"/>
                                         </label>
                                     </td>
                                 </tr>
@@ -1224,13 +1305,19 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                                     <td>
                                         <div style="margin-bottom: 5px">
                                             <label>
-                                                <input type="text" class="regular-text" name="wooco_localization[button_select]" value="<?php echo esc_attr( self::localization( 'button_select' ) ); ?>" placeholder="<?php esc_attr_e( 'Select options', 'wpc-composite-products' ); ?>"/>
+                                                <input type="text" class="regular-text"
+                                                       name="wooco_localization[button_select]"
+                                                       value="<?php echo esc_attr( self::localization( 'button_select' ) ); ?>"
+                                                       placeholder="<?php esc_attr_e( 'Select options', 'wpc-composite-products' ); ?>"/>
                                             </label>
                                             <span class="description"><?php esc_html_e( 'For purchasable composites.', 'wpc-composite-products' ); ?></span>
                                         </div>
                                         <div>
                                             <label>
-                                                <input type="text" class="regular-text" name="wooco_localization[button_read]" value="<?php echo esc_attr( self::localization( 'button_read' ) ); ?>" placeholder="<?php esc_attr_e( 'Read more', 'wpc-composite-products' ); ?>"/>
+                                                <input type="text" class="regular-text"
+                                                       name="wooco_localization[button_read]"
+                                                       value="<?php echo esc_attr( self::localization( 'button_read' ) ); ?>"
+                                                       placeholder="<?php esc_attr_e( 'Read more', 'wpc-composite-products' ); ?>"/>
                                             </label>
                                             <span class="description"><?php esc_html_e( 'For unpurchasable composites.', 'wpc-composite-products' ); ?></span>
                                         </div>
@@ -1240,7 +1327,10 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                                     <th><?php esc_html_e( 'Single product page', 'wpc-composite-products' ); ?></th>
                                     <td>
                                         <label>
-                                            <input type="text" class="regular-text" name="wooco_localization[button_single]" value="<?php echo esc_attr( self::localization( 'button_single' ) ); ?>" placeholder="<?php esc_attr_e( 'Add to cart', 'wpc-composite-products' ); ?>"/>
+                                            <input type="text" class="regular-text"
+                                                   name="wooco_localization[button_single]"
+                                                   value="<?php echo esc_attr( self::localization( 'button_single' ) ); ?>"
+                                                   placeholder="<?php esc_attr_e( 'Add to cart', 'wpc-composite-products' ); ?>"/>
                                         </label>
                                     </td>
                                 </tr>
@@ -1253,7 +1343,10 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                                     <th><?php esc_html_e( 'Components', 'wpc-composite-products' ); ?></th>
                                     <td>
                                         <label>
-                                            <input type="text" class="regular-text" name="wooco_localization[cart_components]" value="<?php echo esc_attr( self::localization( 'cart_components' ) ); ?>" placeholder="<?php esc_attr_e( 'Components', 'wpc-composite-products' ); ?>"/>
+                                            <input type="text" class="regular-text"
+                                                   name="wooco_localization[cart_components]"
+                                                   value="<?php echo esc_attr( self::localization( 'cart_components' ) ); ?>"
+                                                   placeholder="<?php esc_attr_e( 'Components', 'wpc-composite-products' ); ?>"/>
                                         </label>
                                     </td>
                                 </tr>
@@ -1262,8 +1355,12 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
 										esc_html_e( 'Components: %s', 'wpc-composite-products' ); ?></th>
                                     <td>
                                         <label>
-                                            <input type="text" class="regular-text" name="wooco_localization[cart_components_s]" value="<?php echo esc_attr( self::localization( 'cart_components_s' ) ); ?>" placeholder="<?php /* translators: components */
-											esc_attr_e( 'Components: %s', 'wpc-composite-products' ); ?>"/> </label>
+                                            <input type="text" class="regular-text"
+                                                   name="wooco_localization[cart_components_s]"
+                                                   value="<?php echo esc_attr( self::localization( 'cart_components_s' ) ); ?>"
+                                                   placeholder="<?php /* translators: components */
+											       esc_attr_e( 'Components: %s', 'wpc-composite-products' ); ?>"/>
+                                        </label>
                                     </td>
                                 </tr>
                                 <tr>
@@ -1271,8 +1368,12 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
 										esc_html_e( 'Composite: %s', 'wpc-composite-products' ); ?></th>
                                     <td>
                                         <label>
-                                            <input type="text" class="regular-text" name="wooco_localization[cart_composite_s]" value="<?php echo esc_attr( self::localization( 'cart_composite_s' ) ); ?>" placeholder="<?php /* translators: composite */
-											esc_attr_e( 'Composite: %s', 'wpc-composite-products' ); ?>"/> </label>
+                                            <input type="text" class="regular-text"
+                                                   name="wooco_localization[cart_composite_s]"
+                                                   value="<?php echo esc_attr( self::localization( 'cart_composite_s' ) ); ?>"
+                                                   placeholder="<?php /* translators: composite */
+											       esc_attr_e( 'Composite: %s', 'wpc-composite-products' ); ?>"/>
+                                        </label>
                                     </td>
                                 </tr>
                                 <tr class="heading">
@@ -1284,7 +1385,10 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                                     <th><?php esc_html_e( 'Require selection', 'wpc-composite-products' ); ?></th>
                                     <td>
                                         <label>
-                                            <input type="text" class="large-text" name="wooco_localization[alert_selection]" value="<?php echo esc_attr( self::localization( 'alert_selection' ) ); ?>" placeholder="<?php esc_attr_e( 'Please choose a purchasable product for the component [name] before adding this composite to the cart.', 'wpc-composite-products' ); ?>"/>
+                                            <input type="text" class="large-text"
+                                                   name="wooco_localization[alert_selection]"
+                                                   value="<?php echo esc_attr( self::localization( 'alert_selection' ) ); ?>"
+                                                   placeholder="<?php esc_attr_e( 'Please choose a purchasable product for the component [name] before adding this composite to the cart.', 'wpc-composite-products' ); ?>"/>
                                         </label>
                                     </td>
                                 </tr>
@@ -1292,7 +1396,9 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                                     <th><?php esc_html_e( 'Different selection', 'wpc-composite-products' ); ?></th>
                                     <td>
                                         <label>
-                                            <input type="text" class="large-text" name="wooco_localization[alert_same]" value="<?php echo esc_attr( self::localization( 'alert_same' ) ); ?>" placeholder="<?php esc_attr_e( 'Please select a different product for each component.', 'wpc-composite-products' ); ?>"/>
+                                            <input type="text" class="large-text" name="wooco_localization[alert_same]"
+                                                   value="<?php echo esc_attr( self::localization( 'alert_same' ) ); ?>"
+                                                   placeholder="<?php esc_attr_e( 'Please select a different product for each component.', 'wpc-composite-products' ); ?>"/>
                                         </label>
                                     </td>
                                 </tr>
@@ -1300,7 +1406,9 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                                     <th><?php esc_html_e( 'Whole component\'s quantity minimum required', 'wpc-composite-products' ); ?></th>
                                     <td>
                                         <label>
-                                            <input type="text" class="large-text" name="wooco_localization[alert_m_min]" value="<?php echo esc_attr( self::localization( 'alert_m_min' ) ); ?>" placeholder="<?php esc_attr_e( 'Please choose at least a total quantity of [min] products for the component [name].', 'wpc-composite-products' ); ?>"/>
+                                            <input type="text" class="large-text" name="wooco_localization[alert_m_min]"
+                                                   value="<?php echo esc_attr( self::localization( 'alert_m_min' ) ); ?>"
+                                                   placeholder="<?php esc_attr_e( 'Please choose at least a total quantity of [min] products for the component [name].', 'wpc-composite-products' ); ?>"/>
                                         </label>
                                     </td>
                                 </tr>
@@ -1308,7 +1416,9 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                                     <th><?php esc_html_e( 'Whole component\'s quantity maximum reached', 'wpc-composite-products' ); ?></th>
                                     <td>
                                         <label>
-                                            <input type="text" class="large-text" name="wooco_localization[alert_m_max]" value="<?php echo esc_attr( self::localization( 'alert_m_max' ) ); ?>" placeholder="<?php esc_attr_e( 'Sorry, you can only choose at max a total quantity of [max] products for the component [name].', 'wpc-composite-products' ); ?>"/>
+                                            <input type="text" class="large-text" name="wooco_localization[alert_m_max]"
+                                                   value="<?php echo esc_attr( self::localization( 'alert_m_max' ) ); ?>"
+                                                   placeholder="<?php esc_attr_e( 'Sorry, you can only choose at max a total quantity of [max] products for the component [name].', 'wpc-composite-products' ); ?>"/>
                                         </label>
                                     </td>
                                 </tr>
@@ -1316,7 +1426,9 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                                     <th><?php esc_html_e( 'Minimum required', 'wpc-composite-products' ); ?></th>
                                     <td>
                                         <label>
-                                            <input type="text" class="large-text" name="wooco_localization[alert_min]" value="<?php echo esc_attr( self::localization( 'alert_min' ) ); ?>" placeholder="<?php esc_attr_e( 'Please choose at least a total quantity of [min] products before adding this composite to the cart.', 'wpc-composite-products' ); ?>"/>
+                                            <input type="text" class="large-text" name="wooco_localization[alert_min]"
+                                                   value="<?php echo esc_attr( self::localization( 'alert_min' ) ); ?>"
+                                                   placeholder="<?php esc_attr_e( 'Please choose at least a total quantity of [min] products before adding this composite to the cart.', 'wpc-composite-products' ); ?>"/>
                                         </label>
                                     </td>
                                 </tr>
@@ -1324,7 +1436,9 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                                     <th><?php esc_html_e( 'Maximum reached', 'wpc-composite-products' ); ?></th>
                                     <td>
                                         <label>
-                                            <input type="text" class="large-text" name="wooco_localization[alert_max]" value="<?php echo esc_attr( self::localization( 'alert_max' ) ); ?>" placeholder="<?php esc_attr_e( 'Sorry, you can only choose at max a total quantity of [max] products before adding this composite to the cart.', 'wpc-composite-products' ); ?>"/>
+                                            <input type="text" class="large-text" name="wooco_localization[alert_max]"
+                                                   value="<?php echo esc_attr( self::localization( 'alert_max' ) ); ?>"
+                                                   placeholder="<?php esc_attr_e( 'Sorry, you can only choose at max a total quantity of [max] products before adding this composite to the cart.', 'wpc-composite-products' ); ?>"/>
                                         </label>
                                     </td>
                                 </tr>
@@ -1332,7 +1446,10 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                                     <th><?php esc_html_e( 'Total minimum required', 'wpc-composite-products' ); ?></th>
                                     <td>
                                         <label>
-                                            <input type="text" class="large-text" name="wooco_localization[alert_total_min]" value="<?php echo esc_attr( self::localization( 'alert_total_min' ) ); ?>" placeholder="<?php esc_attr_e( 'The total must meet the minimum amount of [min].', 'wpc-composite-products' ); ?>"/>
+                                            <input type="text" class="large-text"
+                                                   name="wooco_localization[alert_total_min]"
+                                                   value="<?php echo esc_attr( self::localization( 'alert_total_min' ) ); ?>"
+                                                   placeholder="<?php esc_attr_e( 'The total must meet the minimum amount of [min].', 'wpc-composite-products' ); ?>"/>
                                         </label>
                                     </td>
                                 </tr>
@@ -1340,7 +1457,10 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                                     <th><?php esc_html_e( 'Total maximum required', 'wpc-composite-products' ); ?></th>
                                     <td>
                                         <label>
-                                            <input type="text" class="large-text" name="wooco_localization[alert_total_max]" value="<?php echo esc_attr( self::localization( 'alert_total_max' ) ); ?>" placeholder="<?php esc_attr_e( 'The total must meet the maximum amount of [max].', 'wpc-composite-products' ); ?>"/>
+                                            <input type="text" class="large-text"
+                                                   name="wooco_localization[alert_total_max]"
+                                                   value="<?php echo esc_attr( self::localization( 'alert_total_max' ) ); ?>"
+                                                   placeholder="<?php esc_attr_e( 'The total must meet the maximum amount of [max].', 'wpc-composite-products' ); ?>"/>
                                         </label>
                                     </td>
                                 </tr>
@@ -1434,13 +1554,13 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
 											echo '<p class="description">' . esc_html__( 'Please wait until it has finished!', 'wpc-composite-products' ) . '</p>';
 											?>
                                             <script type="text/javascript">
-                                              (function($) {
-                                                $(function() {
-                                                  setTimeout(function() {
-                                                    window.location.href = '<?php echo esc_url_raw( admin_url( 'admin.php?page=wpclever-wooco&tab=tools&act=migrate&num=' . $num . '&paged=' . ( $paged + 1 ) ) ); ?>';
-                                                  }, 1000);
-                                                });
-                                              })(jQuery);
+                                                (function ($) {
+                                                    $(function () {
+                                                        setTimeout(function () {
+                                                            window.location.href = '<?php echo esc_url_raw( admin_url( 'admin.php?page=wpclever-wooco&tab=tools&act=migrate&num=' . $num . '&paged=' . ( $paged + 1 ) ) ); ?>';
+                                                        }, 1000);
+                                                    });
+                                                })(jQuery);
                                             </script>
 										<?php } else {
 											echo '<span style="color: #2271b1; font-weight: 700">' . esc_html__( 'Finished!', 'wpc-composite-products' ) . '</span>';
@@ -1457,7 +1577,8 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                         <div class="wpclever_settings_page_content_text">
                             <p>
                                 Get the Premium Version just $29!
-                                <a href="https://wpclever.net/downloads/composite-products?utm_source=pro&utm_medium=wooco&utm_campaign=wporg" target="_blank">https://wpclever.net/downloads/composite-products</a>
+                                <a href="https://wpclever.net/downloads/composite-products?utm_source=pro&utm_medium=wooco&utm_campaign=wporg"
+                                   target="_blank">https://wpclever.net/downloads/composite-products</a>
                             </p>
                             <p><strong>Extra features for Premium Version:</strong></p>
                             <ul style="margin-bottom: 0">
@@ -1474,12 +1595,15 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                     <div class="wpclever_settings_page_suggestion_content">
                         <div>
                             To display custom engaging real-time messages on any wished positions, please install
-                            <a href="https://wordpress.org/plugins/wpc-smart-messages/" target="_blank">WPC Smart Messages</a> plugin. It's free!
+                            <a href="https://wordpress.org/plugins/wpc-smart-messages/" target="_blank">WPC Smart
+                                Messages</a> plugin. It's free!
                         </div>
                         <div>
                             Wanna save your precious time working on variations? Try our brand-new free plugin
-                            <a href="https://wordpress.org/plugins/wpc-variation-bulk-editor/" target="_blank">WPC Variation Bulk Editor</a> and
-                            <a href="https://wordpress.org/plugins/wpc-variation-duplicator/" target="_blank">WPC Variation Duplicator</a>.
+                            <a href="https://wordpress.org/plugins/wpc-variation-bulk-editor/" target="_blank">WPC
+                                Variation Bulk Editor</a> and
+                            <a href="https://wordpress.org/plugins/wpc-variation-duplicator/" target="_blank">WPC
+                                Variation Duplicator</a>.
                         </div>
                     </div>
                 </div>
@@ -2464,15 +2588,22 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                                 <option value="include" <?php selected( $pricing, 'include' ); ?>><?php esc_html_e( 'Include base price', 'wpc-composite-products' ); ?></option>
                                 <option value="exclude" <?php selected( $pricing, 'exclude' ); ?>><?php esc_html_e( 'Exclude base price', 'wpc-composite-products' ); ?></option>
                             </select>
-                            <span class="woocommerce-help-tip" data-tip="<?php esc_attr_e( '"Base price" is the price set in the General tab. When "Only base price" is chosen, the total price won\'t change despite the price changes in variable components.', 'wpc-composite-products' ); ?>"></span>
+                            <span class="woocommerce-help-tip"
+                                  data-tip="<?php esc_attr_e( '"Base price" is the price set in the General tab. When "Only base price" is chosen, the total price won\'t change despite the price changes in variable components.', 'wpc-composite-products' ); ?>"></span>
                             <span style="color: #c9356e">* <?php esc_html_e( 'Always put a price in the General tab to display the Add to Cart button. This is also the base price.', 'wpc-composite-products' ); ?></span>
                         </td>
                     </tr>
                     <tr class="wooco_tr_space">
                         <th><?php esc_html_e( 'Discount', 'wpc-composite-products' ); ?></th>
                         <td style="vertical-align: middle; line-height: 30px;">
-                            <label for="wooco_discount_percent"></label><input id="wooco_discount_percent" name="wooco_discount_percent" type="number" min="0.0001" step="0.0001" max="99.9999" value="<?php echo esc_attr( get_post_meta( $product_id, 'wooco_discount_percent', true ) ?: '' ); ?>" style="width: 80px"/>%.
-                            <span class="woocommerce-help-tip" data-tip="<?php esc_attr_e( 'The universal percentage discount will be applied equally on each component\'s price, not on the total.', 'wpc-composite-products' ); ?>"></span>
+                            <label for="wooco_discount_percent"></label><input id="wooco_discount_percent"
+                                                                               name="wooco_discount_percent"
+                                                                               type="number" min="0.0001" step="0.0001"
+                                                                               max="99.9999"
+                                                                               value="<?php echo esc_attr( get_post_meta( $product_id, 'wooco_discount_percent', true ) ?: '' ); ?>"
+                                                                               style="width: 80px"/>%.
+                            <span class="woocommerce-help-tip"
+                                  data-tip="<?php esc_attr_e( 'The universal percentage discount will be applied equally on each component\'s price, not on the total.', 'wpc-composite-products' ); ?>"></span>
                         </td>
                     </tr>
                     <tr class="wooco_tr_space">
@@ -2497,37 +2628,49 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                         <th><?php esc_html_e( 'Quantity', 'wpc-composite-products' ); ?></th>
                         <td style="vertical-align: middle; line-height: 30px;">
                             Min <label>
-                                <input name="wooco_qty_min" type="number" style="width: 80px" min="0" step="<?php echo esc_attr( $step ); ?>" value="<?php echo esc_attr( $min ); ?>"/>
+                                <input name="wooco_qty_min" type="number" style="width: 80px" min="0"
+                                       step="<?php echo esc_attr( $step ); ?>" value="<?php echo esc_attr( $min ); ?>"/>
                             </label> Max <label>
-                                <input name="wooco_qty_max" type="number" min="0" style="width: 80px" step="<?php echo esc_attr( $step ); ?>" value="<?php echo esc_attr( $max ); ?>"/>
+                                <input name="wooco_qty_max" type="number" min="0" style="width: 80px"
+                                       step="<?php echo esc_attr( $step ); ?>" value="<?php echo esc_attr( $max ); ?>"/>
                             </label>
                         </td>
                     </tr>
                     <tr class="wooco_tr_space">
                         <th><?php esc_html_e( 'Total limits', 'wpc-composite-products' ); ?></th>
                         <td>
-                            <input id="wooco_total_limits" name="wooco_total_limits" type="checkbox" <?php echo( get_post_meta( $product_id, 'wooco_total_limits', true ) === 'on' ? 'checked' : '' ); ?>/>
+                            <input id="wooco_total_limits" name="wooco_total_limits"
+                                   type="checkbox" <?php echo( get_post_meta( $product_id, 'wooco_total_limits', true ) === 'on' ? 'checked' : '' ); ?>/>
                             <label for="wooco_total_limits"><?php esc_html_e( 'Configure total limits for the current composite.', 'wpc-composite-products' ); ?></label>
                             <span class="wooco_show_if_total_limits">
-                                        Min <label for="wooco_total_limits_min"></label><input id="wooco_total_limits_min" name="wooco_total_limits_min" type="number" min="0" style="width: 80px" value="<?php echo esc_attr( get_post_meta( $product_id, 'wooco_total_limits_min', true ) ); ?>"/>
-                                        Max <label for="wooco_total_limits_max"></label><input id="wooco_total_limits_max" name="wooco_total_limits_max" type="number" min="0" style="width: 80px" value="<?php echo esc_attr( get_post_meta( $product_id, 'wooco_total_limits_max', true ) ); ?>"/> <?php echo esc_html( get_woocommerce_currency_symbol() ); ?>
+                                        Min <label for="wooco_total_limits_min"></label><input
+                                        id="wooco_total_limits_min" name="wooco_total_limits_min" type="number" min="0"
+                                        style="width: 80px"
+                                        value="<?php echo esc_attr( get_post_meta( $product_id, 'wooco_total_limits_min', true ) ); ?>"/>
+                                        Max <label for="wooco_total_limits_max"></label><input
+                                        id="wooco_total_limits_max" name="wooco_total_limits_max" type="number" min="0"
+                                        style="width: 80px"
+                                        value="<?php echo esc_attr( get_post_meta( $product_id, 'wooco_total_limits_max', true ) ); ?>"/> <?php echo esc_html( get_woocommerce_currency_symbol() ); ?>
                                     </span>
                         </td>
                     </tr>
                     <tr class="wooco_tr_space">
                         <th><?php esc_html_e( 'Same products', 'wpc-composite-products' ); ?></th>
                         <td>
-                            <label for="wooco_same_products"></label><select id="wooco_same_products" name="wooco_same_products">
+                            <label for="wooco_same_products"></label><select id="wooco_same_products"
+                                                                             name="wooco_same_products">
                                 <option value="allow" <?php selected( $same_products, 'allow' ); ?>><?php esc_html_e( 'Allow', 'wpc-composite-products' ); ?></option>
                                 <option value="do_not_allow" <?php selected( $same_products, 'do_not_allow' ); ?>><?php esc_html_e( 'Do not allow', 'wpc-composite-products' ); ?></option>
                             </select>
-                            <span class="woocommerce-help-tip" data-tip="<?php esc_attr_e( 'Allow/Do not allow the buyer to choose the same products in the components.', 'wpc-composite-products' ); ?>"></span>
+                            <span class="woocommerce-help-tip"
+                                  data-tip="<?php esc_attr_e( 'Allow/Do not allow the buyer to choose the same products in the components.', 'wpc-composite-products' ); ?>"></span>
                         </td>
                     </tr>
                     <tr class="wooco_tr_space">
                         <th><?php esc_html_e( 'Shipping fee', 'wpc-composite-products' ); ?></th>
                         <td>
-                            <label for="wooco_shipping_fee"></label><select id="wooco_shipping_fee" name="wooco_shipping_fee">
+                            <label for="wooco_shipping_fee"></label><select id="wooco_shipping_fee"
+                                                                            name="wooco_shipping_fee">
                                 <option value="whole" <?php selected( $shipping_fee, 'whole' ); ?>><?php esc_html_e( 'Apply to the whole composite', 'wpc-composite-products' ); ?></option>
                                 <option value="each" <?php selected( $shipping_fee, 'each' ); ?>><?php esc_html_e( 'Apply to each component product', 'wpc-composite-products' ); ?></option>
                             </select>
@@ -2537,7 +2680,8 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                         <th><?php esc_html_e( 'Custom display price', 'wpc-composite-products' ); ?></th>
                         <td>
                             <label>
-                                <input type="text" name="wooco_custom_price" value="<?php echo esc_attr( get_post_meta( $product_id, 'wooco_custom_price', true ) ); ?>"/>
+                                <input type="text" name="wooco_custom_price"
+                                       value="<?php echo esc_attr( get_post_meta( $product_id, 'wooco_custom_price', true ) ); ?>"/>
                             </label> E.g: <code>From $10 to $100</code>
                         </td>
                     </tr>
@@ -2546,7 +2690,8 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                         <td>
                             <div class="w100">
                                 <label>
-                                    <textarea name="wooco_before_text"><?php echo esc_textarea( get_post_meta( $product_id, 'wooco_before_text', true ) ); ?></textarea>
+                                    <textarea
+                                            name="wooco_before_text"><?php echo esc_textarea( get_post_meta( $product_id, 'wooco_before_text', true ) ); ?></textarea>
                                 </label>
                             </div>
                         </td>
@@ -2556,7 +2701,8 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                         <td>
                             <div class="w100">
                                 <label>
-                                    <textarea name="wooco_after_text"><?php echo esc_textarea( get_post_meta( $product_id, 'wooco_after_text', true ) ); ?></textarea>
+                                    <textarea
+                                            name="wooco_after_text"><?php echo esc_textarea( get_post_meta( $product_id, 'wooco_after_text', true ) ); ?></textarea>
                                 </label>
                             </div>
                         </td>
@@ -2801,7 +2947,17 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
 
 				do_action( 'wooco_before_components', $product );
 				?>
-                <div class="<?php echo esc_attr( apply_filters( 'wooco_components_class', 'wooco_components wooco-components', $product ) ); ?>" data-percent="<?php echo esc_attr( $product->get_discount() ); ?>" data-min="<?php echo esc_attr( get_post_meta( $product_id, 'wooco_qty_min', true ) ); ?>" data-max="<?php echo esc_attr( get_post_meta( $product_id, 'wooco_qty_max', true ) ); ?>" data-price="<?php echo esc_attr( wc_get_price_to_display( $product ) ); ?>" data-regular-price="<?php echo esc_attr( wc_get_price_to_display( $product, [ 'price' => $product->get_regular_price() ] ) ); ?>" data-pricing="<?php echo esc_attr( $product->get_pricing() ); ?>" data-same="<?php echo esc_attr( get_post_meta( $product_id, 'wooco_same_products', true ) === 'do_not_allow' ? 'no' : 'yes' ); ?>" data-checkbox="<?php echo esc_attr( $checkbox ? 'yes' : 'no' ); ?>" data-total-min="<?php echo esc_attr( $total_limit && $total_limit_min ? $total_limit_min : 0 ); ?>" data-total-max="<?php echo esc_attr( $total_limit && $total_limit_max ? $total_limit_max : '-1' ); ?>">
+                <div class="<?php echo esc_attr( apply_filters( 'wooco_components_class', 'wooco_components wooco-components', $product ) ); ?>"
+                     data-percent="<?php echo esc_attr( $product->get_discount() ); ?>"
+                     data-min="<?php echo esc_attr( get_post_meta( $product_id, 'wooco_qty_min', true ) ); ?>"
+                     data-max="<?php echo esc_attr( get_post_meta( $product_id, 'wooco_qty_max', true ) ); ?>"
+                     data-price="<?php echo esc_attr( wc_get_price_to_display( $product ) ); ?>"
+                     data-regular-price="<?php echo esc_attr( wc_get_price_to_display( $product, [ 'price' => $product->get_regular_price() ] ) ); ?>"
+                     data-pricing="<?php echo esc_attr( $product->get_pricing() ); ?>"
+                     data-same="<?php echo esc_attr( get_post_meta( $product_id, 'wooco_same_products', true ) === 'do_not_allow' ? 'no' : 'yes' ); ?>"
+                     data-checkbox="<?php echo esc_attr( $checkbox ? 'yes' : 'no' ); ?>"
+                     data-total-min="<?php echo esc_attr( $total_limit && $total_limit_min ? $total_limit_min : 0 ); ?>"
+                     data-total-max="<?php echo esc_attr( $total_limit && $total_limit_max ? $total_limit_max : '-1' ); ?>">
 					<?php
 					foreach ( $components as $key => $component ) {
 						$component_type = $component['type'];
@@ -2887,7 +3043,15 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
 							if ( $component_required ) {
 								// have no product and required
 								?>
-                                <div class="wooco_component_product wooco_component_product_none" data-key="<?php echo esc_attr( $key ); ?>" data-name="<?php echo esc_attr( $component['name'] ); ?>" data-id="0" data-qty="<?php echo esc_attr( $component_qty ); ?>" data-m-min="<?php echo esc_attr( ! empty( $component['m_min'] ) ? (float) $component['m_min'] : '0' ); ?>" data-m-max="<?php echo esc_attr( ! empty( $component['m_max'] ) ? (float) $component['m_max'] : '10000' ); ?>" data-price="0" data-regular-price="0" data-new-price="0" data-required="yes" data-custom-qty="<?php echo esc_attr( $component_custom_qty ? 'yes' : 'no' ); ?>" data-multiple="<?php echo esc_attr( $component_multiple ? 'yes' : 'no' ); ?>"></div>
+                                <div class="wooco_component_product wooco_component_product_none"
+                                     data-key="<?php echo esc_attr( $key ); ?>"
+                                     data-name="<?php echo esc_attr( $component['name'] ); ?>" data-id="0"
+                                     data-qty="<?php echo esc_attr( $component_qty ); ?>"
+                                     data-m-min="<?php echo esc_attr( ! empty( $component['m_min'] ) ? (float) $component['m_min'] : '0' ); ?>"
+                                     data-m-max="<?php echo esc_attr( ! empty( $component['m_max'] ) ? (float) $component['m_max'] : '10000' ); ?>"
+                                     data-price="0" data-regular-price="0" data-new-price="0" data-required="yes"
+                                     data-custom-qty="<?php echo esc_attr( $component_custom_qty ? 'yes' : 'no' ); ?>"
+                                     data-multiple="<?php echo esc_attr( $component_multiple ? 'yes' : 'no' ); ?>"></div>
 								<?php
 							}
 						} else {
@@ -2917,12 +3081,22 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
 								'description'   => htmlentities( $option_none_description ),
 							], $component, $product );
 							?>
-                            <div class="wooco_component_product" data-key="<?php echo esc_attr( $key ); ?>" data-id="-1" data-qty="<?php echo esc_attr( $component['qty'] ); ?>" data-m-min="<?php echo esc_attr( ! empty( $component['m_min'] ) ? (float) $component['m_min'] : '0' ); ?>" data-m-max="<?php echo esc_attr( ! empty( $component['m_max'] ) ? (float) $component['m_max'] : '10000' ); ?>" data-price="0" data-regular-price="0" data-price-html="" data-name="<?php echo esc_attr( $component['name'] ); ?>" data-new-price="<?php echo esc_attr( $component_price ); ?>" data-required="<?php echo esc_attr( $component_required ? 'yes' : 'no' ); ?>" data-custom-qty="<?php echo esc_attr( $component_custom_qty ? 'yes' : 'no' ); ?>" data-multiple="<?php echo esc_attr( $component_multiple ? 'yes' : 'no' ); ?>">
+                            <div class="wooco_component_product" data-key="<?php echo esc_attr( $key ); ?>" data-id="-1"
+                                 data-qty="<?php echo esc_attr( $component['qty'] ); ?>"
+                                 data-m-min="<?php echo esc_attr( ! empty( $component['m_min'] ) ? (float) $component['m_min'] : '0' ); ?>"
+                                 data-m-max="<?php echo esc_attr( ! empty( $component['m_max'] ) ? (float) $component['m_max'] : '10000' ); ?>"
+                                 data-price="0" data-regular-price="0" data-price-html=""
+                                 data-name="<?php echo esc_attr( $component['name'] ); ?>"
+                                 data-new-price="<?php echo esc_attr( $component_price ); ?>"
+                                 data-required="<?php echo esc_attr( $component_required ? 'yes' : 'no' ); ?>"
+                                 data-custom-qty="<?php echo esc_attr( $component_custom_qty ? 'yes' : 'no' ); ?>"
+                                 data-multiple="<?php echo esc_attr( $component_multiple ? 'yes' : 'no' ); ?>">
 
 								<?php if ( $checkbox && $component_dropdown ) { ?>
                                     <div class="wooco_component_product_checkbox">
                                         <label>
-                                            <input class="wooco-checkbox" type="checkbox" <?php echo( apply_filters( 'wooco_component_checkbox_checked', $checked || $component_required, $component ) ? 'checked="checked"' : '' ); ?>
+                                            <input class="wooco-checkbox"
+                                                   type="checkbox" <?php echo( apply_filters( 'wooco_component_checkbox_checked', $checked || $component_required, $component ) ? 'checked="checked"' : '' ); ?>
 												<?php echo( apply_filters( 'wooco_component_checkbox_disabled', $component_required, $component ) ? 'disabled' : '' ); ?>/>
                                         </label>
                                     </div>
@@ -3112,7 +3286,8 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
 										}
 									} else { ?>
                                         <label for="<?php echo esc_attr( 'wooco_component_product_select_' . $order ); ?>"></label>
-                                        <select class="wooco_component_product_select" id="<?php echo esc_attr( 'wooco_component_product_select_' . $order ); ?>">
+                                        <select class="wooco_component_product_select"
+                                                id="<?php echo esc_attr( 'wooco_component_product_select_' . $order ); ?>">
 											<?php
 											if ( ! $checkbox && ( ! $component_required || $option_none_required ) && ! $one_required ) {
 												echo '<option value="-1" ' . self::data_attributes( $option_none_data ) . '>' . esc_html( $option_none_label ) . '</option>';
@@ -3684,5 +3859,10 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
 		}
 	}
 
-	return WPCleverWooco::instance();
+	function WPCleverWooco() {
+		return WPCleverWooco::instance();
+	}
+
+	// start
+	WPCleverWooco();
 }

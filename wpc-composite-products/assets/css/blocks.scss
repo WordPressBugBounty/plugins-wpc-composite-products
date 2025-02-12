@@ -1,0 +1,14 @@
+.wc-block-cart-items__row.wooco-component {
+  .wc-block-cart-item__remove-link {
+    display: none !important;
+  }
+
+  .wc-block-cart-item__quantity {
+    opacity: .5 !important;
+    pointer-events: none !important;
+  }
+
+  &.wooco-hide-component {
+    display: none !important;
+  }
+}
