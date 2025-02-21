@@ -37,7 +37,7 @@ class WPCleverWooco_Blocks_IntegrationInterface implements IntegrationInterface 
 
 		wp_set_script_translations(
 			'wooco-blocks',
-			'woo-product-bundle',
+			'wpc-composite-products',
 			WOOCO_DIR . 'languages'
 		);
 	}
@@ -131,7 +131,8 @@ if ( ! class_exists( 'WPCleverWooco_Blocks' ) ) {
 				}
 
 				if ( ! empty( $cart_item['wooco_parent_id'] ) ) {
-					$item_data['wooco_component'] = true;
+					$item_data['wooco_component']           = true;
+					$item_data['quantity_limits']->editable = false;
 
 					if ( ! $hide_composite_name ) {
 						$item_data['name'] = get_the_title( $cart_item['wooco_parent_id'] ) . apply_filters( 'wooco_name_separator', ' &rarr; ' ) . $item_data['name'];
