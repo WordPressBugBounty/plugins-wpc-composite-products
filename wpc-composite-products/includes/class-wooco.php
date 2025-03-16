@@ -58,11 +58,12 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
 			add_action( 'woocommerce_before_add_to_cart_button', [ $this, 'add_to_cart_button' ] );
 
 			// Add to cart
-			add_filter( 'woocommerce_add_to_cart_sold_individually_found_in_cart', [ $this, 'found_in_cart' ], 10, 2 );
-			add_filter( 'woocommerce_add_to_cart_validation', [ $this, 'add_to_cart_validation' ], 10, 3 );
-			add_action( 'woocommerce_add_to_cart', [ $this, 'add_to_cart' ], 10, 6 );
-			add_filter( 'woocommerce_add_cart_item_data', [ $this, 'add_cart_item_data' ], 10, 2 );
-			add_filter( 'woocommerce_get_cart_item_from_session', [ $this, 'get_cart_item_from_session' ], 10, 2 );
+			// Ensure it run before WPC Frequently Bought Together (priority: 10)
+			add_filter( 'woocommerce_add_to_cart_sold_individually_found_in_cart', [ $this, 'found_in_cart' ], 9, 2 );
+			add_filter( 'woocommerce_add_to_cart_validation', [ $this, 'add_to_cart_validation' ], 9, 3 );
+			add_action( 'woocommerce_add_to_cart', [ $this, 'add_to_cart' ], 9, 6 );
+			add_filter( 'woocommerce_add_cart_item_data', [ $this, 'add_cart_item_data' ], 9, 2 );
+			add_filter( 'woocommerce_get_cart_item_from_session', [ $this, 'get_cart_item_from_session' ], 9, 2 );
 
 			// Undo remove
 			add_action( 'woocommerce_restore_cart_item', [ $this, 'restore_cart_item' ] );
@@ -2671,7 +2672,8 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                         <td>
                             <label for="wooco_shipping_fee"></label><select id="wooco_shipping_fee"
                                                                             name="wooco_shipping_fee">
-                                <option value="whole" <?php selected( $shipping_fee, 'whole' ); ?>><?php esc_html_e( 'Apply to the whole composite', 'wpc-composite-products' ); ?></option>
+                                <option value="both" <?php selected( $shipping_fee, 'both' ); ?>><?php esc_html_e( 'Apply to both composite & component', 'wpc-composite-products' ); ?></option>
+                                <option value="whole" <?php selected( $shipping_fee, 'whole' ); ?>><?php esc_html_e( 'Apply to the main composite product', 'wpc-composite-products' ); ?></option>
                                 <option value="each" <?php selected( $shipping_fee, 'each' ); ?>><?php esc_html_e( 'Apply to each component product', 'wpc-composite-products' ); ?></option>
                             </select>
                         </td>
@@ -2796,7 +2798,7 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
 					if ( ! empty( $package['contents'] ) ) {
 						foreach ( $package['contents'] as $cart_item_key => $cart_item ) {
 							if ( ! empty( $cart_item['wooco_parent_id'] ) ) {
-								if ( get_post_meta( $cart_item['wooco_parent_id'], 'wooco_shipping_fee', true ) !== 'each' ) {
+								if ( get_post_meta( $cart_item['wooco_parent_id'], 'wooco_shipping_fee', true ) === 'whole' ) {
 									unset( $packages[ $package_key ]['contents'][ $cart_item_key ] );
 								}
 							}

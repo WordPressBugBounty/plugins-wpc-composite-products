@@ -3,8 +3,8 @@ Contributors: wpclever
 Donate link: https://wpclever.net
 Tags: woocommerce, wpc, composite, component, kits
 Tested up to: 6.7
-Version: 7.5.1
-Stable tag: 7.5.1
+Version: 7.5.2
+Stable tag: 7.5.2
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,6 +62,9 @@ Please try other plugins from us:
 5. Almost done! click Save and see the result
 
 == Changelog ==
+
+= 7.5.2 =
+* Fixed: Shipping fee
 
 = 7.5.1 =
 * Fixed: Minor JS/CSS issues
