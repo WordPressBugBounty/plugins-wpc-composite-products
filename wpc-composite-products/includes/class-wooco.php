@@ -616,6 +616,9 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
 				if ( isset( $components['wooco_components'] ) ) {
 					update_post_meta( $pid, 'wooco_components', self::sanitize_array( $components['wooco_components'] ) );
 				}
+
+				// delete cache
+				delete_transient( 'wooco_show_items_' . $pid );
 			}
 
 			wp_die();
@@ -2769,6 +2772,9 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
 			if ( isset( $_POST['wooco_after_text'] ) ) {
 				update_post_meta( $post_id, 'wooco_after_text', sanitize_post_field( 'post_content', $_POST['wooco_after_text'], $post_id, 'display' ) );
 			}
+
+			// delete cache
+			delete_transient( 'wooco_show_items_' . $post_id );
 		}
 
 		function add_to_cart_form() {
@@ -2910,467 +2916,481 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
 
 			do_action( 'wooco_before_wrap', $product );
 
-			if ( $components = $product->get_components() ) {
-				// get settings
-				$selector             = self::get_setting( 'selector', 'ddslick' );
-				$show_price           = self::get_setting( 'show_price', 'yes' ) === 'yes';
-				$show_availability    = self::get_setting( 'show_availability', 'yes' ) === 'yes';
-				$show_image           = self::get_setting( 'show_image', 'yes' ) === 'yes';
-				$checked              = self::get_setting( 'checked', 'yes' ) === 'yes';
-				$checkbox             = self::get_setting( 'checkbox', 'no' ) === 'yes';
-				$product_link         = self::get_setting( 'product_link', 'no' );
-				$option_none_required = self::get_setting( 'option_none_required', 'no' ) === 'yes';
-				$total_limit          = get_post_meta( $product_id, 'wooco_total_limits', true ) === 'on';
-				$total_limit_min      = get_post_meta( $product_id, 'wooco_total_limits_min', true );
-				$total_limit_max      = get_post_meta( $product_id, 'wooco_total_limits_max', true );
+			if ( ! self::enable_cache( 'show_items' ) || ( false === ( $show_items = get_transient( 'wooco_show_items_' . $product_id ) ) ) ) {
+				ob_start();
 
-				// option none image
-				$option_none_image = $option_none_image_full = self::get_setting( 'option_none_image', 'placeholder' ) !== 'none' ? wc_placeholder_img_src() : '';
+				if ( $components = $product->get_components() ) {
+					// get settings
+					$selector             = apply_filters( 'wooco_selector', self::get_setting( 'selector', 'ddslick' ) );
+					$show_price           = self::get_setting( 'show_price', 'yes' ) === 'yes';
+					$show_availability    = self::get_setting( 'show_availability', 'yes' ) === 'yes';
+					$show_image           = self::get_setting( 'show_image', 'yes' ) === 'yes';
+					$checked              = self::get_setting( 'checked', 'yes' ) === 'yes';
+					$checkbox             = self::get_setting( 'checkbox', 'no' ) === 'yes';
+					$product_link         = self::get_setting( 'product_link', 'no' );
+					$option_none_required = self::get_setting( 'option_none_required', 'no' ) === 'yes';
+					$total_limit          = get_post_meta( $product_id, 'wooco_total_limits', true ) === 'on';
+					$total_limit_min      = get_post_meta( $product_id, 'wooco_total_limits_min', true );
+					$total_limit_max      = get_post_meta( $product_id, 'wooco_total_limits_max', true );
 
-				if ( ( self::get_setting( 'option_none_image', 'placeholder' ) === 'product' ) && ( $product_image_id = $product->get_image_id() ) ) {
-					$product_image          = wp_get_attachment_image_src( $product_image_id, self::$image_size );
-					$product_image_full     = wp_get_attachment_image_src( $product_image_id, 'full' );
-					$option_none_image      = $product_image[0] ?? '';
-					$option_none_image_full = $product_image_full[0] ?? '';
-				}
+					// option none image
+					$option_none_image = $option_none_image_full = self::get_setting( 'option_none_image', 'placeholder' ) !== 'none' ? wc_placeholder_img_src() : '';
 
-				if ( ( self::get_setting( 'option_none_image', 'placeholder' ) === 'custom' ) && ( $option_none_image_id = self::get_setting( 'option_none_image_id' ) ) ) {
-					$custom_image           = wp_get_attachment_image_src( $option_none_image_id, self::$image_size );
-					$custom_image_full      = wp_get_attachment_image_src( $option_none_image_id, 'full' );
-					$option_none_image      = $custom_image[0] ?? '';
-					$option_none_image_full = $custom_image_full[0] ?? '';
-				}
+					if ( ( self::get_setting( 'option_none_image', 'placeholder' ) === 'product' ) && ( $product_image_id = $product->get_image_id() ) ) {
+						$product_image          = wp_get_attachment_image_src( $product_image_id, self::$image_size );
+						$product_image_full     = wp_get_attachment_image_src( $product_image_id, 'full' );
+						$option_none_image      = $product_image[0] ?? '';
+						$option_none_image_full = $product_image_full[0] ?? '';
+					}
 
-				echo '<div class="' . esc_attr( apply_filters( 'wooco_wrap_class', 'wooco_wrap wooco-wrap wooco-wrap-' . $product_id, $product ) ) . '" data-id="' . esc_attr( $product_id ) . '">';
+					if ( ( self::get_setting( 'option_none_image', 'placeholder' ) === 'custom' ) && ( $option_none_image_id = self::get_setting( 'option_none_image_id' ) ) ) {
+						$custom_image           = wp_get_attachment_image_src( $option_none_image_id, self::$image_size );
+						$custom_image_full      = wp_get_attachment_image_src( $option_none_image_id, 'full' );
+						$option_none_image      = $custom_image[0] ?? '';
+						$option_none_image_full = $custom_image_full[0] ?? '';
+					}
 
-				if ( $before_text = apply_filters( 'wooco_before_text', get_post_meta( $product_id, 'wooco_before_text', true ), $product_id ) ) {
-					echo '<div class="wooco_before_text wooco-before-text wooco-text">' . wp_kses_post( do_shortcode( $before_text ) ) . '</div>';
-				}
+					echo '<div class="' . esc_attr( apply_filters( 'wooco_wrap_class', 'wooco_wrap wooco-wrap wooco-wrap-' . $product_id, $product ) ) . '" data-id="' . esc_attr( $product_id ) . '">';
 
-				do_action( 'wooco_before_components', $product );
-				?>
-                <div class="<?php echo esc_attr( apply_filters( 'wooco_components_class', 'wooco_components wooco-components', $product ) ); ?>"
-                     data-percent="<?php echo esc_attr( $product->get_discount() ); ?>"
-                     data-min="<?php echo esc_attr( get_post_meta( $product_id, 'wooco_qty_min', true ) ); ?>"
-                     data-max="<?php echo esc_attr( get_post_meta( $product_id, 'wooco_qty_max', true ) ); ?>"
-                     data-price="<?php echo esc_attr( wc_get_price_to_display( $product ) ); ?>"
-                     data-regular-price="<?php echo esc_attr( wc_get_price_to_display( $product, [ 'price' => $product->get_regular_price() ] ) ); ?>"
-                     data-pricing="<?php echo esc_attr( $product->get_pricing() ); ?>"
-                     data-same="<?php echo esc_attr( get_post_meta( $product_id, 'wooco_same_products', true ) === 'do_not_allow' ? 'no' : 'yes' ); ?>"
-                     data-checkbox="<?php echo esc_attr( $checkbox ? 'yes' : 'no' ); ?>"
-                     data-total-min="<?php echo esc_attr( $total_limit && $total_limit_min ? $total_limit_min : 0 ); ?>"
-                     data-total-max="<?php echo esc_attr( $total_limit && $total_limit_max ? $total_limit_max : '-1' ); ?>">
-					<?php
-					foreach ( $components as $key => $component ) {
-						$component_type = $component['type'];
+					if ( $before_text = apply_filters( 'wooco_before_text', get_post_meta( $product_id, 'wooco_before_text', true ), $product_id ) ) {
+						echo '<div class="wooco_before_text wooco-before-text wooco-text">' . wp_kses_post( do_shortcode( $before_text ) ) . '</div>';
+					}
 
-						if ( $component_type === 'products' ) {
-							$component_val = $component['products'] ?? [];
-						} else {
-							$component_val = $component['other'] ?? [];
-						}
+					do_action( 'wooco_before_components', $product );
+					?>
+                    <div class="<?php echo esc_attr( apply_filters( 'wooco_components_class', 'wooco_components wooco-components', $product ) ); ?>"
+                         data-percent="<?php echo esc_attr( $product->get_discount() ); ?>"
+                         data-min="<?php echo esc_attr( get_post_meta( $product_id, 'wooco_qty_min', true ) ); ?>"
+                         data-max="<?php echo esc_attr( get_post_meta( $product_id, 'wooco_qty_max', true ) ); ?>"
+                         data-price="<?php echo esc_attr( wc_get_price_to_display( $product ) ); ?>"
+                         data-regular-price="<?php echo esc_attr( wc_get_price_to_display( $product, [ 'price' => $product->get_regular_price() ] ) ); ?>"
+                         data-pricing="<?php echo esc_attr( $product->get_pricing() ); ?>"
+                         data-same="<?php echo esc_attr( get_post_meta( $product_id, 'wooco_same_products', true ) === 'do_not_allow' ? 'no' : 'yes' ); ?>"
+                         data-checkbox="<?php echo esc_attr( $checkbox ? 'yes' : 'no' ); ?>"
+                         data-total-min="<?php echo esc_attr( $total_limit && $total_limit_min ? $total_limit_min : 0 ); ?>"
+                         data-total-max="<?php echo esc_attr( $total_limit && $total_limit_max ? $total_limit_max : '-1' ); ?>">
+						<?php
+						foreach ( $components as $key => $component ) {
+							$component_type = $component['type'];
 
-						$component_default = $component['default'] ?? 0;
+							if ( $component_type === 'products' ) {
+								$component_val = $component['products'] ?? [];
+							} else {
+								$component_val = $component['other'] ?? [];
+							}
 
-						if ( ! is_numeric( $component_default ) ) {
-							// sku
-							$component_default = wc_get_product_id_by_sku( $component_default );
-						}
+							$component_default = $component['default'] ?? 0;
 
-						$component_default    = absint( $df_products[ $order - 1 ] ?? $component_default );
-						$component_default    = apply_filters( 'wooco_component_default', $component_default, $component );
-						$component['default'] = $component_default;
-						$component_required   = isset( $component['optional'] ) && ( $component['optional'] === 'no' );
-						$component_multiple   = isset( $component['multiple'] ) && ( $component['multiple'] === 'yes' );
-						$component_qty        = (float) ( $component['qty'] ?? 1 );
-						$component_custom_qty = isset( $component['custom_qty'] ) && $component['custom_qty'] === 'yes';
-						$component_exclude    = $component['exclude'] ?? [];
-						$component_orderby    = (string) ( $component['orderby'] ?? 'default' );
-						$component_order      = (string) ( $component['order'] ?? 'default' );
-						$component_price      = isset( $component['price'] ) ? self::format_price( $component['price'] ) : '';
-						$component_products   = self::get_products( $component_type, $component_val, $component_orderby, $component_order, $component_exclude, $component_default, $component_qty, $component_price, $component_custom_qty );
-						$component_selector   = isset( $component['selector'] ) && $component['selector'] !== 'default' ? $component['selector'] : $selector;
+							if ( ! is_numeric( $component_default ) ) {
+								// sku
+								$component_default = wc_get_product_id_by_sku( $component_default );
+							}
 
-						// force set 'grid_3' if enable multiple
-						if ( $component_multiple && ! in_array( $component_selector, [
-								'list',
-								'grid_2',
-								'grid_3',
-								'grid_4'
-							] ) ) {
-							$component_selector = 'grid_3';
-						}
+							$component_default    = absint( $df_products[ $order - 1 ] ?? $component_default );
+							$component_default    = apply_filters( 'wooco_component_default', $component_default, $component );
+							$component['default'] = $component_default;
+							$component_required   = isset( $component['optional'] ) && ( $component['optional'] === 'no' );
+							$component_multiple   = isset( $component['multiple'] ) && ( $component['multiple'] === 'yes' );
+							$component_qty        = (float) ( $component['qty'] ?? 1 );
+							$component_custom_qty = isset( $component['custom_qty'] ) && $component['custom_qty'] === 'yes';
+							$component_exclude    = $component['exclude'] ?? [];
+							$component_orderby    = (string) ( $component['orderby'] ?? 'default' );
+							$component_order      = (string) ( $component['order'] ?? 'default' );
+							$component_price      = isset( $component['price'] ) ? self::format_price( $component['price'] ) : '';
+							$component_products   = self::get_products( $component_type, $component_val, $component_orderby, $component_order, $component_exclude, $component_default, $component_qty, $component_price, $component_custom_qty );
+							$component_selector   = isset( $component['selector'] ) && $component['selector'] !== 'default' ? $component['selector'] : $selector;
 
-						$component_dropdown = ! in_array( $component_selector, [
-								'list',
-								'grid_2',
-								'grid_3',
-								'grid_4'
-							] ) && ! $component_multiple;
-						$component_class    = 'wooco_component wooco_component_' . $order . ' wooco_component_type_' . $component_type . ' wooco_component_has_' . ( $component_products ? count( $component_products ) : '0' ) . ' wooco_component_layout_' . $component_selector;
+							// force set 'grid_3' if enable multiple
+							if ( $component_multiple && ! in_array( $component_selector, [
+									'list',
+									'grid_2',
+									'grid_3',
+									'grid_4'
+								] ) ) {
+								$component_selector = 'grid_3';
+							}
 
-						if ( $component_required ) {
-							$component_class .= ' wooco_component_required';
-						}
+							$component_selector = apply_filters( 'wooco_component_selector', $component_selector, $component );
+							$component_dropdown = ! in_array( $component_selector, [
+									'list',
+									'grid_2',
+									'grid_3',
+									'grid_4'
+								] ) && ! $component_multiple;
+							$component_class    = 'wooco_component wooco_component_' . $order . ' wooco_component_type_' . $component_type . ' wooco_component_has_' . ( $component_products ? count( $component_products ) : '0' ) . ' wooco_component_layout_' . $component_selector;
 
-						if ( $option_none_required ) {
-							$component_class .= ' wooco_component_option_none_required';
-						}
-
-						if ( $component_multiple ) {
-							$component_class .= ' wooco_component_multiple';
-						}
-
-						if ( $component_custom_qty ) {
-							$component_class .= ' wooco_component_custom_qty';
-						}
-
-						if ( ! $component_products && ! $component_required ) {
-							// have no products and isn't required, hide it
-							continue;
-						}
-
-						echo '<div class="' . esc_attr( apply_filters( 'wooco_component_class', $component_class, $component, $order ) ) . '">';
-						do_action( 'wooco_before_component', $component, $order );
-
-						if ( ! empty( $component['name'] ) ) {
-							echo '<div class="wooco_component_name">' . esc_html( $component['name'] ) . '</div>';
-						}
-
-						if ( ! empty( $component['desc'] ) ) {
-							echo '<div class="wooco_component_desc">' . wp_kses_post( $component['desc'] ) . '</div>';
-						}
-
-						if ( ! $component_products ) {
 							if ( $component_required ) {
-								// have no product and required
+								$component_class .= ' wooco_component_required';
+							}
+
+							if ( $option_none_required ) {
+								$component_class .= ' wooco_component_option_none_required';
+							}
+
+							if ( $component_multiple ) {
+								$component_class .= ' wooco_component_multiple';
+							}
+
+							if ( $component_custom_qty ) {
+								$component_class .= ' wooco_component_custom_qty';
+							}
+
+							if ( ! $component_products && ! $component_required ) {
+								// have no products and isn't required, hide it
+								continue;
+							}
+
+							echo '<div class="' . esc_attr( apply_filters( 'wooco_component_class', $component_class, $component, $order ) ) . '">';
+							do_action( 'wooco_before_component', $component, $order );
+
+							if ( ! empty( $component['name'] ) ) {
+								echo '<div class="wooco_component_name">' . esc_html( $component['name'] ) . '</div>';
+							}
+
+							if ( ! empty( $component['desc'] ) ) {
+								echo '<div class="wooco_component_desc">' . wp_kses_post( $component['desc'] ) . '</div>';
+							}
+
+							if ( ! $component_products ) {
+								if ( $component_required ) {
+									// have no product and required
+									?>
+                                    <div class="wooco_component_product wooco_component_product_none"
+                                         data-key="<?php echo esc_attr( $key ); ?>"
+                                         data-name="<?php echo esc_attr( $component['name'] ); ?>" data-id="0"
+                                         data-qty="<?php echo esc_attr( $component_qty ); ?>"
+                                         data-m-min="<?php echo esc_attr( ! empty( $component['m_min'] ) ? (float) $component['m_min'] : '0' ); ?>"
+                                         data-m-max="<?php echo esc_attr( ! empty( $component['m_max'] ) ? (float) $component['m_max'] : '10000' ); ?>"
+                                         data-price="0" data-regular-price="0" data-new-price="0" data-required="yes"
+                                         data-custom-qty="<?php echo esc_attr( $component_custom_qty ? 'yes' : 'no' ); ?>"
+                                         data-multiple="<?php echo esc_attr( $component_multiple ? 'yes' : 'no' ); ?>"></div>
+									<?php
+								}
+							} else {
+								if ( ( count( $component_products ) === 1 ) && $component_required ) {
+									// have one product and required
+									$one_required = true;
+								} else {
+									$one_required = false;
+								}
+
+								$option_none_image       = apply_filters( 'wooco_option_none_img_src', $option_none_image, $component, $product );
+								$option_none_image_full  = apply_filters( 'wooco_option_none_img_full', $option_none_image_full, $component, $product );
+								$option_none             = $component_required ? self::localization( 'option_none_required', esc_html__( 'Please make your choice here', 'wpc-composite-products' ) ) : self::localization( 'option_none', esc_html__( 'No, thanks. I don\'t need this', 'wpc-composite-products' ) );
+								$option_none_label       = apply_filters( 'wooco_option_none', $option_none, $component, $product );
+								$option_none_description = apply_filters( 'wooco_option_none_description', wc_price( 0 ), $component, $product );
+								$option_none_data        = apply_filters( 'wooco_option_none_data', [
+									'id'            => '-1',
+									'pid'           => '-1',
+									'qty'           => '0',
+									'price'         => '',
+									'regular-price' => '',
+									'link'          => '',
+									'price-html'    => '',
+									'imagesrc'      => esc_url( $option_none_image ),
+									'imagefull'     => esc_url( $option_none_image_full ),
+									'availability'  => '',
+									'description'   => htmlentities( $option_none_description ),
+								], $component, $product );
 								?>
-                                <div class="wooco_component_product wooco_component_product_none"
-                                     data-key="<?php echo esc_attr( $key ); ?>"
-                                     data-name="<?php echo esc_attr( $component['name'] ); ?>" data-id="0"
-                                     data-qty="<?php echo esc_attr( $component_qty ); ?>"
+                                <div class="wooco_component_product" data-key="<?php echo esc_attr( $key ); ?>"
+                                     data-id="-1"
+                                     data-qty="<?php echo esc_attr( $component['qty'] ); ?>"
                                      data-m-min="<?php echo esc_attr( ! empty( $component['m_min'] ) ? (float) $component['m_min'] : '0' ); ?>"
                                      data-m-max="<?php echo esc_attr( ! empty( $component['m_max'] ) ? (float) $component['m_max'] : '10000' ); ?>"
-                                     data-price="0" data-regular-price="0" data-new-price="0" data-required="yes"
+                                     data-price="0" data-regular-price="0" data-price-html=""
+                                     data-name="<?php echo esc_attr( $component['name'] ); ?>"
+                                     data-new-price="<?php echo esc_attr( $component_price ); ?>"
+                                     data-required="<?php echo esc_attr( $component_required ? 'yes' : 'no' ); ?>"
                                      data-custom-qty="<?php echo esc_attr( $component_custom_qty ? 'yes' : 'no' ); ?>"
-                                     data-multiple="<?php echo esc_attr( $component_multiple ? 'yes' : 'no' ); ?>"></div>
-								<?php
-							}
-						} else {
-							if ( ( count( $component_products ) === 1 ) && $component_required ) {
-								// have one product and required
-								$one_required = true;
-							} else {
-								$one_required = false;
-							}
+                                     data-multiple="<?php echo esc_attr( $component_multiple ? 'yes' : 'no' ); ?>">
 
-							$option_none_image       = apply_filters( 'wooco_option_none_img_src', $option_none_image, $component, $product );
-							$option_none_image_full  = apply_filters( 'wooco_option_none_img_full', $option_none_image_full, $component, $product );
-							$option_none             = $component_required ? self::localization( 'option_none_required', esc_html__( 'Please make your choice here', 'wpc-composite-products' ) ) : self::localization( 'option_none', esc_html__( 'No, thanks. I don\'t need this', 'wpc-composite-products' ) );
-							$option_none_label       = apply_filters( 'wooco_option_none', $option_none, $component, $product );
-							$option_none_description = apply_filters( 'wooco_option_none_description', wc_price( 0 ), $component, $product );
-							$option_none_data        = apply_filters( 'wooco_option_none_data', [
-								'id'            => '-1',
-								'pid'           => '-1',
-								'qty'           => '0',
-								'price'         => '',
-								'regular-price' => '',
-								'link'          => '',
-								'price-html'    => '',
-								'imagesrc'      => esc_url( $option_none_image ),
-								'imagefull'     => esc_url( $option_none_image_full ),
-								'availability'  => '',
-								'description'   => htmlentities( $option_none_description ),
-							], $component, $product );
-							?>
-                            <div class="wooco_component_product" data-key="<?php echo esc_attr( $key ); ?>" data-id="-1"
-                                 data-qty="<?php echo esc_attr( $component['qty'] ); ?>"
-                                 data-m-min="<?php echo esc_attr( ! empty( $component['m_min'] ) ? (float) $component['m_min'] : '0' ); ?>"
-                                 data-m-max="<?php echo esc_attr( ! empty( $component['m_max'] ) ? (float) $component['m_max'] : '10000' ); ?>"
-                                 data-price="0" data-regular-price="0" data-price-html=""
-                                 data-name="<?php echo esc_attr( $component['name'] ); ?>"
-                                 data-new-price="<?php echo esc_attr( $component_price ); ?>"
-                                 data-required="<?php echo esc_attr( $component_required ? 'yes' : 'no' ); ?>"
-                                 data-custom-qty="<?php echo esc_attr( $component_custom_qty ? 'yes' : 'no' ); ?>"
-                                 data-multiple="<?php echo esc_attr( $component_multiple ? 'yes' : 'no' ); ?>">
-
-								<?php if ( $checkbox && $component_dropdown ) { ?>
-                                    <div class="wooco_component_product_checkbox">
-                                        <label>
-                                            <input class="wooco-checkbox"
-                                                   type="checkbox" <?php echo( apply_filters( 'wooco_component_checkbox_checked', $checked || $component_required, $component ) ? 'checked="checked"' : '' ); ?>
-												<?php echo( apply_filters( 'wooco_component_checkbox_disabled', $component_required, $component ) ? 'disabled' : '' ); ?>/>
-                                        </label>
-                                    </div>
-								<?php } ?>
-
-								<?php if ( ( $selector === 'select' ) && $show_image ) { ?>
-                                    <div class="wooco_component_product_image">
-										<?php echo '<img src="' . esc_url( $option_none_image ) . '"/>'; ?>
-                                    </div>
-								<?php } ?>
-
-                                <div class="wooco_component_product_selection">
-									<?php if ( ! $component_dropdown ) {
-										// list or grid
-										$_order = 1;
-
-										if ( $component_selector === 'list' ) {
-											echo '<div class="wooco_component_product_selection_list">';
-
-											foreach ( $component_products as $component_product ) {
-												if ( $component_product_obj = wc_get_product( $component_product['id'] ) ) {
-													$item_selected = apply_filters( 'wooco_component_product_selected', isset( $component['default'] ) && ( $component['default'] == $component_product['id'] ), $component_product, $component );
-													echo '<div class="wooco_component_product_selection_list_item wooco_component_product_selection_item ' . ( $item_selected || $one_required ? 'wooco_item_selected' : '' ) . '" ' . self::data_attributes( $component_product ) . '>';
-													echo '<div class="wooco_component_product_selection_list_item_choose"><span></span></div>';
-													echo '<div class="wooco_component_product_selection_list_item_image">' . wp_kses_post( $component_product_obj->get_image() ) . '</div>';
-													echo '<div class="wooco_component_product_selection_list_item_info">';
-													echo '<div class="wooco_component_product_selection_list_item_name">' . wp_kses_post( $component_product['name'] ) . '</div>';
-													echo '<div class="wooco_component_product_selection_list_item_desc">' . wp_kses_post( html_entity_decode( $component_product['description'] ) ) . '</div>';
-													echo '</div>';
-
-													if ( $component_custom_qty ) {
-														$min = 0;
-														$max = 1000;
-														$qty = $component['qty'];
-
-														if ( ! empty( $component['min'] ) ) {
-															$min = $component['min'];
-														}
-
-														if ( ! empty( $component['max'] ) ) {
-															$max = $component['max'];
-														}
-
-														if ( class_exists( 'WPCleverWoopq' ) && ( get_option( '_woopq_decimal', 'no' ) === 'yes' ) ) {
-															$step = get_option( '_woopq_step' ) ?: '1';
-														} else {
-															$step = '1';
-															$qty  = (int) $qty;
-															$min  = (int) $min;
-															$max  = (int) $max;
-														}
-
-														if ( ( $max_purchase = $component_product_obj->get_max_purchase_quantity() ) && ( $max_purchase > 0 ) && ( $max_purchase < $max ) ) {
-															// get_max_purchase_quantity can return -1
-															$max = $max_purchase;
-														}
-
-														echo '<div class="wooco_component_product_selection_list_item_qty wooco_component_product_selection_item_qty wooco-qty-wrap">';
-														echo '<span class="wooco-qty-label">' . esc_html( self::localization( 'qty_label', esc_html__( 'Qty:', 'wpc-composite-products' ) ) ) . '</span>';
-														echo '<span class="wooco-qty-input">';
-														echo '<span class="wooco_component_product_qty_btn wooco_component_product_qty_minus wooco-minus">-</span>';
-														echo woocommerce_quantity_input( [
-															'input_value' => $qty,
-															'min_value'   => $min,
-															'max_value'   => $max,
-															'wooco_qty'   => [
-																'input_value' => $qty,
-																'min_value'   => $min,
-																'max_value'   => $max
-															],
-															'classes'     => apply_filters( 'wooco_qty_classes', [
-																'input-text',
-																'wooco_component_product_qty_input',
-																'wooco_qty',
-																'qty',
-																'text'
-															], $component ),
-															'input_name'  => 'wooco_qty_' . $order . '_' . $_order
-															// compatible with WPC Product Quantity
-														], $component_product_obj, false );
-														echo '<span class="wooco_component_product_qty_btn wooco_component_product_qty_plus wooco-plus">+</span>';
-														echo '</span>';
-														echo '</div>';
-
-														//echo wp_kses_post( apply_filters( 'wooco_qty_input', $qty_input, $qty, $step, $min, $max ) );
-													}
-
-													if ( $product_link !== 'no' ) {
-														if ( $component_product_obj->is_visible() || apply_filters( 'wooco_hidden_product_link', false ) ) {
-															$quickview_id = is_a( $component_product_obj, 'WC_Product_Variation' ) && ( apply_filters( 'wooco_quickview_variation', 'default' ) === 'parent' ) ? $component_product_obj->get_parent_id() : $component_product['id'];
-															echo '<div class="wooco_component_product_selection_list_item_link"><a ' . ( $product_link === 'yes_popup' ? 'class="woosq-link" data-id="' . esc_attr( $quickview_id ) . '" data-context="wooco"' : 'class="wooco_component_product_selection_list_item_link"' ) . ' href="' . esc_url( $component_product_obj->get_permalink() ) . '" ' . ( $product_link === 'yes_blank' ? 'target="_blank"' : '' ) . '>' . esc_html( $component_product_obj->get_name() ) . '</a></div>';
-														}
-													}
-
-													echo '</div>';
-												}
-
-												$_order ++;
-											}
-
-											echo '</div>';
-										} else {
-											echo '<div class="wooco_component_product_selection_grid">';
-
-											foreach ( $component_products as $component_product ) {
-												if ( $component_product_obj = wc_get_product( $component_product['id'] ) ) {
-													$item_selected = apply_filters( 'wooco_component_product_selected', isset( $component['default'] ) && ( $component['default'] == $component_product['id'] ), $component_product, $component );
-													echo '<div class="wooco_component_product_selection_grid_item wooco_component_product_selection_item ' . ( $item_selected || $one_required ? 'wooco_item_selected' : '' ) . '" ' . self::data_attributes( $component_product ) . '>';
-													echo '<div class="wooco_component_product_selection_grid_item_image">' . wp_kses_post( $component_product_obj->get_image() ) . '</div>';
-													echo '<div class="wooco_component_product_selection_grid_item_info">';
-													echo '<div class="wooco_component_product_selection_grid_item_name">' . wp_kses_post( $component_product['name'] ) . '</div>';
-													echo '<div class="wooco_component_product_selection_grid_item_desc">' . wp_kses_post( html_entity_decode( $component_product['description'] ) ) . '</div>';
-
-													if ( $component_custom_qty ) {
-														$min = 0;
-														$max = 1000;
-														$qty = $component['qty'];
-
-														if ( ! empty( $component['min'] ) ) {
-															$min = $component['min'];
-														}
-
-														if ( ! empty( $component['max'] ) ) {
-															$max = $component['max'];
-														}
-
-														if ( class_exists( 'WPCleverWoopq' ) && ( get_option( '_woopq_decimal', 'no' ) === 'yes' ) ) {
-															$step = get_option( '_woopq_step' ) ?: '1';
-														} else {
-															$step = '1';
-															$qty  = (int) $qty;
-															$min  = (int) $min;
-															$max  = (int) $max;
-														}
-
-														if ( ( $max_purchase = $component_product_obj->get_max_purchase_quantity() ) && ( $max_purchase > 0 ) && ( $max_purchase < $max ) ) {
-															// get_max_purchase_quantity can return -1
-															$max = $max_purchase;
-														}
-
-														echo '<div class="wooco_component_product_selection_grid_item_qty wooco_component_product_selection_item_qty wooco-qty-wrap">';
-														echo '<span class="wooco-qty-label">' . esc_html( self::localization( 'qty_label', esc_html__( 'Qty:', 'wpc-composite-products' ) ) ) . '</span>';
-														echo '<span class="wooco-qty-input">';
-														echo '<span class="wooco_component_product_qty_btn wooco_component_product_qty_minus wooco-minus">-</span>';
-														echo woocommerce_quantity_input( [
-															'input_value' => $qty,
-															'min_value'   => $min,
-															'max_value'   => $max,
-															'wooco_qty'   => [
-																'input_value' => $qty,
-																'min_value'   => $min,
-																'max_value'   => $max
-															],
-															'classes'     => apply_filters( 'wooco_qty_classes', [
-																'input-text',
-																'wooco_component_product_qty_input',
-																'wooco_qty',
-																'qty',
-																'text'
-															], $component ),
-															'input_name'  => 'wooco_qty_' . $order . '_' . $_order
-															// compatible with WPC Product Quantity
-														], $component_product_obj, false );
-														echo '<span class="wooco_component_product_qty_btn wooco_component_product_qty_plus wooco-plus">+</span>';
-														echo '</span>';
-														echo '</div>';
-
-														//echo wp_kses_post( apply_filters( 'wooco_qty_input', $qty_input, $qty, $step, $min, $max ) );
-													}
-
-													echo '</div>';
-
-													if ( $product_link !== 'no' ) {
-														if ( $component_product_obj->is_visible() || apply_filters( 'wooco_hidden_product_link', false ) ) {
-															$quickview_id = is_a( $component_product_obj, 'WC_Product_Variation' ) && ( apply_filters( 'wooco_quickview_variation', 'default' ) === 'parent' ) ? $component_product_obj->get_parent_id() : $component_product['id'];
-															echo '<a ' . ( $product_link === 'yes_popup' ? 'class="wooco_component_product_selection_grid_item_link woosq-link" data-id="' . esc_attr( $quickview_id ) . '" data-context="wooco"' : 'class="wooco_component_product_selection_grid_item_link"' ) . ' href="' . esc_url( $component_product_obj->get_permalink() ) . '" ' . ( $product_link === 'yes_blank' ? 'target="_blank"' : '' ) . '>' . esc_html( $component_product_obj->get_name() ) . '</a>';
-														}
-													}
-
-													echo '</div>';
-												}
-
-												$_order ++;
-											}
-
-											echo '</div>';
-										}
-									} else { ?>
-                                        <label for="<?php echo esc_attr( 'wooco_component_product_select_' . $order ); ?>"></label>
-                                        <select class="wooco_component_product_select"
-                                                id="<?php echo esc_attr( 'wooco_component_product_select_' . $order ); ?>">
-											<?php
-											if ( ! $checkbox && ( ! $component_required || $option_none_required ) && ! $one_required ) {
-												echo '<option value="-1" ' . self::data_attributes( $option_none_data ) . '>' . esc_html( $option_none_label ) . '</option>';
-											}
-
-											foreach ( $component_products as $component_product ) {
-												echo '<option value="' . esc_attr( $component_product['purchasable'] === 'yes' ? $component_product['id'] : 0 ) . '" ' . self::data_attributes( $component_product ) . ' ' . selected( $component['default'], $component_product['id'], false ) . ' ' . esc_attr( $component_product['purchasable'] !== 'yes' ? 'disabled' : '' ) . '>' . esc_html( $component_product['name'] ) . '</option>';
-											}
-											?>
-                                        </select>
+									<?php if ( $checkbox && $component_dropdown ) { ?>
+                                        <div class="wooco_component_product_checkbox">
+                                            <label>
+                                                <input class="wooco-checkbox"
+                                                       type="checkbox" <?php echo( apply_filters( 'wooco_component_checkbox_checked', $checked || $component_required, $component ) ? 'checked="checked"' : '' ); ?>
+													<?php echo( apply_filters( 'wooco_component_checkbox_disabled', $component_required, $component ) ? 'disabled' : '' ); ?>/>
+                                            </label>
+                                        </div>
 									<?php } ?>
+
+									<?php if ( ( $component_selector === 'select' ) && $show_image ) { ?>
+                                        <div class="wooco_component_product_image">
+											<?php echo '<img src="' . esc_url( $option_none_image ) . '"/>'; ?>
+                                        </div>
+									<?php } ?>
+
+                                    <div class="wooco_component_product_selection">
+										<?php if ( ! $component_dropdown ) {
+											// list or grid
+											$_order = 1;
+
+											if ( $component_selector === 'list' ) {
+												echo '<div class="wooco_component_product_selection_list">';
+
+												foreach ( $component_products as $component_product ) {
+													if ( $component_product_obj = wc_get_product( $component_product['id'] ) ) {
+														$item_selected = apply_filters( 'wooco_component_product_selected', isset( $component['default'] ) && ( $component['default'] == $component_product['id'] ), $component_product, $component );
+														echo '<div class="wooco_component_product_selection_list_item wooco_component_product_selection_item ' . ( $item_selected || $one_required ? 'wooco_item_selected' : '' ) . '" ' . self::data_attributes( $component_product ) . '>';
+														echo '<div class="wooco_component_product_selection_list_item_choose"><span></span></div>';
+														echo '<div class="wooco_component_product_selection_list_item_image">' . wp_kses_post( $component_product_obj->get_image() ) . '</div>';
+														echo '<div class="wooco_component_product_selection_list_item_info">';
+														echo '<div class="wooco_component_product_selection_list_item_name">' . wp_kses_post( $component_product['name'] ) . '</div>';
+														echo '<div class="wooco_component_product_selection_list_item_desc">' . wp_kses_post( html_entity_decode( $component_product['description'] ) ) . '</div>';
+														echo '</div>';
+
+														if ( $component_custom_qty ) {
+															$min = 0;
+															$max = 1000;
+															$qty = $component['qty'];
+
+															if ( ! empty( $component['min'] ) ) {
+																$min = $component['min'];
+															}
+
+															if ( ! empty( $component['max'] ) ) {
+																$max = $component['max'];
+															}
+
+															if ( class_exists( 'WPCleverWoopq' ) && ( get_option( '_woopq_decimal', 'no' ) === 'yes' ) ) {
+																$step = get_option( '_woopq_step' ) ?: '1';
+															} else {
+																$step = '1';
+																$qty  = (int) $qty;
+																$min  = (int) $min;
+																$max  = (int) $max;
+															}
+
+															if ( ( $max_purchase = $component_product_obj->get_max_purchase_quantity() ) && ( $max_purchase > 0 ) && ( $max_purchase < $max ) ) {
+																// get_max_purchase_quantity can return -1
+																$max = $max_purchase;
+															}
+
+															echo '<div class="wooco_component_product_selection_list_item_qty wooco_component_product_selection_item_qty wooco-qty-wrap">';
+															echo '<span class="wooco-qty-label">' . esc_html( self::localization( 'qty_label', esc_html__( 'Qty:', 'wpc-composite-products' ) ) ) . '</span>';
+															echo '<span class="wooco-qty-input">';
+															echo '<span class="wooco_component_product_qty_btn wooco_component_product_qty_minus wooco-minus">-</span>';
+															echo woocommerce_quantity_input( [
+																'input_value' => $qty,
+																'min_value'   => $min,
+																'max_value'   => $max,
+																'wooco_qty'   => [
+																	'input_value' => $qty,
+																	'min_value'   => $min,
+																	'max_value'   => $max
+																],
+																'classes'     => apply_filters( 'wooco_qty_classes', [
+																	'input-text',
+																	'wooco_component_product_qty_input',
+																	'wooco_qty',
+																	'qty',
+																	'text'
+																], $component ),
+																'input_name'  => 'wooco_qty_' . $order . '_' . $_order
+																// compatible with WPC Product Quantity
+															], $component_product_obj, false );
+															echo '<span class="wooco_component_product_qty_btn wooco_component_product_qty_plus wooco-plus">+</span>';
+															echo '</span>';
+															echo '</div>';
+
+															//echo wp_kses_post( apply_filters( 'wooco_qty_input', $qty_input, $qty, $step, $min, $max ) );
+														}
+
+														if ( $product_link !== 'no' ) {
+															if ( $component_product_obj->is_visible() || apply_filters( 'wooco_hidden_product_link', false ) ) {
+																$quickview_id = is_a( $component_product_obj, 'WC_Product_Variation' ) && ( apply_filters( 'wooco_quickview_variation', 'default' ) === 'parent' ) ? $component_product_obj->get_parent_id() : $component_product['id'];
+																echo '<div class="wooco_component_product_selection_list_item_link"><a ' . ( $product_link === 'yes_popup' ? 'class="woosq-link" data-id="' . esc_attr( $quickview_id ) . '" data-context="wooco"' : 'class="wooco_component_product_selection_list_item_link"' ) . ' href="' . esc_url( $component_product_obj->get_permalink() ) . '" ' . ( $product_link === 'yes_blank' ? 'target="_blank"' : '' ) . '>' . esc_html( $component_product_obj->get_name() ) . '</a></div>';
+															}
+														}
+
+														echo '</div>';
+													}
+
+													$_order ++;
+												}
+
+												echo '</div>';
+											} else {
+												echo '<div class="wooco_component_product_selection_grid">';
+
+												foreach ( $component_products as $component_product ) {
+													if ( $component_product_obj = wc_get_product( $component_product['id'] ) ) {
+														$item_selected = apply_filters( 'wooco_component_product_selected', isset( $component['default'] ) && ( $component['default'] == $component_product['id'] ), $component_product, $component );
+														echo '<div class="wooco_component_product_selection_grid_item wooco_component_product_selection_item ' . ( $item_selected || $one_required ? 'wooco_item_selected' : '' ) . '" ' . self::data_attributes( $component_product ) . '>';
+														echo '<div class="wooco_component_product_selection_grid_item_image">' . wp_kses_post( $component_product_obj->get_image() ) . '</div>';
+														echo '<div class="wooco_component_product_selection_grid_item_info">';
+														echo '<div class="wooco_component_product_selection_grid_item_name">' . wp_kses_post( $component_product['name'] ) . '</div>';
+														echo '<div class="wooco_component_product_selection_grid_item_desc">' . wp_kses_post( html_entity_decode( $component_product['description'] ) ) . '</div>';
+
+														if ( $component_custom_qty ) {
+															$min = 0;
+															$max = 1000;
+															$qty = $component['qty'];
+
+															if ( ! empty( $component['min'] ) ) {
+																$min = $component['min'];
+															}
+
+															if ( ! empty( $component['max'] ) ) {
+																$max = $component['max'];
+															}
+
+															if ( class_exists( 'WPCleverWoopq' ) && ( get_option( '_woopq_decimal', 'no' ) === 'yes' ) ) {
+																$step = get_option( '_woopq_step' ) ?: '1';
+															} else {
+																$step = '1';
+																$qty  = (int) $qty;
+																$min  = (int) $min;
+																$max  = (int) $max;
+															}
+
+															if ( ( $max_purchase = $component_product_obj->get_max_purchase_quantity() ) && ( $max_purchase > 0 ) && ( $max_purchase < $max ) ) {
+																// get_max_purchase_quantity can return -1
+																$max = $max_purchase;
+															}
+
+															echo '<div class="wooco_component_product_selection_grid_item_qty wooco_component_product_selection_item_qty wooco-qty-wrap">';
+															echo '<span class="wooco-qty-label">' . esc_html( self::localization( 'qty_label', esc_html__( 'Qty:', 'wpc-composite-products' ) ) ) . '</span>';
+															echo '<span class="wooco-qty-input">';
+															echo '<span class="wooco_component_product_qty_btn wooco_component_product_qty_minus wooco-minus">-</span>';
+															echo woocommerce_quantity_input( [
+																'input_value' => $qty,
+																'min_value'   => $min,
+																'max_value'   => $max,
+																'wooco_qty'   => [
+																	'input_value' => $qty,
+																	'min_value'   => $min,
+																	'max_value'   => $max
+																],
+																'classes'     => apply_filters( 'wooco_qty_classes', [
+																	'input-text',
+																	'wooco_component_product_qty_input',
+																	'wooco_qty',
+																	'qty',
+																	'text'
+																], $component ),
+																'input_name'  => 'wooco_qty_' . $order . '_' . $_order
+																// compatible with WPC Product Quantity
+															], $component_product_obj, false );
+															echo '<span class="wooco_component_product_qty_btn wooco_component_product_qty_plus wooco-plus">+</span>';
+															echo '</span>';
+															echo '</div>';
+
+															//echo wp_kses_post( apply_filters( 'wooco_qty_input', $qty_input, $qty, $step, $min, $max ) );
+														}
+
+														echo '</div>';
+
+														if ( $product_link !== 'no' ) {
+															if ( $component_product_obj->is_visible() || apply_filters( 'wooco_hidden_product_link', false ) ) {
+																$quickview_id = is_a( $component_product_obj, 'WC_Product_Variation' ) && ( apply_filters( 'wooco_quickview_variation', 'default' ) === 'parent' ) ? $component_product_obj->get_parent_id() : $component_product['id'];
+																echo '<a ' . ( $product_link === 'yes_popup' ? 'class="wooco_component_product_selection_grid_item_link woosq-link" data-id="' . esc_attr( $quickview_id ) . '" data-context="wooco"' : 'class="wooco_component_product_selection_grid_item_link"' ) . ' href="' . esc_url( $component_product_obj->get_permalink() ) . '" ' . ( $product_link === 'yes_blank' ? 'target="_blank"' : '' ) . '>' . esc_html( $component_product_obj->get_name() ) . '</a>';
+															}
+														}
+
+														echo '</div>';
+													}
+
+													$_order ++;
+												}
+
+												echo '</div>';
+											}
+										} else { ?>
+                                            <label for="<?php echo esc_attr( 'wooco_component_product_select_' . $order ); ?>"></label>
+                                            <select class="wooco_component_product_select"
+                                                    id="<?php echo esc_attr( 'wooco_component_product_select_' . $order ); ?>">
+												<?php
+												if ( ! $checkbox && ( ! $component_required || $option_none_required ) && ! $one_required ) {
+													echo '<option value="-1" ' . self::data_attributes( $option_none_data ) . '>' . esc_html( $option_none_label ) . '</option>';
+												}
+
+												foreach ( $component_products as $component_product ) {
+													echo '<option value="' . esc_attr( $component_product['purchasable'] === 'yes' ? $component_product['id'] : 0 ) . '" ' . self::data_attributes( $component_product ) . ' ' . selected( $component['default'], $component_product['id'], false ) . ' ' . esc_attr( $component_product['purchasable'] !== 'yes' ? 'disabled' : '' ) . '>' . esc_html( $component_product['name'] ) . '</option>';
+												}
+												?>
+                                            </select>
+										<?php } ?>
+                                    </div>
+
+									<?php
+									if ( ( $component_selector === 'select' ) && $show_availability ) {
+										echo '<div class="wooco_component_product_availability"></div>';
+									}
+
+									if ( ( $component_selector === 'select' ) && $show_price ) {
+										echo '<div class="wooco_component_product_price"></div>';
+									}
+
+									if ( $component_custom_qty && $component_dropdown ) {
+										$min = 0;
+										$max = 1000;
+										$qty = $component['qty'];
+
+										if ( ! empty( $component['min'] ) ) {
+											$min = $component['min'];
+										}
+
+										if ( ! empty( $component['max'] ) ) {
+											$max = $component['max'];
+										}
+
+										if ( class_exists( 'WPCleverWoopq' ) && ( get_option( '_woopq_decimal', 'no' ) === 'yes' ) ) {
+											$step = get_option( '_woopq_step' ) ?: '1';
+										} else {
+											$step = '1';
+											$qty  = (int) $qty;
+											$min  = (int) $min;
+											$max  = (int) $max;
+										}
+
+										echo '<div class="wooco_component_product_qty wooco-qty-wrap">';
+										echo '<span class="wooco-qty-label">' . esc_html( self::localization( 'qty_label', esc_html__( 'Qty:', 'wpc-composite-products' ) ) ) . '</span>';
+										echo '<span class="wooco-qty-input">';
+										echo '<span class="wooco_component_product_qty_btn wooco_component_product_qty_minus wooco-minus">-</span>';
+										echo '<input class="wooco_component_product_qty_input wooco_qty input-text text qty" type="number" min="' . esc_attr( $min ) . '" max="' . esc_attr( $max ) . '" step="' . esc_attr( $step ) . '" value="' . esc_attr( $qty ) . '"/>';
+										echo '<span class="wooco_component_product_qty_btn wooco_component_product_qty_plus wooco-plus">+</span>';
+										echo '</span>';
+										echo '</div>';
+
+										//echo wp_kses_post( apply_filters( 'wooco_qty_input', $qty_input, $qty, $step, $min, $max ) );
+									}
+									?>
                                 </div>
-
 								<?php
-								if ( ( $selector === 'select' ) && $show_availability ) {
-									echo '<div class="wooco_component_product_availability"></div>';
-								}
+							}
 
-								if ( ( $selector === 'select' ) && $show_price ) {
-									echo '<div class="wooco_component_product_price"></div>';
-								}
-
-								if ( $component_custom_qty && $component_dropdown ) {
-									$min = 0;
-									$max = 1000;
-									$qty = $component['qty'];
-
-									if ( ! empty( $component['min'] ) ) {
-										$min = $component['min'];
-									}
-
-									if ( ! empty( $component['max'] ) ) {
-										$max = $component['max'];
-									}
-
-									if ( class_exists( 'WPCleverWoopq' ) && ( get_option( '_woopq_decimal', 'no' ) === 'yes' ) ) {
-										$step = get_option( '_woopq_step' ) ?: '1';
-									} else {
-										$step = '1';
-										$qty  = (int) $qty;
-										$min  = (int) $min;
-										$max  = (int) $max;
-									}
-
-									echo '<div class="wooco_component_product_qty wooco-qty-wrap">';
-									echo '<span class="wooco-qty-label">' . esc_html( self::localization( 'qty_label', esc_html__( 'Qty:', 'wpc-composite-products' ) ) ) . '</span>';
-									echo '<span class="wooco-qty-input">';
-									echo '<span class="wooco_component_product_qty_btn wooco_component_product_qty_minus wooco-minus">-</span>';
-									echo '<input class="wooco_component_product_qty_input wooco_qty input-text text qty" type="number" min="' . esc_attr( $min ) . '" max="' . esc_attr( $max ) . '" step="' . esc_attr( $step ) . '" value="' . esc_attr( $qty ) . '"/>';
-									echo '<span class="wooco_component_product_qty_btn wooco_component_product_qty_plus wooco-plus">+</span>';
-									echo '</span>';
-									echo '</div>';
-
-									//echo wp_kses_post( apply_filters( 'wooco_qty_input', $qty_input, $qty, $step, $min, $max ) );
-								}
-								?>
-                            </div>
-							<?php
+							do_action( 'wooco_after_component', $component, $order );
+							echo '</div>';
+							$order ++;
 						}
+						?>
+                    </div>
+					<?php
+					echo '<div class="wooco_summary wooco-summary wooco-text"><div class="wooco_total wooco-total"></div><div class="wooco_count wooco-count"></div></div>';
 
-						do_action( 'wooco_after_component', $component, $order );
-						echo '</div>';
-						$order ++;
+					if ( self::get_setting( 'show_alert', 'load' ) !== 'no' ) {
+						echo '<div class="wooco_alert wooco-alert wooco-text" style="display: none"></div>';
 					}
-					?>
-                </div>
-				<?php
-				echo '<div class="wooco_summary wooco-summary wooco-text"><div class="wooco_total wooco-total"></div><div class="wooco_count wooco-count"></div></div>';
 
-				if ( self::get_setting( 'show_alert', 'load' ) !== 'no' ) {
-					echo '<div class="wooco_alert wooco-alert wooco-text" style="display: none"></div>';
+					do_action( 'wooco_after_components', $product );
+
+					if ( $after_text = apply_filters( 'wooco_after_text', get_post_meta( $product_id, 'wooco_after_text', true ), $product_id ) ) {
+						echo '<div class="wooco_after_text wooco-after-text wooco-text">' . wp_kses_post( do_shortcode( $after_text ) ) . '</div>';
+					}
+
+					echo '</div>';
 				}
 
-				do_action( 'wooco_after_components', $product );
+				$show_items = ob_get_clean();
 
-				if ( $after_text = apply_filters( 'wooco_after_text', get_post_meta( $product_id, 'wooco_after_text', true ), $product_id ) ) {
-					echo '<div class="wooco_after_text wooco-after-text wooco-text">' . wp_kses_post( do_shortcode( $after_text ) ) . '</div>';
+				if ( self::enable_cache( 'show_items' ) ) {
+					set_transient( 'wooco_show_items_' . $product_id, $show_items, 24 * HOUR_IN_SECONDS );
 				}
-
-				echo '</div>';
 			}
+
+			echo $show_items;
 
 			do_action( 'wooco_after_wrap', $product );
 		}
@@ -3405,10 +3425,6 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
 				$default = wc_get_product_id_by_sku( $default );
 			}
 
-			if ( $type !== 'products' ) {
-				return $products;
-			}
-
 			if ( apply_filters( 'wooco_use_wc_get_products', true ) ) {
 				// query args
 				if ( $type === 'products' ) {
@@ -3429,21 +3445,6 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
 						'orderby'  => $orderby,
 						'order'    => $order,
 						'limit'    => $limit
-					];
-				} else {
-					$args = [
-						'is_wooco'  => true,
-						'orderby'   => $orderby,
-						'order'     => $order,
-						'limit'     => $limit,
-						'tax_query' => [
-							[
-								'taxonomy' => $type,
-								'field'    => 'slug',
-								'terms'    => $val_arr,
-								'operator' => 'IN',
-							]
-						]
 					];
 				}
 
@@ -3471,24 +3472,6 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
 						'post_type'      => [ 'product', 'product_variation' ],
 						'post_status'    => [ 'publish' ],
 						'include'        => $val_arr,
-						'orderby'        => $orderby,
-						'order'          => $order,
-						'posts_per_page' => $limit
-					] );
-				} else {
-					$args = apply_filters( 'wooco_wp_get_posts_args', [
-						'is_wooco'       => true,
-						'fields'         => 'ids',
-						'post_type'      => [ 'product', 'product_variation' ],
-						'post_status'    => [ 'publish' ],
-						'tax_query'      => [
-							[
-								'taxonomy' => $type,
-								'field'    => 'slug',
-								'terms'    => $val_arr,
-								'operator' => 'IN',
-							]
-						],
 						'orderby'        => $orderby,
 						'order'          => $order,
 						'posts_per_page' => $limit
@@ -3796,6 +3779,10 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
 			}
 
 			return apply_filters( 'wooco_localization_' . $key, $str );
+		}
+
+		public static function enable_cache( $context = 'default' ) {
+			return apply_filters( 'wooco_enable_cache', false, $context );
 		}
 
 		public static function get_items( $ids ) {
