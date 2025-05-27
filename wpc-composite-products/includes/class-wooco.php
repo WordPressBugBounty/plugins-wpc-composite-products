@@ -180,7 +180,7 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
 			if ( ! empty( self::$settings ) && isset( self::$settings[ $name ] ) ) {
 				$setting = self::$settings[ $name ];
 			} else {
-				$setting = get_option( '_wooco_' . $name, $default );
+				$setting = get_option( 'wooco_' . $name, $default );
 			}
 
 			return apply_filters( 'wooco_get_setting', $setting, $name, $default );
@@ -219,7 +219,7 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
 				$component = $component_default;
 			}
 
-			if ( class_exists( 'WPCleverWoopq' ) && ( get_option( '_woopq_decimal', 'no' ) === 'yes' ) ) {
+			if ( class_exists( 'WPCleverWoopq' ) && ( WPCleverWoopq::get_setting( 'decimal', 'no' ) === 'yes' ) ) {
 				$step = '0.000001';
 			} else {
 				$step             = '1';
@@ -2600,7 +2600,7 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
 						$min = get_post_meta( $product_id, 'wooco_qty_min', true ) ?: '';
 						$max = get_post_meta( $product_id, 'wooco_qty_max', true ) ?: '';
 
-						if ( class_exists( 'WPCleverWoopq' ) && ( get_option( '_woopq_decimal', 'no' ) === 'yes' ) ) {
+						if ( class_exists( 'WPCleverWoopq' ) && ( WPCleverWoopq::get_setting( 'decimal', 'no' ) === 'yes' ) ) {
 							$step = '0.000001';
 						} else {
 							$step = '1';
@@ -3133,8 +3133,8 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
 																$max = $component['max'];
 															}
 
-															if ( class_exists( 'WPCleverWoopq' ) && ( get_option( '_woopq_decimal', 'no' ) === 'yes' ) ) {
-																$step = get_option( '_woopq_step' ) ?: '1';
+															if ( class_exists( 'WPCleverWoopq' ) && ( WPCleverWoopq::get_setting( 'decimal', 'no' ) === 'yes' ) ) {
+																$step = WPCleverWoopq::get_setting( 'step' ) ?: '1';
 															} else {
 																$step = '1';
 																$qty  = (int) $qty;
@@ -3216,8 +3216,8 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
 																$max = $component['max'];
 															}
 
-															if ( class_exists( 'WPCleverWoopq' ) && ( get_option( '_woopq_decimal', 'no' ) === 'yes' ) ) {
-																$step = get_option( '_woopq_step' ) ?: '1';
+															if ( class_exists( 'WPCleverWoopq' ) && ( WPCleverWoopq::get_setting( 'decimal', 'no' ) === 'yes' ) ) {
+																$step = WPCleverWoopq::get_setting( 'step' ) ?: '1';
 															} else {
 																$step = '1';
 																$qty  = (int) $qty;
@@ -3316,8 +3316,8 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
 											$max = $component['max'];
 										}
 
-										if ( class_exists( 'WPCleverWoopq' ) && ( get_option( '_woopq_decimal', 'no' ) === 'yes' ) ) {
-											$step = get_option( '_woopq_step' ) ?: '1';
+										if ( class_exists( 'WPCleverWoopq' ) && ( WPCleverWoopq::get_setting( 'decimal', 'no' ) === 'yes' ) ) {
+											$step = WPCleverWoopq::get_setting( 'step' ) ?: '1';
 										} else {
 											$step = '1';
 											$qty  = (int) $qty;
@@ -3376,9 +3376,9 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
 		}
 
 		function get_product_id( $id = null ) {
-			if ( ! ( $product_id = wc_get_product_id_by_sku( $id ) ) ) {
-				$product_id = absint( $id );
-			}
+			$use_sku    = apply_filters( 'wooco_get_product_id_by_sku', true );
+			$product_id = $use_sku ? wc_get_product_id_by_sku( $id ) : false;
+			$product_id = $product_id ?: absint( $id );
 
 			return apply_filters( 'wooco_get_product_id', $product_id, $id );
 		}
