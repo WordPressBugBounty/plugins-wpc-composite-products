@@ -365,7 +365,7 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
 														$_product_id = self::get_product_id( $_product_id );
 
 														if ( $_product = wc_get_product( $_product_id ) ) {
-															echo '<option value="' . esc_attr( $_product->get_sku() ?: $_product->get_id() ) . '" selected="selected">' . wp_kses_post( $_product->get_formatted_name() ) . '</option>';
+															echo '<option value="' . esc_attr( $_product->get_sku() ? '_sku_' . $_product->get_sku() : $_product->get_id() ) . '" selected="selected">' . wp_kses_post( $_product->get_formatted_name() ) . '</option>';
 														}
 													}
 												}
@@ -399,7 +399,7 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
 														$_product_id = self::get_product_id( $_product_id );
 
 														if ( $_product = wc_get_product( $_product_id ) ) {
-															echo '<option value="' . esc_attr( $_product->get_sku() ?: $_product->get_id() ) . '" selected="selected">' . wp_kses_post( $_product->get_formatted_name() ) . '</option>';
+															echo '<option value="' . esc_attr( $_product->get_sku() ? '_sku_' . $_product->get_sku() : $_product->get_id() ) . '" selected="selected">' . wp_kses_post( $_product->get_formatted_name() ) . '</option>';
 														}
 													}
 												}
@@ -423,7 +423,7 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
 												$default_id = self::get_product_id( $component['default'] );
 
 												if ( $default_product = wc_get_product( $default_id ) ) {
-													echo '<option value="' . esc_attr( $default_product->get_sku() ?: $default_product->get_id() ) . '" selected="selected">' . wp_kses_post( $default_product->get_formatted_name() ) . '</option>';
+													echo '<option value="' . esc_attr( $default_product->get_sku() ? '_sku_' . $default_product->get_sku() : $default_product->get_id() ) . '" selected="selected">' . wp_kses_post( $default_product->get_formatted_name() ) . '</option>';
 												}
 											}
 											?>
@@ -790,7 +790,7 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
 				}
 
 				$products[] = [
-					$product_object->get_sku() ?: $product_object->get_id(),
+					$product_object->get_sku() ? '_sku_' . $product_object->get_sku() : $product_object->get_id(),
 					rawurldecode( wp_strip_all_tags( $product_object->get_formatted_name() ) )
 				];
 			}
@@ -3383,8 +3383,7 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
 		}
 
 		function get_product_id( $id = null ) {
-			$use_sku    = apply_filters( 'wooco_get_product_id_by_sku', true );
-			$product_id = $use_sku ? wc_get_product_id_by_sku( $id ) : false;
+			$product_id = ! ( is_numeric( $id ) && (int) $id == $id ) || ( is_string( $id ) && str_starts_with( $id, '_sku_' ) ) ? wc_get_product_id_by_sku( substr( $id, 5 ) ) : false;
 			$product_id = $product_id ?: absint( $id );
 
 			return apply_filters( 'wooco_get_product_id', $product_id, $id );
