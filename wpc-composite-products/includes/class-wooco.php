@@ -3383,7 +3383,7 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
 		}
 
 		function get_product_id( $id = null ) {
-			$product_id = ! ( is_numeric( $id ) && (int) $id == $id ) || ( is_string( $id ) && str_starts_with( $id, '_sku_' ) ) ? wc_get_product_id_by_sku( substr( $id, 5 ) ) : false;
+			$product_id = ! ( is_numeric( $id ) && (int) $id == $id ) || ( is_string( $id ) && str_starts_with( $id, '_sku_' ) ) ? wc_get_product_id_by_sku( str_replace( '_sku_', '', $id ) ) : false;
 			$product_id = $product_id ?: absint( $id );
 
 			return apply_filters( 'wooco_get_product_id', $product_id, $id );
