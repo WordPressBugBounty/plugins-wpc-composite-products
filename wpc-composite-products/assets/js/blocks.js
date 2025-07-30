@@ -1,4 +1,4 @@
-const {registerCheckoutFilters} = window.wc.blocksCheckout;
+const woocoCheckoutFilters = window.wc.blocksCheckout.registerCheckoutFilters;
 
 const woocoCartItemClass = (defaultValue, extensions, args) => {
     if (args?.cartItem?.wooco_composite) {
@@ -30,6 +30,6 @@ const woocoShowRemoveItemLink = (defaultValue, extensions, args) => {
     return defaultValue;
 };
 
-registerCheckoutFilters('wooco-blocks', {
+woocoCheckoutFilters('wooco-blocks', {
     cartItemClass: woocoCartItemClass, showRemoveItemLink: woocoShowRemoveItemLink,
 });
