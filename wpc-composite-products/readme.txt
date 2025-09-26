@@ -3,8 +3,8 @@ Contributors: wpclever
 Donate link: https://wpclever.net
 Tags: woocommerce, wpc, composite, component, kits
 Tested up to: 6.8
-Version: 7.6.1
-Stable tag: 7.6.1
+Version: 7.6.2
+Stable tag: 7.6.2
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -57,11 +57,15 @@ Please try other plugins from us:
 
 1. Please make sure that you installed WooCommerce
 2. Go to plugins in your dashboard and select "Add New"
-3. Search for "WPC Composite Products", Install & Activate it
-4. Now when you create/edit a product you can choose product data is "Composite product", then add many components as you want
-5. Almost done! click Save and see the result
+3. Search for "WPC Composite Products," Install & Activate it
+4. Now when you create/edit a product, you can choose product data is "Smart composite," then add as many components as you want
+5. Almost done! Click Save and see the result
 
 == Changelog ==
+
+= 7.6.2 =
+* Added: Filter hook 'wooco_component_product_image'
+* Updated: Compatible with WP 6.8 & Woo 10.2
 
 = 7.6.1 =
 * Fixed: Get incorrect SKU for variations
