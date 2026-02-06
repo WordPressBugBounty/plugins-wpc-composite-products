@@ -1,13 +1,21 @@
-.wc-block-cart-items__row.wooco-component {
-  .wc-block-cart-item__remove-link {
-    display: none !important;
+.wc-block-cart-items__row, .wc-block-components-order-summary-item {
+  &.wooco-composite {
+    .wc-block-cart-item__prices, .wc-block-components-product-badge, .wc-block-components-product-price__value {
+      display: none !important;
+    }
   }
 
-  .wc-block-cart-item__quantity {
-    pointer-events: none !important;
-  }
+  &.wooco-component {
+    .wc-block-cart-item__remove-link {
+      display: none !important;
+    }
 
-  &.wooco-hide-component {
-    display: none !important;
+    .wc-block-cart-item__quantity {
+      pointer-events: none !important;
+    }
+
+    &.wooco-hide-component {
+      display: none !important;
+    }
   }
 }

@@ -29,9 +29,7 @@
             },
         };
 
-        if ((wooco_vars.change_image === 'yes') &&
-            (context === 'loaded' || context === 'on_select' || context ===
-                'on_click')) {
+        if ((wooco_vars.change_image === 'yes') && (context === 'loaded' || context === 'on_select' || context === 'on_click')) {
             var product_id = $wrap.data('id');
             var $all_gallery = $(wooco_vars.gallery_selector);
             var $main_gallery = $(wooco_vars.main_gallery_selector);
@@ -64,48 +62,42 @@
 
                         gallery_loading = true;
 
-                        $gallery = $.post(wooco_vars.wc_ajax_url.toString().replace('%%endpoint%%', 'wooco_load_gallery'), data,
-                            function (response) {
-                                if (response.gallery) {
-                                    var $wooco_gallery = $(response.gallery);
+                        $gallery = $.post(wooco_vars.wc_ajax_url.toString().replace('%%endpoint%%', 'wooco_load_gallery'), data, function (response) {
+                            if (response.gallery) {
+                                var $wooco_gallery = $(response.gallery);
 
-                                    $all_gallery.unblock().hide();
-                                    $wooco_gallery.insertAfter($main_gallery);
-                                    $(document).trigger('wooco_gallery_loaded', product_id, key, ids);
+                                $all_gallery.unblock().hide();
+                                $wooco_gallery.insertAfter($main_gallery);
+                                $(document).trigger('wooco_gallery_loaded', product_id, key, ids);
 
-                                    $wooco_gallery.imagesLoaded(function () {
-                                        $wooco_gallery.wc_product_gallery();
+                                $wooco_gallery.imagesLoaded(function () {
+                                    $wooco_gallery.wc_product_gallery();
 
-                                        // scroll to selected image
-                                        if ($selected) {
-                                            var selected_image = $selected.data('image_gallery');
-                                            var $gallery_nav = $wooco_gallery.find(
-                                                '.flex-control-nav');
+                                    // scroll to selected image
+                                    if ($selected) {
+                                        var selected_image = $selected.data('image_gallery');
+                                        var $gallery_nav = $wooco_gallery.find('.flex-control-nav');
 
-                                            if ($gallery_nav.length &&
-                                                (selected_image !== undefined) &&
-                                                (selected_image !== '')) {
-                                                var $scroll_image = $gallery_nav.find(
-                                                    'li img[src="' + selected_image + '"]');
+                                        if ($gallery_nav.length && (selected_image !== undefined) && (selected_image !== '')) {
+                                            var $scroll_image = $gallery_nav.find('li img[src="' + selected_image + '"]');
 
-                                                if ($scroll_image.length) {
-                                                    window.setTimeout(function () {
-                                                        $scroll_image.trigger('click');
-                                                        $(window).trigger('resize');
-                                                    }, 100);
-                                                }
+                                            if ($scroll_image.length) {
+                                                window.setTimeout(function () {
+                                                    $scroll_image.trigger('click');
+                                                    $(window).trigger('resize');
+                                                }, 100);
                                             }
                                         }
+                                    }
 
-                                        $(document).trigger('wooco_gallery_images_loaded', product_id,
-                                            key, ids);
-                                    });
-                                } else {
-                                    $all_gallery.unblock();
-                                }
+                                    $(document).trigger('wooco_gallery_images_loaded', product_id, key, ids);
+                                });
+                            } else {
+                                $all_gallery.unblock();
+                            }
 
-                                gallery_loading = false;
-                            });
+                            gallery_loading = false;
+                        });
                     }
                 }
             }
@@ -124,10 +116,8 @@
 
     $(document).on('click touch', '.wooco-plus, .wooco-minus', function () {
         // get values
-        var $qty = $(this).closest('.wooco-qty-wrap').find('.wooco_qty').length ? $(
-                this).closest('.wooco-qty-wrap').find('.wooco_qty') : $(this).closest('.wooco-qty-wrap').find('.qty'),
-            val = parseFloat($qty.val()),
-            max = parseFloat($qty.attr('max')), min = parseFloat($qty.attr('min')),
+        var $qty = $(this).closest('.wooco-qty-wrap').find('.wooco_qty').length ? $(this).closest('.wooco-qty-wrap').find('.wooco_qty') : $(this).closest('.wooco-qty-wrap').find('.qty'),
+            val = parseFloat($qty.val()), max = parseFloat($qty.attr('max')), min = parseFloat($qty.attr('min')),
             step = $qty.attr('step');
 
         // format values
@@ -143,8 +133,7 @@
             min = 0;
         }
 
-        if (step === 'any' || step === '' || step === undefined ||
-            parseFloat(step) === 'NaN') {
+        if (step === 'any' || step === '' || step === undefined || parseFloat(step) === 'NaN') {
             step = 1;
         } else {
             step = parseFloat(step);
@@ -197,6 +186,67 @@
 
         wooco_init($wrap, 'checked');
     });
+
+    $(document).on('change', '.wooco_component_product_select', function () {
+        // check on select
+        var $this = $(this);
+        var $selection = $this.closest('.wooco_component_product_selection');
+        var $component = $this.closest('.wooco_component_product');
+        var $wrap = $this.closest('.wooco-wrap');
+        var $selected = $('option:selected', this);
+
+        wooco_selected($selected, $selection, $component);
+        wooco_init($wrap, 'on_select', $selected);
+    });
+
+    $(document).on('click touch', '.wooco_component_product_selection_item', function (e) {
+        if ($(e.target).closest('.wooco_component_product_selection_item_qty').length === 0 && !$(e.target).is('a, a *')) {
+            // check on select
+            var $this = $(this);
+            var $selection = $this.closest('.wooco_component_product_selection');
+            var $component = $this.closest('.wooco_component_product');
+            var $wrap = $this.closest('.wooco-wrap');
+
+            if ($component.attr('data-multiple') === 'yes') {
+                // multiple selection
+                if ($this.hasClass('wooco_item_selected')) {
+                    $this.removeClass('wooco_item_selected');
+                    wooco_deselect($this, $selection, $component);
+                } else {
+                    $this.addClass('wooco_item_selected');
+                    wooco_selected($this, $selection, $component);
+                }
+            } else {
+                // single selection
+                if ($this.hasClass('wooco_item_selected')) {
+                    // remove
+                    $component.attr('data-id', '-1');
+                    $component.attr('data-price', '');
+                    $component.attr('data-price-html', '');
+                    $component.attr('data-regular-price', '');
+                    $this.removeClass('wooco_item_selected');
+                    wooco_deselect($this, $selection, $component);
+                } else {
+                    $selection.find('.wooco_component_product_selection_item').removeClass('wooco_item_selected');
+                    $this.addClass('wooco_item_selected');
+                    wooco_selected($this, $selection, $component);
+                }
+            }
+
+            wooco_init($wrap, 'on_click', $this);
+        }
+    });
+
+    $(document).on('select2:select', '.wooco_component_product_select', function (e) {
+        var $this = $(this);
+        var $selection = $this.closest('.wooco_component_product_selection');
+        var $component = $this.closest('.wooco_component_product');
+        var $wrap = $this.closest('.wooco-wrap');
+        var $selected = $(e.params.data.element);
+
+        wooco_selected($selected, $selection, $component);
+        wooco_init($wrap, 'on_select', $selected);
+    });
 })(jQuery);
 
 function wooco_init($wrap, context = null, $selected = null) {
@@ -212,8 +262,7 @@ function wooco_init($wrap, context = null, $selected = null) {
     wooco_check_ready($wrap, context, $selected);
     wooco_save_ids($wrap, context, $selected);
 
-    if (context === null || context === 'on_select' || context ===
-        wooco_vars.show_alert) {
+    if (context === null || context === 'on_select' || context === wooco_vars.show_alert) {
         wooco_show_alert($wrap, context, $selected);
     }
 
@@ -251,14 +300,12 @@ function wooco_check_ready($wrap, context = null, $selected = null) {
     var $woobt = jQuery('.woobt-wrap-' + wid);
     var pricing = $components.attr('data-pricing');
     var price = wooco_format_number($components.attr('data-price'));
-    var regular_price = wooco_format_number(
-        $components.attr('data-regular-price'));
+    var regular_price = wooco_format_number($components.attr('data-regular-price'));
     var percent = wooco_format_number($components.attr('data-percent'));
     var total = 0;
     var total_regular = 0;
 
-    if (!$components.length ||
-        !$components.find('.wooco_component_product').length) {
+    if (!$components.length || !$components.find('.wooco_component_product').length) {
         return;
     }
 
@@ -273,8 +320,7 @@ function wooco_check_ready($wrap, context = null, $selected = null) {
             var $this = jQuery(this);
             var $checkbox = $this.find('.wooco-checkbox');
             var _price = wooco_format_number($this.attr('data-price'));
-            var _regular_price = wooco_format_number(
-                $this.attr('data-regular-price'));
+            var _regular_price = wooco_format_number($this.attr('data-regular-price'));
             var _qty = wooco_format_number($this.attr('data-qty'));
             var _multiple = $this.attr('data-multiple');
 
@@ -288,8 +334,7 @@ function wooco_check_ready($wrap, context = null, $selected = null) {
                 $this.find('.wooco_item_selected').each(function () {
                     var $_this = jQuery(this);
                     var __price = wooco_format_number($_this.attr('data-price'));
-                    var __regular_price = wooco_format_number(
-                        $_this.attr('data-regular-price'));
+                    var __regular_price = wooco_format_number($_this.attr('data-regular-price'));
                     var __qty = wooco_format_number($_this.attr('data-qty'));
 
                     if ((__price > 0) && (__qty > 0)) {
@@ -327,16 +372,13 @@ function wooco_check_ready($wrap, context = null, $selected = null) {
     var total_html = wooco_price_html(total_regular, total);
 
     if ((pricing !== 'only') && (percent > 0) && (percent < 100)) {
-        total_html += ' <small class="woocommerce-price-suffix">' +
-            wooco_vars.saved_text.replace('[d]', percent + '%') + '</small>';
+        total_html += ' <small class="woocommerce-price-suffix">' + wooco_vars.saved_text.replace('[d]', percent + '%') + '</small>';
     }
 
     $total.html(wooco_vars.total_text + ' ' + total_html).slideDown();
 
     if ((wooco_vars.change_price !== 'no') && (pricing !== 'only')) {
-        if ((wooco_vars.change_price === 'yes_custom') &&
-            (wooco_vars.price_selector !== null) &&
-            (wooco_vars.price_selector !== '')) {
+        if ((wooco_vars.change_price === 'yes_custom') && (wooco_vars.price_selector !== null) && (wooco_vars.price_selector !== '')) {
             $price = jQuery(wooco_vars.price_selector);
         }
 
@@ -350,8 +392,7 @@ function wooco_check_ready($wrap, context = null, $selected = null) {
         woobt_init($woobt);
     }
 
-    jQuery(document).trigger('wooco_calc_price',
-        [total, total_regular, total_html, $wrap, context, $selected]);
+    jQuery(document).trigger('wooco_calc_price', [total, total_regular, total_html, $wrap, context, $selected]);
 
     // check ready
 
@@ -448,8 +489,7 @@ function wooco_check_ready($wrap, context = null, $selected = null) {
     });
 
     if (is_count) {
-        $count.html('<span class="wooco-count-label">' + wooco_vars.selected_text +
-            '</span> <span class="wooco-count-value">' + qty + '</span>').slideDown();
+        $count.html('<span class="wooco-count-label">' + wooco_vars.selected_text + '</span> <span class="wooco-count-value">' + qty + '</span>').slideDown();
         jQuery(document).trigger('wooco_change_count', [$count, qty, qty_min, qty_max]);
     }
 
@@ -473,14 +513,12 @@ function wooco_check_ready($wrap, context = null, $selected = null) {
         }
     }
 
-    if (is_selection || is_min || is_max || is_m_min || is_m_max || is_same ||
-        is_total_min || is_total_max) {
+    if (is_selection || is_min || is_max || is_m_min || is_m_max || is_same || is_total_min || is_total_max) {
         $btn.addClass('wooco-disabled');
         $alert.addClass('alert-active');
 
         if (is_selection) {
-            $alert.addClass('alert-selection').html(wooco_vars.alert_selection.replace('[name]',
-                '<strong>' + c_name + '</strong>'));
+            $alert.addClass('alert-selection').html(wooco_vars.alert_selection.replace('[name]', '<strong>' + c_name + '</strong>'));
         } else if (is_m_min) {
             $alert.addClass('alert-min').html(wooco_vars.alert_m_min.replace('[min]', m_min).replace('[name]', '<strong>' + c_name + '</strong>'));
         } else if (is_m_max) {
@@ -492,41 +530,22 @@ function wooco_check_ready($wrap, context = null, $selected = null) {
         } else if (is_same) {
             $alert.addClass('alert-same').html(wooco_vars.alert_same);
         } else if (is_total_min) {
-            $alert.addClass('alert-total-min').html(wooco_vars.alert_total_min.replace('[min]',
-                wooco_format_price(total_min)).replace('[total]', wooco_format_price(total)));
+            $alert.addClass('alert-total-min').html(wooco_vars.alert_total_min.replace('[min]', wooco_format_price(total_min)).replace('[total]', wooco_format_price(total)));
         } else if (is_total_max) {
-            $alert.addClass('alert-total-max').html(wooco_vars.alert_total_max.replace('[max]',
-                wooco_format_price(total_max)).replace('[total]', wooco_format_price(total)));
+            $alert.addClass('alert-total-max').html(wooco_vars.alert_total_max.replace('[max]', wooco_format_price(total_max)).replace('[total]', wooco_format_price(total)));
         }
 
         $alert.slideDown();
 
-        jQuery(document).trigger('wooco_check_ready', [
-            false,
-            is_selection,
-            is_same,
-            is_min,
-            is_max,
-            $wrap,
-            context,
-            $selected]);
+        jQuery(document).trigger('wooco_check_ready', [false, is_selection, is_same, is_min, is_max, $wrap, context, $selected]);
     } else {
-        $alert.removeClass(
-            'alert-active alert-selection alert-min alert-max alert-total-min alert-total-max').slideUp(300, function () {
+        $alert.removeClass('alert-active alert-selection alert-min alert-max alert-total-min alert-total-max').slideUp(300, function () {
             $alert.html('');
         });
         $btn.removeClass('wooco-disabled');
 
         // ready
-        jQuery(document).trigger('wooco_check_ready', [
-            true,
-            is_selection,
-            is_same,
-            is_min,
-            is_max,
-            $wrap,
-            context,
-            $selected]);
+        jQuery(document).trigger('wooco_check_ready', [true, is_selection, is_same, is_min, is_max, $wrap, context, $selected]);
     }
 }
 
@@ -551,17 +570,14 @@ function wooco_save_ids($wrap, context = null, $selected = null) {
                 var $_this = jQuery(this);
 
                 if (($_this.attr('data-id') > 0) && ($_this.attr('data-qty') > 0)) {
-                    ids.push(
-                        $_this.attr('data-id') + '/' + $_this.attr('data-qty') + '/' +
-                        key);
+                    ids.push($_this.attr('data-id') + '/' + $_this.attr('data-qty') + '/' + key);
                 }
             });
         } else {
             // single selection
 
             if (($this.attr('data-id') > 0) && ($this.attr('data-qty') > 0)) {
-                ids.push(
-                    $this.attr('data-id') + '/' + $this.attr('data-qty') + '/' + key);
+                ids.push($this.attr('data-id') + '/' + $this.attr('data-qty') + '/' + key);
             }
         }
     });
@@ -667,17 +683,6 @@ function wooco_init_selector() {
                 dropdownCssClass: 'wpc-select2-dropdown',
             });
         });
-
-        jQuery('.wooco_component_product_select').on('select2:select', function (e) {
-            var $this = jQuery(this);
-            var $selection = $this.closest('.wooco_component_product_selection');
-            var $component = $this.closest('.wooco_component_product');
-            var $wrap = $this.closest('.wooco-wrap');
-            var $selected = jQuery(e.params.data.element);
-
-            wooco_selected($selected, $selection, $component);
-            wooco_init($wrap, 'on_select', $selected);
-        });
     } else {
         jQuery('.wooco_component_product_select').each(function () {
             // check on start
@@ -690,18 +695,6 @@ function wooco_init_selector() {
             wooco_selected($selected, $selection, $component);
             wooco_init($wrap, 'selected', $selected);
         });
-
-        jQuery('body').on('change', '.wooco_component_product_select', function () {
-            // check on select
-            var $this = jQuery(this);
-            var $selection = $this.closest('.wooco_component_product_selection');
-            var $component = $this.closest('.wooco_component_product');
-            var $wrap = $this.closest('.wooco-wrap');
-            var $selected = jQuery('option:selected', this);
-
-            wooco_selected($selected, $selection, $component);
-            wooco_init($wrap, 'on_select', $selected);
-        });
     }
 
     jQuery('.wooco_component_product_selection_item.wooco_item_selected').each(function () {
@@ -712,38 +705,6 @@ function wooco_init_selector() {
 
         wooco_selected($this, $selection, $component);
         wooco_init($wrap, 'selected', $this);
-    });
-
-    jQuery('body').on('click touch', '.wooco_component_product_selection_item', function (e) {
-        if (jQuery(e.target).closest('.wooco_component_product_selection_item_qty').length ===
-            0 && !jQuery(e.target).is('a, a *')) {
-            // check on select
-            var $this = jQuery(this);
-            var $selection = $this.closest('.wooco_component_product_selection');
-            var $component = $this.closest('.wooco_component_product');
-            var $wrap = $this.closest('.wooco-wrap');
-
-            if ($component.attr('data-multiple') === 'yes') {
-                // multiple selection
-                $this.toggleClass('wooco_item_selected');
-            } else {
-                // single selection
-                if ($this.hasClass('wooco_item_selected')) {
-                    // remove
-                    $component.attr('data-id', '-1');
-                    $component.attr('data-price', '');
-                    $component.attr('data-price-html', '');
-                    $component.attr('data-regular-price', '');
-                    $this.removeClass('wooco_item_selected');
-                } else {
-                    $selection.find('.wooco_component_product_selection_item').removeClass('wooco_item_selected');
-                    $this.addClass('wooco_item_selected');
-                    wooco_selected($this, $selection, $component);
-                }
-            }
-
-            wooco_init($wrap, 'on_click', $this);
-        }
     });
 }
 
@@ -786,14 +747,9 @@ function wooco_selected($selected, $selection, $component) {
         $selection.find('.wooco_component_product_link').remove();
         if (link !== '') {
             if (wooco_vars.product_link === 'yes_popup') {
-                $selection.append(
-                    '<a class="wooco_component_product_link woosq-link" data-id="' +
-                    qid + '" data-context="wooco" href="' + link +
-                    '" target="_blank"> &nbsp; </a>');
+                $selection.append('<a class="wooco_component_product_link woosq-link" data-id="' + qid + '" data-context="wooco" href="' + link + '" target="_blank"> &nbsp; </a>');
             } else {
-                $selection.append(
-                    '<a class="wooco_component_product_link" href="' + link +
-                    '" target="_blank"> &nbsp; </a>');
+                $selection.append('<a class="wooco_component_product_link" href="' + link + '" target="_blank"> &nbsp; </a>');
             }
         }
     }
@@ -805,6 +761,10 @@ function wooco_selected($selected, $selection, $component) {
     jQuery(document).trigger('wooco_selected', [$selected, $selection, $component]);
 }
 
+function wooco_deselect($selected, $selection, $component) {
+    jQuery(document).trigger('wooco_deselected', [$selected, $selection, $component]);
+}
+
 function wooco_select2_state(state) {
     if (!state.id) {
         return state.text;
@@ -813,23 +773,16 @@ function wooco_select2_state(state) {
     var $state = {};
 
     if (jQuery(state.element).attr('data-imagesrc') !== '') {
-        $state = jQuery('<span class="image"><img src="' +
-            jQuery(state.element).attr('data-imagesrc') +
-            '"/></span><span class="info"><span class="name">' + state.text +
-            '</span> <span class="desc">' +
-            jQuery(state.element).attr('data-description') + '</span></span>');
+        $state = jQuery('<span class="image"><img src="' + jQuery(state.element).attr('data-imagesrc') + '"/></span><span class="info"><span class="name">' + state.text + '</span> <span class="desc">' + jQuery(state.element).attr('data-description') + '</span></span>');
     } else {
-        $state = jQuery('<span class="info"><span class="name">' + state.text +
-            '</span> <span class="desc">' +
-            jQuery(state.element).attr('data-description') + '</span></span>');
+        $state = jQuery('<span class="info"><span class="name">' + state.text + '</span> <span class="desc">' + jQuery(state.element).attr('data-description') + '</span></span>');
     }
 
     return $state;
 }
 
 function wooco_round(value) {
-    return Number(Math.round(value + 'e' + wooco_vars.price_decimals) + 'e-' +
-        wooco_vars.price_decimals);
+    return Number(Math.round(value + 'e' + wooco_vars.price_decimals) + 'e-' + wooco_vars.price_decimals);
 }
 
 function wooco_decimal_places(num) {
@@ -852,23 +805,16 @@ function wooco_format_money(number, places, symbol, thousand, decimal) {
     thousand = thousand || '';
     decimal = decimal || '';
 
-    var negative = number < 0 ? '-' : '',
-        i = parseInt(number = Math.abs(+number || 0).toFixed(places), 10) + '',
-        j = 0;
+    var negative = number < 0 ? '-' : '', i = parseInt(number = Math.abs(+number || 0).toFixed(places), 10) + '', j = 0;
 
     if (i.length > 3) {
         j = i.length % 3;
     }
 
     if (wooco_vars.trim_zeros === '1') {
-        return symbol + negative + (j ? i.substr(0, j) + thousand : '') +
-            i.substr(j).replace(/(\d{3})(?=\d)/g, '$1' + thousand) +
-            (places && (parseFloat(number) > parseFloat(i)) ? decimal +
-                Math.abs(number - i).toFixed(places).slice(2).replace(/(\d*?[1-9])0+$/g, '$1') : '');
+        return symbol + negative + (j ? i.substr(0, j) + thousand : '') + i.substr(j).replace(/(\d{3})(?=\d)/g, '$1' + thousand) + (places && (parseFloat(number) > parseFloat(i)) ? decimal + Math.abs(number - i).toFixed(places).slice(2).replace(/(\d*?[1-9])0+$/g, '$1') : '');
     } else {
-        return symbol + negative + (j ? i.substr(0, j) + thousand : '') +
-            i.substr(j).replace(/(\d{3})(?=\d)/g, '$1' + thousand) +
-            (places ? decimal + Math.abs(number - i).toFixed(places).slice(2) : '');
+        return symbol + negative + (j ? i.substr(0, j) + thousand : '') + i.substr(j).replace(/(\d{3})(?=\d)/g, '$1' + thousand) + (places ? decimal + Math.abs(number - i).toFixed(places).slice(2) : '');
     }
 }
 
@@ -878,36 +824,28 @@ function wooco_format_number(number) {
 
 function wooco_format_price(price) {
     var price_html = '<span class="woocommerce-Price-amount amount">';
-    var price_formatted = wooco_format_money(price, wooco_vars.price_decimals, '',
-        wooco_vars.price_thousand_separator, wooco_vars.price_decimal_separator);
+    var price_formatted = wooco_format_money(price, wooco_vars.price_decimals, '', wooco_vars.price_thousand_separator, wooco_vars.price_decimal_separator);
 
     switch (wooco_vars.price_format) {
         case '%1$s%2$s':
             //left
-            price_html += '<span class="woocommerce-Price-currencySymbol">' +
-                wooco_vars.currency_symbol + '</span>' + price_formatted;
+            price_html += '<span class="woocommerce-Price-currencySymbol">' + wooco_vars.currency_symbol + '</span>' + price_formatted;
             break;
         case '%1$s %2$s':
             //left with space
-            price_html += '<span class="woocommerce-Price-currencySymbol">' +
-                wooco_vars.currency_symbol + '</span> ' + price_formatted;
+            price_html += '<span class="woocommerce-Price-currencySymbol">' + wooco_vars.currency_symbol + '</span> ' + price_formatted;
             break;
         case '%2$s%1$s':
             //right
-            price_html += price_formatted +
-                '<span class="woocommerce-Price-currencySymbol">' +
-                wooco_vars.currency_symbol + '</span>';
+            price_html += price_formatted + '<span class="woocommerce-Price-currencySymbol">' + wooco_vars.currency_symbol + '</span>';
             break;
         case '%2$s %1$s':
             //right with space
-            price_html += price_formatted +
-                ' <span class="woocommerce-Price-currencySymbol">' +
-                wooco_vars.currency_symbol + '</span>';
+            price_html += price_formatted + ' <span class="woocommerce-Price-currencySymbol">' + wooco_vars.currency_symbol + '</span>';
             break;
         default:
             //default
-            price_html += '<span class="woocommerce-Price-currencySymbol">' +
-                wooco_vars.currency_symbol + '</span> ' + price_formatted;
+            price_html += '<span class="woocommerce-Price-currencySymbol">' + wooco_vars.currency_symbol + '</span> ' + price_formatted;
     }
 
     price_html += '</span>';
@@ -920,8 +858,7 @@ function wooco_price_html(regular_price, sale_price) {
 
     if (wooco_round(sale_price) !== wooco_round(regular_price)) {
         if (wooco_round(sale_price) < wooco_round(regular_price)) {
-            price_html = '<del>' + wooco_format_price(regular_price) +
-                '</del> <ins>' + wooco_format_price(sale_price) + '</ins>';
+            price_html = '<del>' + wooco_format_price(regular_price) + '</del> <ins>' + wooco_format_price(sale_price) + '</ins>';
         } else {
             price_html = wooco_format_price(sale_price);
         }

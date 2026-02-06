@@ -604,6 +604,14 @@ body.rtl .wpc-select2-dropdown ul li .image {
   margin-left: 10px;
 }
 
+.wooco-cart-item-edit {
+  &:before {
+    content: '✎';
+    display: inline-block;
+    margin-right: 5px;
+  }
+}
+
 /* Responsive */
 
 @media only screen and (max-width: 767px) {

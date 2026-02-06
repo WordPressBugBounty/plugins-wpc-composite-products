@@ -142,6 +142,10 @@ if ( ! class_exists( 'WPCleverWooco_Blocks' ) ) {
 						$item_data['wooco_hide_component'] = true;
 					}
 				}
+
+				if ( ! empty( $cart_item['wooco_price'] ) ) {
+					$item_data['wooco_price'] = $cart_item['wooco_price'];
+				}
 			}
 
 			$response->set_data( $data );

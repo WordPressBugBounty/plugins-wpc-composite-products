@@ -2,9 +2,9 @@
 Contributors: wpclever
 Donate link: https://wpclever.net
 Tags: woocommerce, wpc, composite, component, kits
-Tested up to: 6.8
-Version: 7.6.2
-Stable tag: 7.6.2
+Tested up to: 6.9
+Version: 7.6.8
+Stable tag: 7.6.8
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,6 +62,28 @@ Please try other plugins from us:
 5. Almost done! Click Save and see the result
 
 == Changelog ==
+
+= 7.6.8 =
+* Fixed: Incorrect price when using discount
+
+= 7.6.7 =
+* Updated: Optimized the code
+* Updated: Compatible with WP 6.9 & Woo 10.4
+
+= 7.6.6 =
+* Fixed: Minor JS/CSS issues
+
+= 7.6.5 =
+* Updated: Optimized the code
+
+= 7.6.4 =
+* Added: Import/export settings
+* Added: Edit link for composite products on the cart page
+* Updated: Compatible with WP 6.8 & Woo 10.3
+
+= 7.6.3 =
+* Added: Option to show/hide the plus/minus button
+* Updated: Optimized the code
 
 = 7.6.2 =
 * Added: Filter hook 'wooco_component_product_image'
