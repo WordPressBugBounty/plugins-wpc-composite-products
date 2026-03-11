@@ -3196,7 +3196,8 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                                     'required'      => $component_required ? 'yes' : 'no',
                                     'custom-qty'    => $component_custom_qty ? 'yes' : 'no',
                                     'multiple'      => $component_multiple ? 'yes' : 'no',
-                            ] );
+                                    'count'         => count( $component_products )
+                            ], $component, $product );
 
                             echo '<div class="wooco_component_product" ' . self::data_attributes( $component_product_attrs ) . '>';
 
@@ -3703,55 +3704,53 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                     }
                 }
 
-                if ( ! $has_default ) {
+                if ( ! $has_default && ( $product_default = wc_get_product( $default_id ) ) ) {
                     // add default product
-                    if ( $product_default = wc_get_product( $default_id ) ) {
-                        if ( $product_default->is_type( 'variable' ) ) {
-                            // select a available variation
-                            $available_variations = $product_default->get_available_variations();
+                    if ( $product_default->is_type( 'variable' ) ) {
+                        // select a available variation
+                        $available_variations = $product_default->get_available_variations();
 
-                            if ( count( $available_variations ) > 0 ) {
-                                $sort_default_variations = apply_filters( 'wooco_sort_default_variations', 'default' );
+                        if ( count( $available_variations ) > 0 ) {
+                            $sort_default_variations = apply_filters( 'wooco_sort_default_variations', 'default' );
 
-                                if ( $sort_default_variations === 'price_asc' ) {
-                                    $display_price = array_column( $available_variations, 'display_price' );
+                            if ( $sort_default_variations === 'price_asc' ) {
+                                $display_price = array_column( $available_variations, 'display_price' );
 
-                                    array_multisort( $display_price, SORT_ASC, $available_variations );
+                                array_multisort( $display_price, SORT_ASC, $available_variations );
+                            }
+
+                            if ( $sort_default_variations === 'price_desc' ) {
+                                $display_price = array_column( $available_variations, 'display_price' );
+
+                                array_multisort( $display_price, SORT_DESC, $available_variations );
+                            }
+
+                            foreach ( array_reverse( $available_variations ) as $available_variation ) {
+                                $available_variation_id      = $available_variation['variation_id'];
+                                $available_variation_product = wc_get_product( $available_variation_id );
+
+                                if ( ! $available_variation_product || ( ! $available_variation_product->variation_is_visible() && $exclude_hidden ) || ( $exclude_unpurchasable && ! self::is_purchasable( $available_variation_product, $qty ) ) ) {
+                                    continue;
                                 }
 
-                                if ( $sort_default_variations === 'price_desc' ) {
-                                    $display_price = array_column( $available_variations, 'display_price' );
+                                // add variation
+                                $products = [ 'pid_' . $available_variation_id => self::get_product_data( $available_variation_product, $qty, $price, $custom_qty ) ] + $products;
+                            }
 
-                                    array_multisort( $display_price, SORT_DESC, $available_variations );
-                                }
+                            foreach ( $available_variations as $available_variation ) {
+                                $available_variation_id      = $available_variation['variation_id'];
+                                $available_variation_product = wc_get_product( $available_variation_id );
 
-                                foreach ( array_reverse( $available_variations ) as $available_variation ) {
-                                    $available_variation_id      = $available_variation['variation_id'];
-                                    $available_variation_product = wc_get_product( $available_variation_id );
-
-                                    if ( ! $available_variation_product || ( ! $available_variation_product->variation_is_visible() && $exclude_hidden ) || ( $exclude_unpurchasable && ! self::is_purchasable( $available_variation_product, $qty ) ) ) {
-                                        continue;
-                                    }
-
-                                    // add variation
+                                if ( $available_variation_product && self::is_purchasable( $available_variation_product, $qty ) ) {
+                                    // select default variation
                                     $products = [ 'pid_' . $available_variation_id => self::get_product_data( $available_variation_product, $qty, $price, $custom_qty ) ] + $products;
-                                }
-
-                                foreach ( $available_variations as $available_variation ) {
-                                    $available_variation_id      = $available_variation['variation_id'];
-                                    $available_variation_product = wc_get_product( $available_variation_id );
-
-                                    if ( $available_variation_product && self::is_purchasable( $available_variation_product, $qty ) ) {
-                                        // select default variation
-                                        $products = [ 'pid_' . $available_variation_id => self::get_product_data( $available_variation_product, $qty, $price, $custom_qty ) ] + $products;
-                                        break;
-                                    }
+                                    break;
                                 }
                             }
-                        } else {
-                            if ( self::is_purchasable( $product_default, $qty ) || ! $exclude_unpurchasable ) {
-                                $products = [ 'pid_' . $default_id => self::get_product_data( $product_default, $qty, $price, $custom_qty ) ] + $products;
-                            }
+                        }
+                    } else {
+                        if ( self::is_purchasable( $product_default, $qty ) || ! $exclude_unpurchasable ) {
+                            $products = [ 'pid_' . $default_id => self::get_product_data( $product_default, $qty, $price, $custom_qty ) ] + $products;
                         }
                     }
                 }

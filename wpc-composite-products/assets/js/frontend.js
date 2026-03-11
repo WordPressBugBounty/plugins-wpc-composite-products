@@ -45,6 +45,23 @@
                     if ($key_gallery.length) {
                         $all_gallery.unblock().hide();
                         $key_gallery.unblock().show();
+
+                        // scroll to selected image
+                        if ($selected) {
+                            var selected_image = $selected.data('image_gallery');
+                            var $gallery_nav = $key_gallery.find('.flex-control-nav');
+
+                            if ($gallery_nav.length && (selected_image !== undefined) && (selected_image !== '')) {
+                                var $scroll_image = $gallery_nav.find('li img[src="' + selected_image + '"]');
+
+                                if ($scroll_image.length) {
+                                    window.setTimeout(function () {
+                                        $scroll_image.trigger('click');
+                                        $(window).trigger('resize');
+                                    }, 100);
+                                }
+                            }
+                        }
                     } else {
                         $all_gallery.block(block_ui_params);
 
