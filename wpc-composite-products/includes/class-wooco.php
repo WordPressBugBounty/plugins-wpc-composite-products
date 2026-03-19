@@ -25,6 +25,7 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
 
             // Settings
             add_action( 'admin_init', [ $this, 'register_settings' ] );
+            add_filter( 'pre_update_option', [ $this, 'last_saved' ], 10, 2 );
             add_action( 'admin_menu', [ $this, 'admin_menu' ] );
 
             // Enqueue frontend scripts
@@ -827,6 +828,15 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
             ] );
         }
 
+        function last_saved( $value, $option ) {
+            if ( $option == 'wooco_settings' || $option == 'wooco_localization' ) {
+                $value['_last_saved']    = current_time( 'timestamp' );
+                $value['_last_saved_by'] = get_current_user_id();
+            }
+
+            return $value;
+        }
+
         function admin_menu() {
             add_submenu_page( 'wpclever', esc_html__( 'WPC Composite Products', 'wpc-composite-products' ), esc_html__( 'Composite Products', 'wpc-composite-products' ), 'manage_options', 'wpclever-wooco', [
                     $this,
@@ -1255,7 +1265,16 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                                 </tr>
                                 <tr class="submit">
                                     <th colspan="2">
-                                        <?php settings_fields( 'wooco_settings' ); ?><?php submit_button(); ?>
+                                        <div class="wpclever_submit">
+                                            <?php
+                                            settings_fields( 'wooco_settings' );
+                                            submit_button( '', 'primary', 'submit', false );
+
+                                            if ( function_exists( 'wpc_last_saved' ) ) {
+                                                wpc_last_saved( self::get_settings() );
+                                            }
+                                            ?>
+                                        </div>
                                         <a style="display: none;" class="wpclever_export" data-key="wooco_settings"
                                            data-name="settings"
                                            href="#"><?php esc_html_e( 'import / export', 'wpc-composite-products' ); ?></a>
@@ -1520,7 +1539,16 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                                 </tr>
                                 <tr class="submit">
                                     <th colspan="2">
-                                        <?php settings_fields( 'wooco_localization' ); ?><?php submit_button(); ?>
+                                        <div class="wpclever_submit">
+                                            <?php
+                                            settings_fields( 'wooco_localization' );
+                                            submit_button( '', 'primary', 'submit', false );
+
+                                            if ( function_exists( 'wpc_last_saved' ) ) {
+                                                wpc_last_saved( get_option( 'wooco_localization', [] ) );
+                                            }
+                                            ?>
+                                        </div>
                                         <a style="display: none;" class="wpclever_export" data-key="wooco_localization"
                                            data-name="settings"
                                            href="#"><?php esc_html_e( 'import / export', 'wpc-composite-products' ); ?></a>
