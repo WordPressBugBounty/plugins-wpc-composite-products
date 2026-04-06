@@ -1,12 +1,11 @@
 <?php
 defined( 'ABSPATH' ) || exit;
 
+
 if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
     class WPCleverWooco {
-        protected static $settings = [];
-        public static $localization = [];
-        protected static $image_size = 'woocommerce_thumbnail';
-        protected static $instance = null;
+        protected static string $image_size = 'woocommerce_thumbnail';
+        protected static ?self $instance = null;
 
         public static function instance() {
             if ( is_null( self::$instance ) ) {
@@ -16,43 +15,18 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
             return self::$instance;
         }
 
-        function __construct() {
-            self::$settings     = (array) get_option( 'wooco_settings', [] );
-            self::$localization = (array) get_option( 'wooco_localization', [] );
+        public function __construct() {
+            WPCleverWooco_Helper::init();
 
             // Init
             add_action( 'init', [ $this, 'init' ] );
 
-            // Settings
-            add_action( 'admin_init', [ $this, 'register_settings' ] );
-            add_filter( 'pre_update_option', [ $this, 'last_saved' ], 10, 2 );
-            add_action( 'admin_menu', [ $this, 'admin_menu' ] );
-
             // Enqueue frontend scripts
             add_action( 'wp_enqueue_scripts', [ $this, 'enqueue_scripts' ] );
 
-            // Enqueue backend scripts
-            add_action( 'admin_enqueue_scripts', [ $this, 'admin_enqueue_scripts' ] );
-
-            // AJAX
-            add_action( 'wp_ajax_wooco_add_component', [ $this, 'ajax_add_component' ] );
-            add_action( 'wp_ajax_wooco_save_components', [ $this, 'ajax_save_components' ] );
-            add_action( 'wp_ajax_wooco_export_components', [ $this, 'ajax_export_components' ] );
-            add_action( 'wp_ajax_wooco_search_term', [ $this, 'ajax_search_term' ] );
-            add_action( 'wp_ajax_wooco_search_product', [ $this, 'ajax_search_product' ] );
-
             // AJAX gallery
+            // Note: Keep it here as it might be used on frontend product page
             add_action( 'wc_ajax_wooco_load_gallery', [ $this, 'ajax_load_gallery' ] );
-
-            // Add to selector
-            add_filter( 'product_type_selector', [ $this, 'product_type_selector' ] );
-
-            // Product data tabs
-            add_filter( 'woocommerce_product_data_tabs', [ $this, 'product_data_tabs' ] );
-
-            // Product data panels
-            add_action( 'woocommerce_product_data_panels', [ $this, 'product_data_panels' ] );
-            add_action( 'woocommerce_process_product_meta_composite', [ $this, 'process_meta_composite' ] );
 
             // Add to a cart form & button
             add_action( 'woocommerce_composite_add_to_cart', [ $this, 'add_to_cart_form' ] );
@@ -69,9 +43,6 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
             // Undo remove
             add_action( 'woocommerce_restore_cart_item', [ $this, 'restore_cart_item' ] );
 
-            // Admin
-            add_filter( 'display_post_states', [ $this, 'display_post_states' ], 10, 2 );
-
             // Cart item
             add_filter( 'woocommerce_cart_item_name', [ $this, 'cart_item_name' ], 10, 2 );
             add_filter( 'woocommerce_cart_item_quantity', [ $this, 'cart_item_quantity' ], 10, 3 );
@@ -85,30 +56,30 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
             add_action( 'woocommerce_after_cart_item_name', [ $this, 'cart_item_edit' ], 10, 2 );
 
             // Hide on cart & checkout page
-            if ( self::get_setting( 'hide_component', 'no' ) !== 'no' ) {
+            if ( WPCleverWooco_Helper::get_setting( 'hide_component', 'no' ) !== 'no' ) {
                 add_filter( 'woocommerce_cart_item_visible', [ $this, 'cart_item_visible' ], 10, 2 );
                 add_filter( 'woocommerce_checkout_cart_item_visible', [ $this, 'cart_item_visible' ], 10, 2 );
             }
 
             // Hide on a mini-cart
-            if ( self::get_setting( 'hide_component_mini_cart', 'no' ) === 'yes' ) {
+            if ( WPCleverWooco_Helper::get_setting( 'hide_component_mini_cart', 'no' ) === 'yes' ) {
                 add_filter( 'woocommerce_widget_cart_item_visible', [ $this, 'cart_item_visible' ], 10, 2 );
             }
 
             // Hide on order details
-            if ( self::get_setting( 'hide_component_order', 'no' ) !== 'no' ) {
+            if ( WPCleverWooco_Helper::get_setting( 'hide_component_order', 'no' ) !== 'no' ) {
                 add_filter( 'woocommerce_order_item_visible', [ $this, 'order_item_visible' ], 10, 2 );
             }
 
             // Item class
-            if ( self::get_setting( 'hide_component', 'no' ) !== 'yes' ) {
+            if ( WPCleverWooco_Helper::get_setting( 'hide_component', 'no' ) !== 'yes' ) {
                 add_filter( 'woocommerce_cart_item_class', [ $this, 'cart_item_class' ], 10, 2 );
                 add_filter( 'woocommerce_mini_cart_item_class', [ $this, 'cart_item_class' ], 10, 2 );
                 add_filter( 'woocommerce_order_item_class', [ $this, 'cart_item_class' ], 10, 2 );
             }
 
             // Get item data
-            if ( self::get_setting( 'hide_component', 'no' ) === 'yes_text' || self::get_setting( 'hide_component', 'no' ) === 'yes_list' ) {
+            if ( WPCleverWooco_Helper::get_setting( 'hide_component', 'no' ) === 'yes_text' || WPCleverWooco_Helper::get_setting( 'hide_component', 'no' ) === 'yes_list' ) {
                 add_filter( 'woocommerce_get_item_data', [ $this, 'cart_item_meta' ], 10, 2 );
             }
 
@@ -123,17 +94,9 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
             add_filter( 'woocommerce_order_item_name', [ $this, 'cart_item_name' ], 10, 2 );
             add_filter( 'woocommerce_order_formatted_line_subtotal', [ $this, 'formatted_line_subtotal' ], 10, 2 );
 
-            if ( self::get_setting( 'hide_component_order', 'no' ) === 'yes_text' || self::get_setting( 'hide_component_order', 'no' ) === 'yes_list' ) {
+            if ( WPCleverWooco_Helper::get_setting( 'hide_component_order', 'no' ) === 'yes_text' || WPCleverWooco_Helper::get_setting( 'hide_component_order', 'no' ) === 'yes_list' ) {
                 add_action( 'woocommerce_order_item_meta_start', [ $this, 'order_item_meta_start' ], 10, 2 );
             }
-
-            // Admin order
-            add_filter( 'woocommerce_hidden_order_itemmeta', [ $this, 'hidden_order_itemmeta' ] );
-            add_action( 'woocommerce_before_order_itemmeta', [ $this, 'before_order_itemmeta' ], 10, 2 );
-
-            // Add settings link
-            add_filter( 'plugin_action_links', [ $this, 'action_links' ], 10, 2 );
-            add_filter( 'plugin_row_meta', [ $this, 'row_meta' ], 10, 2 );
 
             // Loop add-to-cart
             add_filter( 'woocommerce_loop_add_to_cart_link', [ $this, 'loop_add_to_cart_link' ], 10, 2 );
@@ -158,12 +121,6 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
             // Coupons
             add_filter( 'woocommerce_coupon_is_valid_for_product', [ $this, 'coupon_is_valid_for_product' ], 10, 4 );
 
-            // Export
-            add_filter( 'woocommerce_product_export_meta_value', [ $this, 'export_process' ], 10, 3 );
-
-            // Import
-            add_filter( 'woocommerce_product_import_pre_insert_product_object', [ $this, 'import_process' ], 10, 2 );
-
             // WPC Smart Messages
             add_filter( 'wpcsm_locations', [ $this, 'wpcsm_locations' ] );
 
@@ -173,505 +130,7 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
             }, 10, 2 );
         }
 
-        function init() {
-            // load text-domain
-            load_plugin_textdomain( 'wpc-composite-products', false, basename( WOOCO_DIR ) . '/languages/' );
-
-            // image size
-            self::$image_size = apply_filters( 'wooco_image_size', self::$image_size );
-        }
-
-        public static function get_settings() {
-            return apply_filters( 'wooco_get_settings', self::$settings );
-        }
-
-        public static function get_setting( $name, $default = false ) {
-            if ( ! empty( self::$settings ) && isset( self::$settings[ $name ] ) ) {
-                $setting = self::$settings[ $name ];
-            } else {
-                $setting = get_option( 'wooco_' . $name, $default );
-            }
-
-            return apply_filters( 'wooco_get_setting', $setting, $name, $default );
-        }
-
-        function component( $active = false, $component = [], $key = null ) {
-            if ( ! $key ) {
-                $key = self::generate_key();
-            }
-
-            $component_default = [
-                    'name'       => '',
-                    'desc'       => '',
-                    'type'       => '',
-                    'products'   => [],
-                    'other'      => [],
-                    'orderby'    => 'default',
-                    'order'      => 'default',
-                    'exclude'    => [],
-                    'default'    => '',
-                    'optional'   => 'yes',
-                    'multiple'   => 'no',
-                    'qty'        => 1,
-                    'custom_qty' => 'no',
-                    'price'      => '',
-                    'min'        => 0,
-                    'max'        => 1000,
-                    'm_min'      => 0,
-                    'm_max'      => 1000,
-                    'selector'   => 'default',
-            ];
-
-            if ( ! empty( $component ) ) {
-                $component = array_merge( $component_default, $component );
-            } else {
-                $component = $component_default;
-            }
-
-            if ( class_exists( 'WPCleverWoopq' ) && ( WPCleverWoopq::get_setting( 'decimal', 'no' ) === 'yes' ) ) {
-                $step = '0.000001';
-            } else {
-                $step             = '1';
-                $component['qty'] = (int) $component['qty'];
-                $component['min'] = (int) $component['min'];
-                $component['max'] = (int) $component['max'];
-            }
-            ?>
-            <tr class="wooco_component">
-                <td>
-                    <div class="wooco_component_inner <?php echo esc_attr( $active ? 'active' : '' ); ?>">
-                        <div class="wooco_component_heading">
-                            <span class="wooco_move_component"></span>
-                            <span class="wooco_component_name"><?php echo esc_html( wp_strip_all_tags( $component['name'] ) ); ?></span>
-                            <a class="wooco_duplicate_component"
-                               href="#"><?php esc_html_e( 'duplicate', 'wpc-composite-products' ); ?></a>
-                            <a class="wooco_remove_component"
-                               href="#"><?php esc_html_e( 'remove', 'wpc-composite-products' ); ?></a>
-                        </div>
-                        <div class="wooco_component_content">
-                            <div class="wooco_component_content_line">
-                                <div class="wooco_component_content_line_label">
-                                    <?php esc_html_e( 'Name', 'wpc-composite-products' ); ?>
-                                </div>
-                                <div class="wooco_component_content_line_value">
-                                    <label>
-                                        <input name="<?php echo esc_attr( 'wooco_components[' . $key . '][name]' ); ?>"
-                                               type="text" class="wooco_component_name_val"
-                                               id="<?php echo esc_attr( 'wooco_component_name_val_' . $key ); ?>"
-                                               value="<?php echo esc_attr( $component['name'] ); ?>"
-                                               placeholder="<?php esc_attr_e( 'Name', 'wpc-composite-products' ); ?>"/>
-                                    </label>
-                                </div>
-                            </div>
-                            <div class="wooco_component_content_line">
-                                <div class="wooco_component_content_line_label">
-                                    <?php esc_html_e( 'Description', 'wpc-composite-products' ); ?>
-                                </div>
-                                <div class="wooco_component_content_line_value">
-                                    <label>
-                                        <textarea class="wooco_component_desc_val"
-                                                  name="<?php echo esc_attr( 'wooco_components[' . $key . '][desc]' ); ?>"
-                                                  placeholder="<?php esc_attr_e( 'Description', 'wpc-composite-products' ); ?>"><?php echo esc_textarea( $component['desc'] ); ?></textarea>
-                                    </label>
-                                </div>
-                            </div>
-                            <div class="wooco_component_content_line">
-                                <div class="wooco_component_content_line_label">
-                                    <?php esc_html_e( 'Source', 'wpc-composite-products' ); ?>
-                                </div>
-                                <div class="wooco_component_content_line_value">
-                                    <label>
-                                        <select name="<?php echo esc_attr( 'wooco_components[' . $key . '][type]' ); ?>"
-                                                class="wooco_component_type wooco_component_type_val"
-                                                id="<?php echo esc_attr( 'wooco_component_type_val_' . $key ); ?>">
-                                            <option value=""><?php esc_html_e( 'Select source', 'wpc-composite-products' ); ?></option>
-                                            <option value="products" <?php selected( $component['type'], 'products' ); ?>><?php esc_html_e( 'Products', 'wpc-composite-products' ); ?></option>
-                                            <?php
-                                            $taxonomies = get_object_taxonomies( 'product', 'objects' );
-
-                                            foreach ( $taxonomies as $taxonomy ) {
-                                                echo '<option value="' . esc_attr( $taxonomy->name ) . '" ' . selected( $component['type'], $taxonomy->name, false ) . ' disabled>' . esc_html( $taxonomy->label ) . '</option>';
-                                            }
-                                            ?>
-                                        </select>
-                                    </label>
-                                    <span><?php esc_html_e( 'Order by', 'wpc-composite-products' ); ?> <label>
-                                    <select name="<?php echo esc_attr( 'wooco_components[' . $key . '][orderby]' ); ?>"
-                                            class="wooco_component_orderby_val"
-                                            id="<?php echo esc_attr( 'wooco_component_orderby_val_' . $key ); ?>">
-                                                        <option value="default" <?php selected( $component['orderby'], 'default' ); ?>><?php esc_html_e( 'Default', 'wpc-composite-products' ); ?></option>
-                                                        <option value="none" <?php selected( $component['orderby'], 'none' ); ?>><?php esc_html_e( 'None', 'wpc-composite-products' ); ?></option>
-                                                        <option value="ID" <?php selected( $component['orderby'], 'ID' ); ?>><?php esc_html_e( 'ID', 'wpc-composite-products' ); ?></option>
-                                                        <option value="title" <?php selected( $component['orderby'], 'title' ); ?>><?php esc_html_e( 'Name', 'wpc-composite-products' ); ?></option>
-                                                        <option value="type" <?php selected( $component['orderby'], 'type' ); ?>><?php esc_html_e( 'Type', 'wpc-composite-products' ); ?></option>
-                                                        <option value="rand" <?php selected( $component['orderby'], 'rand' ); ?>><?php esc_html_e( 'Rand', 'wpc-composite-products' ); ?></option>
-                                                        <option value="date" <?php selected( $component['orderby'], 'date' ); ?>><?php esc_html_e( 'Date', 'wpc-composite-products' ); ?></option>
-                                                        <option value="price" <?php selected( $component['orderby'], 'price' ); ?>><?php esc_html_e( 'Price', 'wpc-composite-products' ); ?></option>
-                                                        <option value="modified" <?php selected( $component['orderby'], 'modified' ); ?>><?php esc_html_e( 'Modified', 'wpc-composite-products' ); ?></option>
-                                                        <option value="menu_order" <?php selected( $component['orderby'], 'menu_order' ); ?>><?php esc_html_e( 'Menu order', 'wpc-composite-products' ); ?></option>
-                                                    </select>
-                                    </label></span> &nbsp;
-                                    <span><?php esc_html_e( 'Order', 'wpc-composite-products' ); ?> <label>
-                                    <select name="<?php echo esc_attr( 'wooco_components[' . $key . '][order]' ); ?>"
-                                            class="wooco_component_order_val"
-                                            id="<?php echo esc_attr( 'wooco_component_order_val_' . $key ); ?>">
-                                                        <option value="default" <?php selected( $component['order'], 'default' ); ?>><?php esc_html_e( 'Default', 'wpc-composite-products' ); ?></option>
-                                                        <option value="DESC" <?php selected( $component['order'], 'DESC' ); ?>><?php esc_html_e( 'DESC', 'wpc-composite-products' ); ?></option>
-                                                        <option value="ASC" <?php selected( $component['order'], 'ASC' ); ?>><?php esc_html_e( 'ASC', 'wpc-composite-products' ); ?></option>
-                                                        </select>
-                                    </label></span>
-                                </div>
-                            </div>
-                            <div class="wooco_component_content_line wooco_hide wooco_show_if_other">
-                                <div class="wooco_component_content_line_label wooco_component_type_label">
-                                    <?php esc_html_e( 'Terms', 'wpc-composite-products' ); ?>
-                                </div>
-                                <div class="wooco_component_content_line_value">
-                                    <?php
-                                    if ( ! is_array( $component['other'] ) ) {
-                                        // old versions before 6.0
-                                        $other = array_map( 'trim', explode( ',', $component['other'] ) );
-                                    } else {
-                                        $other = $component['other'];
-                                    }
-                                    ?>
-                                    <label>
-                                        <select class="wooco_terms wooco_component_other_val" multiple="multiple"
-                                                id="<?php echo esc_attr( 'wooco_component_other_val_' . $key ); ?>"
-                                                name="<?php echo esc_attr( 'wooco_components[' . $key . '][other][]' ); ?>"
-                                                data-<?php echo esc_attr( $component['type'] ); ?>="<?php echo esc_attr( implode( ',', $other ) ); ?>">
-                                            <?php
-                                            if ( ! empty( $other ) ) {
-                                                foreach ( $other as $t ) {
-                                                    if ( $term = get_term_by( 'slug', $t, $component['type'] ) ) {
-                                                        echo '<option value="' . esc_attr( $t ) . '" selected>' . esc_html( $term->name ) . '</option>';
-                                                    }
-                                                }
-                                            }
-                                            ?>
-                                        </select> </label>
-                                </div>
-                            </div>
-                            <div class="wooco_component_content_line wooco_hide wooco_show_if_products">
-                                <div class="wooco_component_content_line_label">
-                                    <?php esc_html_e( 'Products', 'wpc-composite-products' ); ?>
-                                </div>
-                                <div class="wooco_component_content_line_value">
-                                    <label>
-                                        <select class="wooco_products wooco_component_products_val"
-                                                data-allow_clear="false" style="width: 100%;" data-sortable="1"
-                                                multiple="multiple"
-                                                id="<?php echo esc_attr( 'wooco_component_products_val_' . $key ); ?>"
-                                                name="<?php echo esc_attr( 'wooco_components[' . $key . '][products][]' ); ?>"
-                                                data-placeholder="<?php esc_attr_e( 'Search for a product&hellip;', 'wpc-composite-products' ); ?>">
-                                            <?php
-                                            if ( ! is_array( $component['products'] ) ) {
-                                                // old versions before 6.0
-                                                $_product_ids = explode( ',', $component['products'] );
-                                            } else {
-                                                $_product_ids = $component['products'];
-                                            }
-
-                                            if ( ! empty( $_product_ids ) ) {
-                                                foreach ( $_product_ids as $_product_id ) {
-                                                    if ( ! empty( $_product_id ) ) {
-                                                        $_product_id = self::get_product_id( $_product_id );
-
-                                                        if ( $_product = wc_get_product( $_product_id ) ) {
-                                                            echo '<option value="' . esc_attr( self::get_product_sku_or_id( $_product ) ) . '" selected="selected">' . wp_kses_post( $_product->get_formatted_name() ) . '</option>';
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                            ?>
-                                        </select> </label>
-                                </div>
-                            </div>
-                            <div class="wooco_component_content_line wooco_show wooco_hide_if_products">
-                                <div class="wooco_component_content_line_label">
-                                    <?php esc_html_e( 'Exclude', 'wpc-composite-products' ); ?>
-                                </div>
-                                <div class="wooco_component_content_line_value">
-                                    <label>
-                                        <select class="wooco_products wooco_component_exclude_val" multiple="multiple"
-                                                data-allow_clear="false" style="width: 100%;" data-sortable="1"
-                                                id="<?php echo esc_attr( 'wooco_component_exclude_val_' . $key ); ?>"
-                                                name="<?php echo esc_attr( 'wooco_components[' . $key . '][exclude][]' ); ?>"
-                                                data-placeholder="<?php esc_attr_e( 'Search for a product&hellip;', 'wpc-composite-products' ); ?>">
-                                            <?php
-                                            if ( ! is_array( $component['exclude'] ) ) {
-                                                // old versions before 6.0
-                                                $_product_ids = explode( ',', $component['exclude'] );
-                                            } else {
-                                                $_product_ids = $component['exclude'];
-                                            }
-
-                                            if ( ! empty( $_product_ids ) ) {
-                                                foreach ( $_product_ids as $_product_id ) {
-                                                    if ( ! empty( $_product_id ) ) {
-                                                        $_product_id = self::get_product_id( $_product_id );
-
-                                                        if ( $_product = wc_get_product( $_product_id ) ) {
-                                                            echo '<option value="' . esc_attr( self::get_product_sku_or_id( $_product ) ) . '" selected="selected">' . wp_kses_post( $_product->get_formatted_name() ) . '</option>';
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                            ?>
-                                        </select> </label>
-                                </div>
-                            </div>
-                            <div class="wooco_component_content_line">
-                                <div class="wooco_component_content_line_label">
-                                    <?php esc_html_e( 'Default option', 'wpc-composite-products' ); ?>
-                                </div>
-                                <div class="wooco_component_content_line_value">
-                                    <label>
-                                        <select class="wooco_products" style="width: 100%;" data-allow_clear="true"
-                                                id="<?php echo esc_attr( 'wooco_component_default_val_' . $key ); ?>"
-                                                name="<?php echo esc_attr( 'wooco_components[' . $key . '][default]' ); ?>"
-                                                data-placeholder="<?php esc_attr_e( 'Search for a product&hellip;', 'wpc-composite-products' ); ?>">
-                                            <?php
-                                            if ( ! empty( $component['default'] ) ) {
-                                                $default_id = self::get_product_id( $component['default'] );
-
-                                                if ( $default_product = wc_get_product( $default_id ) ) {
-                                                    echo '<option value="' . esc_attr( self::get_product_sku_or_id( $default_product ) ) . '" selected="selected">' . wp_kses_post( $default_product->get_formatted_name() ) . '</option>';
-                                                }
-                                            }
-                                            ?>
-                                        </select> </label>
-                                </div>
-                            </div>
-                            <div class="wooco_component_content_line">
-                                <div class="wooco_component_content_line_label">
-                                    <?php esc_html_e( 'Required', 'wpc-composite-products' ); ?>
-                                </div>
-                                <div class="wooco_component_content_line_value">
-                                    <label>
-                                        <select name="<?php echo esc_attr( 'wooco_components[' . $key . '][optional]' ); ?>"
-                                                class="wooco_component_optional_val"
-                                                id="<?php echo esc_attr( 'wooco_component_optional_val_' . $key ); ?>">
-                                            <option value="no" <?php selected( $component['optional'], 'no' ); ?>><?php esc_html_e( 'Yes', 'wpc-composite-products' ); ?></option>
-                                            <option value="yes" <?php selected( $component['optional'], 'yes' ); ?>><?php esc_html_e( 'No', 'wpc-composite-products' ); ?></option>
-                                        </select> </label>
-                                </div>
-                            </div>
-                            <div class="wooco_component_content_line">
-                                <div class="wooco_component_content_line_label">
-                                    <?php esc_html_e( 'New price', 'wpc-composite-products' ); ?>
-                                </div>
-                                <div class="wooco_component_content_line_value">
-                                    <label>
-                                        <input name="<?php echo esc_attr( 'wooco_components[' . $key . '][price]' ); ?>"
-                                               class="wooco_component_price_val" type="text"
-                                               style="width: 60px; display: inline-block"
-                                               id="<?php echo esc_attr( 'wooco_component_price_val_' . $key ); ?>"
-                                               value="<?php echo esc_attr( self::format_price( $component['price'] ) ); ?>"/>
-                                    </label>
-                                    <span class="woocommerce-help-tip"
-                                          data-tip="<?php esc_html_e( 'Set a new price using a number (eg. "49" for $49) or a percentage (eg. "90%" of the original price).', 'wpc-composite-products' ); ?>"></span>
-                                </div>
-                            </div>
-                            <div class="wooco_component_content_line">
-                                <div class="wooco_component_content_line_label">
-                                    <?php esc_html_e( 'Quantity', 'wpc-composite-products' ); ?>
-                                </div>
-                                <div class="wooco_component_content_line_value">
-                                    <label>
-                                        <input name="<?php echo esc_attr( 'wooco_components[' . $key . '][qty]' ); ?>"
-                                               class="wooco_component_qty_val" type="number" min="0"
-                                               step="<?php echo esc_attr( $step ); ?>"
-                                               value="<?php echo esc_attr( $component['qty'] ); ?>"/>
-                                    </label>
-                                </div>
-                            </div>
-                            <div class="wooco_component_content_line">
-                                <div class="wooco_component_content_line_label">
-                                    <?php esc_html_e( 'Custom quantity', 'wpc-composite-products' ); ?>
-                                </div>
-                                <div class="wooco_component_content_line_value">
-                                    <label>
-                                        <select name="<?php echo esc_attr( 'wooco_components[' . $key . '][custom_qty]' ); ?>"
-                                                class="wooco_component_custom_qty_val"
-                                                id="<?php echo esc_attr( 'wooco_component_custom_qty_val_' . $key ); ?>">
-                                            <option value="no" <?php selected( $component['custom_qty'], 'no' ); ?>><?php esc_html_e( 'No', 'wpc-composite-products' ); ?></option>
-                                            <option value="yes" <?php selected( $component['custom_qty'], 'yes' ); ?>><?php esc_html_e( 'Yes', 'wpc-composite-products' ); ?></option>
-                                        </select> </label>
-                                </div>
-                            </div>
-                            <div class="wooco_component_content_line wooco_show_if_custom_qty">
-                                <div class="wooco_component_content_line_label">
-                                    <?php esc_html_e( 'Each item\'s quantity limit', 'wpc-composite-products' ); ?>
-                                </div>
-                                <div class="wooco_component_content_line_value">
-                                    <?php esc_html_e( 'Min', 'wpc-composite-products' ); ?>
-                                    <label>
-                                        <input name="<?php echo esc_attr( 'wooco_components[' . $key . '][min]' ); ?>"
-                                               class="wooco_component_min_val" type="number" min="0"
-                                               step="<?php echo esc_attr( $step ); ?>"
-                                               value="<?php echo esc_attr( $component['min'] ); ?>"/>
-                                    </label>
-                                    <?php esc_html_e( 'Max', 'wpc-composite-products' ); ?>
-                                    <label>
-                                        <input name="<?php echo esc_attr( 'wooco_components[' . $key . '][max]' ); ?>"
-                                               class="wooco_component_max_val" type="number" min="0"
-                                               step="<?php echo esc_attr( $step ); ?>"
-                                               value="<?php echo esc_attr( $component['max'] ); ?>"/>
-                                    </label>
-                                </div>
-                            </div>
-                            <div class="wooco_component_content_line wooco_show_if_custom_qty">
-                                <div class="wooco_component_content_line_label">
-                                    <?php esc_html_e( 'Whole component\'s quantity limit', 'wpc-composite-products' ); ?>
-                                </div>
-                                <div class="wooco_component_content_line_value">
-                                    <?php esc_html_e( 'Min', 'wpc-composite-products' ); ?>
-                                    <label>
-                                        <input name="<?php echo esc_attr( 'wooco_components[' . $key . '][m_min]' ); ?>"
-                                               class="wooco_component_m_min_val" type="number" min="0"
-                                               step="<?php echo esc_attr( $step ); ?>"
-                                               value="<?php echo esc_attr( $component['m_min'] ); ?>"/>
-                                    </label>
-                                    <?php esc_html_e( 'Max', 'wpc-composite-products' ); ?>
-                                    <label>
-                                        <input name="<?php echo esc_attr( 'wooco_components[' . $key . '][m_max]' ); ?>"
-                                               class="wooco_component_m_max_val" type="number" min="0"
-                                               step="<?php echo esc_attr( $step ); ?>"
-                                               value="<?php echo esc_attr( $component['m_max'] ); ?>"/>
-                                    </label>
-                                    <span class="woocommerce-help-tip"
-                                          data-tip="<?php esc_html_e( 'For multiple selection only.', 'wpc-composite-products' ); ?>"></span>
-                                </div>
-                            </div>
-                            <div class="wooco_component_content_line">
-                                <div class="wooco_component_content_line_label">
-                                    <?php esc_html_e( 'Multiple selection', 'wpc-composite-products' ); ?>
-                                </div>
-                                <div class="wooco_component_content_line_value">
-                                    <label>
-                                        <select name="<?php echo esc_attr( 'wooco_components[' . $key . '][multiple]' ); ?>"
-                                                class="wooco_component_multiple_val"
-                                                id="<?php echo esc_attr( 'wooco_component_multiple_val_' . $key ); ?>">
-                                            <option value="no" <?php selected( $component['multiple'], 'no' ); ?>><?php esc_html_e( 'No', 'wpc-composite-products' ); ?></option>
-                                            <option value="yes" <?php selected( $component['multiple'], 'yes' ); ?>><?php esc_html_e( 'Yes', 'wpc-composite-products' ); ?></option>
-                                        </select> </label>
-                                </div>
-                            </div>
-                            <div class="wooco_component_content_line">
-                                <div class="wooco_component_content_line_label">
-                                    <?php esc_html_e( 'Selector interface', 'wpc-composite-products' ); ?>
-                                </div>
-                                <div class="wooco_component_content_line_value">
-                                    <label>
-                                        <select name="<?php echo esc_attr( 'wooco_components[' . $key . '][selector]' ); ?>"
-                                                class="wooco_component_selector_val"
-                                                id="<?php echo esc_attr( 'wooco_component_selector_val_' . $key ); ?>">
-                                            <option value="default" <?php selected( $component['selector'], 'default' ); ?>><?php esc_html_e( 'Default', 'wpc-composite-products' ); ?></option>
-                                            <option value="list" <?php selected( $component['selector'], 'list' ); ?>><?php esc_html_e( 'List', 'wpc-composite-products' ); ?></option>
-                                            <option value="grid_2" <?php selected( $component['selector'], 'grid_2' ); ?>><?php esc_html_e( 'Grid - 2 columns', 'wpc-composite-products' ); ?></option>
-                                            <option value="grid_3" <?php selected( $component['selector'], 'grid_3' ); ?>><?php esc_html_e( 'Grid - 3 columns', 'wpc-composite-products' ); ?></option>
-                                            <option value="grid_4" <?php selected( $component['selector'], 'grid_4' ); ?>><?php esc_html_e( 'Grid - 4 columns', 'wpc-composite-products' ); ?></option>
-                                        </select> </label>
-                                    <span class="woocommerce-help-tip"
-                                          data-tip="<?php esc_html_e( 'Specify selector interface for this component. If not, the default selector interface will be used.', 'wpc-composite-products' ); ?>"></span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </td>
-            </tr>
-        <?php }
-
-        function ajax_add_component() {
-            if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_key( $_POST['nonce'] ), 'wooco_nonce' ) ) {
-                die( 'Permissions check failed!' );
-            }
-
-            $component = [];
-            $form_data = isset( $_POST['form_data'] ) ? sanitize_post( $_POST['form_data'] ) : '';
-
-            if ( ! empty( $form_data ) ) {
-                $components = [];
-                parse_str( $form_data, $components );
-
-                if ( isset( $components['wooco_components'] ) && is_array( $components['wooco_components'] ) ) {
-                    $component = reset( $components['wooco_components'] );
-                }
-            }
-
-            self::component( true, $component );
-            wp_die();
-        }
-
-        function ajax_save_components() {
-            if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_key( $_POST['nonce'] ), 'wooco_nonce' ) ) {
-                die( 'Permissions check failed!' );
-            }
-
-            if ( ! isset( $_POST['pid'] ) || ! current_user_can( 'edit_post', absint( sanitize_text_field( $_POST['pid'] ) ) ) ) {
-                die( 'Permissions check failed!' );
-            }
-
-            $pid       = absint( sanitize_text_field( $_POST['pid'] ) );
-            $form_data = isset( $_POST['form_data'] ) ? sanitize_post( $_POST['form_data'] ) : '';
-
-            if ( $pid && $form_data ) {
-                $components = [];
-                parse_str( $form_data, $components );
-
-                if ( isset( $components['wooco_components'] ) ) {
-                    update_post_meta( $pid, 'wooco_components', self::sanitize_array( $components['wooco_components'] ) );
-                }
-
-                // delete cache
-                delete_transient( 'wooco_show_items_' . $pid );
-            }
-
-            wp_die();
-        }
-
-        function ajax_export_components() {
-            if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_key( $_POST['nonce'] ), 'wooco_nonce' ) ) {
-                die( 'Permissions check failed!' );
-            }
-
-            $product_id = absint( $_POST['pid'] ?? 0 );
-            $components = get_post_meta( $product_id, 'wooco_components', true );
-            echo '<textarea style="width: 100%; height: 200px">' . esc_textarea( ! empty( $components ) ? serialize( $components ) : '' ) . '</textarea>';
-            echo '<div>' . esc_html__( 'You can copy this field and use it for a CSV import file.', 'wpc-composite-products' ) . '</div>';
-
-            wp_die();
-        }
-
-        function ajax_search_term() {
-            if ( ! isset( $_REQUEST['nonce'] ) || ! wp_verify_nonce( sanitize_key( $_REQUEST['nonce'] ), 'wooco_nonce' ) ) {
-                die( 'Permissions check failed!' );
-            }
-
-            $return = [];
-
-            $args = [
-                    'taxonomy'   => sanitize_text_field( $_REQUEST['taxonomy'] ),
-                    'orderby'    => 'id',
-                    'order'      => 'ASC',
-                    'hide_empty' => false,
-                    'fields'     => 'all',
-                    'name__like' => sanitize_text_field( $_REQUEST['term'] ),
-            ];
-
-            $terms = get_terms( $args );
-
-            if ( is_array( $terms ) && count( $terms ) ) {
-                foreach ( $terms as $term ) {
-                    $return[] = [ $term->slug, $term->name ];
-                }
-            }
-
-            wp_send_json( $return );
-        }
-
-        function ajax_load_gallery() {
+        public function ajax_load_gallery() {
             if ( ! apply_filters( 'wooco_disable_nonce_check', false, 'load_gallery' ) ) {
                 if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_key( $_POST['nonce'] ), 'wooco_nonce' ) ) {
                     die( 'Permissions check failed!' );
@@ -780,936 +239,21 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
             wp_send_json( [ 'gallery' => apply_filters( 'wooco_gallery', $gallery_html, $image_ids, $main_product_id ) ] );
         }
 
-        function ajax_search_product() {
-            if ( ! isset( $_REQUEST['nonce'] ) || ! wp_verify_nonce( sanitize_key( $_REQUEST['nonce'] ), 'wooco_nonce' ) ) {
-                die( 'Permissions check failed!' );
-            }
+        public function init() {
+            // load text-domain
+            load_plugin_textdomain( 'wpc-composite-products', false, basename( WOOCO_DIR ) . '/languages/' );
 
-            if ( isset( $_REQUEST['term'] ) ) {
-                $term = (string) wc_clean( wp_unslash( $_REQUEST['term'] ) );
-            }
-
-            if ( empty( $term ) ) {
-                wp_die();
-            }
-
-            $products   = [];
-            $limit      = absint( apply_filters( 'wooco_json_search_limit', 30 ) );
-            $data_store = WC_Data_Store::load( 'product' );
-            $ids        = $data_store->search_products( $term, '', true, false, $limit );
-
-            foreach ( $ids as $id ) {
-                $product_object = wc_get_product( $id );
-
-                if ( ! wc_products_array_filter_readable( $product_object ) ) {
-                    continue;
-                }
-
-                $products[] = [
-                        self::get_product_sku_or_id( $product_object ),
-                        rawurldecode( wp_strip_all_tags( $product_object->get_formatted_name() ) )
-                ];
-            }
-
-            wp_send_json( apply_filters( 'wooco_json_search_found_products', $products ) );
+            // image size
+            self::$image_size = apply_filters( 'wooco_image_size', self::$image_size );
         }
 
-        function register_settings() {
-            // settings
-            register_setting( 'wooco_settings', 'wooco_settings', [
-                    'type'              => 'array',
-                    'sanitize_callback' => [ $this, 'sanitize_array' ],
-            ] );
 
-            // localization
-            register_setting( 'wooco_localization', 'wooco_localization', [
-                    'type'              => 'array',
-                    'sanitize_callback' => [ $this, 'sanitize_array' ],
-            ] );
-        }
-
-        function last_saved( $value, $option ) {
-            if ( $option == 'wooco_settings' || $option == 'wooco_localization' ) {
-                $value['_last_saved']    = current_time( 'timestamp' );
-                $value['_last_saved_by'] = get_current_user_id();
-            }
-
-            return $value;
-        }
-
-        function admin_menu() {
-            add_submenu_page( 'wpclever', esc_html__( 'WPC Composite Products', 'wpc-composite-products' ), esc_html__( 'Composite Products', 'wpc-composite-products' ), 'manage_options', 'wpclever-wooco', [
-                    $this,
-                    'admin_menu_content'
-            ] );
-        }
-
-        function admin_menu_content() {
-            add_thickbox();
-            $active_tab = sanitize_key( $_GET['tab'] ?? 'settings' );
-            ?>
-            <div class="wpclever_settings_page wrap">
-                <div class="wpclever_settings_page_header">
-                    <a class="wpclever_settings_page_header_logo" href="https://wpclever.net/"
-                       target="_blank" title="Visit wpclever.net"></a>
-                    <div class="wpclever_settings_page_header_text">
-                        <div class="wpclever_settings_page_title"><?php echo esc_html__( 'WPC Composite Products', 'wpc-composite-products' ) . ' ' . esc_html( WOOCO_VERSION ) . ' ' . ( defined( 'WOOCO_PREMIUM' ) ? '<span class="premium" style="display: none">' . esc_html__( 'Premium', 'wpc-composite-products' ) . '</span>' : '' ); ?></div>
-                        <div class="wpclever_settings_page_desc about-text">
-                            <p>
-                                <?php printf( /* translators: stars */ esc_html__( 'Thank you for using our plugin! If you are satisfied, please reward it a full five-star %s rating.', 'wpc-composite-products' ), '<span style="color:#ffb900">&#9733;&#9733;&#9733;&#9733;&#9733;</span>' ); ?>
-                                <br/>
-                                <a href="<?php echo esc_url( WOOCO_REVIEWS ); ?>"
-                                   target="_blank"><?php esc_html_e( 'Reviews', 'wpc-composite-products' ); ?></a> |
-                                <a href="<?php echo esc_url( WOOCO_CHANGELOG ); ?>"
-                                   target="_blank"><?php esc_html_e( 'Changelog', 'wpc-composite-products' ); ?></a> |
-                                <a href="<?php echo esc_url( WOOCO_DISCUSSION ); ?>"
-                                   target="_blank"><?php esc_html_e( 'Discussion', 'wpc-composite-products' ); ?></a>
-                            </p>
-                        </div>
-                    </div>
-                </div>
-                <h2></h2>
-                <?php if ( isset( $_GET['settings-updated'] ) && $_GET['settings-updated'] ) { ?>
-                    <div class="notice notice-success is-dismissible">
-                        <p><?php esc_html_e( 'Settings updated.', 'wpc-composite-products' ); ?></p>
-                    </div>
-                <?php } ?>
-                <div class="wpclever_settings_page_nav">
-                    <h2 class="nav-tab-wrapper">
-                        <a href="<?php echo esc_url( admin_url( 'admin.php?page=wpclever-wooco&tab=how' ) ); ?>"
-                           class="<?php echo $active_tab === 'how' ? 'nav-tab nav-tab-active' : 'nav-tab'; ?>">
-                            <?php esc_html_e( 'How to use?', 'wpc-composite-products' ); ?>
-                        </a>
-                        <a href="<?php echo esc_url( admin_url( 'admin.php?page=wpclever-wooco&tab=settings' ) ); ?>"
-                           class="<?php echo $active_tab === 'settings' ? 'nav-tab nav-tab-active' : 'nav-tab'; ?>">
-                            <?php esc_html_e( 'Settings', 'wpc-composite-products' ); ?>
-                        </a>
-                        <a href="<?php echo esc_url( admin_url( 'admin.php?page=wpclever-wooco&tab=localization' ) ); ?>"
-                           class="<?php echo $active_tab === 'localization' ? 'nav-tab nav-tab-active' : 'nav-tab'; ?>">
-                            <?php esc_html_e( 'Localization', 'wpc-composite-products' ); ?>
-                        </a> <a href="<?php echo esc_url( WOOCO_DOCS ); ?>" class="nav-tab" target="_blank">
-                            <?php esc_html_e( 'Docs', 'wpc-composite-products' ); ?>
-                        </a>
-                        <a href="<?php echo esc_url( admin_url( 'admin.php?page=wpclever-wooco&tab=premium' ) ); ?>"
-                           class="<?php echo $active_tab === 'premium' ? 'nav-tab nav-tab-active' : 'nav-tab'; ?>"
-                           style="color: #c9356e">
-                            <?php esc_html_e( 'Premium Version', 'wpc-composite-products' ); ?>
-                        </a>
-                        <a href="<?php echo esc_url( admin_url( 'admin.php?page=wpclever-kit' ) ); ?>" class="nav-tab">
-                            <?php esc_html_e( 'Essential Kit', 'wpc-composite-products' ); ?>
-                        </a>
-                    </h2>
-                </div>
-                <div class="wpclever_settings_page_content">
-                    <?php if ( $active_tab === 'how' ) { ?>
-                        <div class="wpclever_settings_page_content_text">
-                            <p>
-                                <?php esc_html_e( 'When creating the product, please choose product data is "Smart composite" then you can see the search field to start search and add component products.', 'wpc-composite-products' ); ?>
-                            </p>
-                            <p>
-                                <img src="<?php echo esc_url( WOOCO_URI . 'assets/images/how-01.jpg' ); ?>" alt=""/>
-                            </p>
-                        </div>
-                        <?php
-                    } elseif ( $active_tab === 'settings' ) {
-                        $price_format             = self::get_setting( 'price_format', 'from_regular' );
-                        $product_price            = self::get_setting( 'product_price', 'sale_price' );
-                        $selector                 = self::get_setting( 'selector', 'ddslick' );
-                        $exclude_hidden           = self::get_setting( 'exclude_hidden', 'no' );
-                        $exclude_unpurchasable    = self::get_setting( 'exclude_unpurchasable', 'yes' );
-                        $show_alert               = self::get_setting( 'show_alert', 'load' );
-                        $show_qty                 = self::get_setting( 'show_qty', 'yes' );
-                        $show_plus_minus          = self::get_setting( 'show_plus_minus', 'yes' );
-                        $show_image               = self::get_setting( 'show_image', 'yes' );
-                        $show_price               = self::get_setting( 'show_price', 'yes' );
-                        $show_availability        = self::get_setting( 'show_availability', 'yes' );
-                        $show_short_description   = self::get_setting( 'show_short_description', 'no' );
-                        $option_none_image        = self::get_setting( 'option_none_image', 'placeholder' );
-                        $option_none_image_id     = self::get_setting( 'option_none_image_id', '' );
-                        $option_none_required     = self::get_setting( 'option_none_required', 'no' );
-                        $checkbox                 = self::get_setting( 'checkbox', 'no' );
-                        $checked                  = self::get_setting( 'checked', 'yes' );
-                        $change_image             = self::get_setting( 'change_image', 'yes' );
-                        $change_price             = self::get_setting( 'change_price', 'yes' );
-                        $change_price_custom      = self::get_setting( 'change_price_custom', '.summary > .price' );
-                        $product_link             = self::get_setting( 'product_link', 'no' );
-                        $coupon_restrictions      = self::get_setting( 'coupon_restrictions', 'no' );
-                        $cart_contents_count      = self::get_setting( 'cart_contents_count', 'composite' );
-                        $hide_composite_name      = self::get_setting( 'hide_composite_name', 'no' );
-                        $hide_component_name      = self::get_setting( 'hide_component_name', 'yes' );
-                        $hide_component           = self::get_setting( 'hide_component', 'no' );
-                        $hide_component_mini_cart = self::get_setting( 'hide_component_mini_cart', 'no' );
-                        $hide_component_order     = self::get_setting( 'hide_component_order', 'no' );
-                        $edit_link                = self::get_setting( 'edit_link', 'no' );
-                        ?>
-                        <form method="post" action="options.php">
-                            <table class="form-table">
-                                <tr class="heading">
-                                    <th colspan="2">
-                                        <?php esc_html_e( 'General', 'wpc-composite-products' ); ?>
-                                    </th>
-                                </tr>
-                                <tr>
-                                    <th><?php esc_html_e( 'Price format', 'wpc-composite-products' ); ?></th>
-                                    <td>
-                                        <label> <select name="wooco_settings[price_format]">
-                                                <option value="from_regular" <?php selected( $price_format, 'from_regular' ); ?>><?php esc_html_e( 'From regular price', 'wpc-composite-products' ); ?></option>
-                                                <option value="from_sale" <?php selected( $price_format, 'from_sale' ); ?>><?php esc_html_e( 'From sale price', 'wpc-composite-products' ); ?></option>
-                                                <option value="normal" <?php selected( $price_format, 'normal' ); ?>><?php esc_html_e( 'Regular and sale price', 'wpc-composite-products' ); ?></option>
-                                            </select> </label>
-                                        <span class="description"><?php esc_html_e( 'Choose a price format for composites on the archive page.', 'wpc-composite-products' ); ?></span>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th><?php esc_html_e( 'Calculate product prices', 'wpc-composite-products' ); ?></th>
-                                    <td>
-                                        <label> <select name="wooco_settings[product_price]">
-                                                <option value="sale_price" <?php selected( $product_price, 'sale_price' ); ?>><?php esc_html_e( 'from Sale price', 'wpc-composite-products' ); ?></option>
-                                                <option value="regular_price" <?php selected( $product_price, 'regular_price' ); ?>><?php esc_html_e( 'from Regular price', 'wpc-composite-products' ); ?></option>
-                                            </select> </label>
-                                        <span class="description"><?php esc_html_e( 'Component product pricing methods: from Sale price (default) or Regular price.', 'wpc-composite-products' ); ?></span>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th><?php esc_html_e( 'Selector interface', 'wpc-composite-products' ); ?></th>
-                                    <td>
-                                        <label> <select name="wooco_settings[selector]">
-                                                <option value="list" <?php selected( $selector, 'list' ); ?>><?php esc_html_e( 'List', 'wpc-composite-products' ); ?></option>
-                                                <option value="grid_2" <?php selected( $selector, 'grid_2' ); ?>><?php esc_html_e( 'Grid - 2 columns', 'wpc-composite-products' ); ?></option>
-                                                <option value="grid_3" <?php selected( $selector, 'grid_3' ); ?>><?php esc_html_e( 'Grid - 3 columns', 'wpc-composite-products' ); ?></option>
-                                                <option value="grid_4" <?php selected( $selector, 'grid_4' ); ?>><?php esc_html_e( 'Grid - 4 columns', 'wpc-composite-products' ); ?></option>
-                                                <option value="ddslick" <?php selected( $selector, 'ddslick' ); ?>><?php esc_html_e( 'Dropdown - ddSlick', 'wpc-composite-products' ); ?></option>
-                                                <option value="select2" <?php selected( $selector, 'select2' ); ?>><?php esc_html_e( 'Dropdown - Select2', 'wpc-composite-products' ); ?></option>
-                                                <option value="select" <?php selected( $selector, 'select' ); ?>><?php esc_html_e( 'Dropdown - HTML select tag', 'wpc-composite-products' ); ?></option>
-                                            </select> </label>
-                                        <span class="description">Read more about <a
-                                                    href="https://designwithpc.com/Plugins/ddSlick" target="_blank">ddSlick</a>, <a
-                                                    href="https://select2.org/" target="_blank">Select2</a> and <a
-                                                    href="https://www.w3schools.com/tags/tag_select.asp"
-                                                    target="_blank">HTML select tag</a></span>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th><?php esc_html_e( 'Exclude hidden', 'wpc-composite-products' ); ?></th>
-                                    <td>
-                                        <label> <select name="wooco_settings[exclude_hidden]">
-                                                <option value="yes" <?php selected( $exclude_hidden, 'yes' ); ?>><?php esc_html_e( 'Yes', 'wpc-composite-products' ); ?></option>
-                                                <option value="no" <?php selected( $exclude_hidden, 'no' ); ?>><?php esc_html_e( 'No', 'wpc-composite-products' ); ?></option>
-                                            </select> </label>
-                                        <span class="description"><?php esc_html_e( 'Exclude hidden products from the list.', 'wpc-composite-products' ); ?></span>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th><?php esc_html_e( 'Exclude unpurchasable', 'wpc-composite-products' ); ?></th>
-                                    <td>
-                                        <label> <select name="wooco_settings[exclude_unpurchasable]">
-                                                <option value="yes" <?php selected( $exclude_unpurchasable, 'yes' ); ?>><?php esc_html_e( 'Yes', 'wpc-composite-products' ); ?></option>
-                                                <option value="no" <?php selected( $exclude_unpurchasable, 'no' ); ?>><?php esc_html_e( 'No', 'wpc-composite-products' ); ?></option>
-                                            </select> </label>
-                                        <span class="description"><?php esc_html_e( 'Exclude unpurchasable products from the list.', 'wpc-composite-products' ); ?></span>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th><?php esc_html_e( 'Show alert', 'wpc-composite-products' ); ?></th>
-                                    <td>
-                                        <label> <select name="wooco_settings[show_alert]">
-                                                <option value="load" <?php selected( $show_alert, 'load' ); ?>><?php esc_html_e( 'On composite loaded', 'wpc-composite-products' ); ?></option>
-                                                <option value="change" <?php selected( $show_alert, 'change' ); ?>><?php esc_html_e( 'On composite changing', 'wpc-composite-products' ); ?></option>
-                                                <option value="no" <?php selected( $show_alert, 'no' ); ?>><?php esc_html_e( 'No, always hide the alert', 'wpc-composite-products' ); ?></option>
-                                            </select> </label>
-                                        <span class="description"><?php esc_html_e( 'Show the inline alert under the components.', 'wpc-composite-products' ); ?></span>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th><?php esc_html_e( 'Show quantity', 'wpc-composite-products' ); ?></th>
-                                    <td>
-                                        <label> <select name="wooco_settings[show_qty]">
-                                                <option value="yes" <?php selected( $show_qty, 'yes' ); ?>><?php esc_html_e( 'Yes', 'wpc-composite-products' ); ?></option>
-                                                <option value="no" <?php selected( $show_qty, 'no' ); ?>><?php esc_html_e( 'No', 'wpc-composite-products' ); ?></option>
-                                            </select> </label>
-                                        <span class="description"><?php esc_html_e( 'Show the quantity number before component product name.', 'wpc-composite-products' ); ?></span>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th><?php esc_html_e( 'Show plus/minus button', 'wpc-composite-products' ); ?></th>
-                                    <td>
-                                        <label> <select name="wooco_settings[show_plus_minus]">
-                                                <option value="yes" <?php selected( $show_plus_minus, 'yes' ); ?>><?php esc_html_e( 'Yes', 'wpc-composite-products' ); ?></option>
-                                                <option value="no" <?php selected( $show_plus_minus, 'no' ); ?>><?php esc_html_e( 'No', 'wpc-composite-products' ); ?></option>
-                                            </select> </label>
-                                        <span class="description"><?php esc_html_e( 'Show the plus/minus button for the quantity input.', 'wpc-composite-products' ); ?></span>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th><?php esc_html_e( 'Show image', 'wpc-composite-products' ); ?></th>
-                                    <td>
-                                        <label> <select name="wooco_settings[show_image]">
-                                                <option value="yes" <?php selected( $show_image, 'yes' ); ?>><?php esc_html_e( 'Yes', 'wpc-composite-products' ); ?></option>
-                                                <option value="no" <?php selected( $show_image, 'no' ); ?>><?php esc_html_e( 'No', 'wpc-composite-products' ); ?></option>
-                                            </select> </label>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th><?php esc_html_e( 'Show price', 'wpc-composite-products' ); ?></th>
-                                    <td>
-                                        <label> <select name="wooco_settings[show_price]">
-                                                <option value="yes" <?php selected( $show_price, 'yes' ); ?>><?php esc_html_e( 'Yes', 'wpc-composite-products' ); ?></option>
-                                                <option value="no" <?php selected( $show_price, 'no' ); ?>><?php esc_html_e( 'No', 'wpc-composite-products' ); ?></option>
-                                            </select> </label>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th><?php esc_html_e( 'Show availability', 'wpc-composite-products' ); ?></th>
-                                    <td>
-                                        <label> <select name="wooco_settings[show_availability]">
-                                                <option value="yes" <?php selected( $show_availability, 'yes' ); ?>><?php esc_html_e( 'Yes', 'wpc-composite-products' ); ?></option>
-                                                <option value="no" <?php selected( $show_availability, 'no' ); ?>><?php esc_html_e( 'No', 'wpc-composite-products' ); ?></option>
-                                            </select> </label>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th><?php esc_html_e( 'Show short description', 'wpc-composite-products' ); ?></th>
-                                    <td>
-                                        <label> <select name="wooco_settings[show_short_description]">
-                                                <option value="yes" <?php selected( $show_short_description, 'yes' ); ?>><?php esc_html_e( 'Yes', 'wpc-composite-products' ); ?></option>
-                                                <option value="no" <?php selected( $show_short_description, 'no' ); ?>><?php esc_html_e( 'No', 'wpc-composite-products' ); ?></option>
-                                            </select> </label>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th><?php esc_html_e( 'Component selector', 'wpc-composite-products' ); ?></th>
-                                    <td>
-                                        <label> <select name="wooco_settings[checkbox]" class="wooco_settings_checkbox">
-                                                <option value="yes" <?php selected( $checkbox, 'yes' ); ?>><?php esc_html_e( 'Checkbox', 'wpc-composite-products' ); ?></option>
-                                                <option value="no" <?php selected( $checkbox, 'no' ); ?>><?php esc_html_e( 'Option none', 'wpc-composite-products' ); ?></option>
-                                            </select> </label>
-                                        <span class="description"><?php esc_html_e( 'Use checkbox or Option none for the dropdown selector.', 'wpc-composite-products' ); ?></span>
-                                    </td>
-                                </tr>
-                                <tr class="wooco_settings_checkbox_hide wooco_settings_checkbox_show_yes">
-                                    <th><?php esc_html_e( 'Checked by default', 'wpc-composite-products' ); ?></th>
-                                    <td>
-                                        <label> <select name="wooco_settings[checked]">
-                                                <option value="yes" <?php selected( $checked, 'yes' ); ?>><?php esc_html_e( 'Yes', 'wpc-composite-products' ); ?></option>
-                                                <option value="no" <?php selected( $checked, 'no' ); ?>><?php esc_html_e( 'No', 'wpc-composite-products' ); ?></option>
-                                            </select> </label>
-                                        <span class="description"><?php esc_html_e( 'Mark checkboxes as checked by default.', 'wpc-composite-products' ); ?></span>
-                                    </td>
-                                </tr>
-                                <tr class="wooco_settings_checkbox_hide wooco_settings_checkbox_show_no">
-                                    <th><?php esc_html_e( 'Show "Option none" for required component', 'wpc-composite-products' ); ?></th>
-                                    <td>
-                                        <label> <select name="wooco_settings[option_none_required]">
-                                                <option value="yes" <?php selected( $option_none_required, 'yes' ); ?>><?php esc_html_e( 'Yes', 'wpc-composite-products' ); ?></option>
-                                                <option value="no" <?php selected( $option_none_required, 'no' ); ?>><?php esc_html_e( 'No', 'wpc-composite-products' ); ?></option>
-                                            </select> </label>
-                                    </td>
-                                </tr>
-                                <tr class="wooco_settings_checkbox_hide wooco_settings_checkbox_show_no">
-                                    <th><?php esc_html_e( '"Option none" image', 'wpc-composite-products' ); ?></th>
-                                    <td>
-                                        <label>
-                                            <select name="wooco_settings[option_none_image]"
-                                                    class="wooco_option_none_image">
-                                                <option value="placeholder" <?php selected( $option_none_image, 'placeholder' ); ?>><?php esc_html_e( 'Placeholder image', 'wpc-composite-products' ); ?></option>
-                                                <option value="product" <?php selected( $option_none_image, 'product' ); ?>><?php esc_html_e( 'Main product\'s image', 'wpc-composite-products' ); ?></option>
-                                                <option value="custom" <?php selected( $option_none_image, 'custom' ); ?>><?php esc_html_e( 'Custom image', 'wpc-composite-products' ); ?></option>
-                                                <option value="none" <?php selected( $option_none_image, 'none' ); ?>><?php esc_html_e( 'None (hide it)', 'wpc-composite-products' ); ?></option>
-                                            </select> </label>
-                                        <span class="description"><?php esc_html_e( 'If you choose "Placeholder image", you can change it in WooCommerce > Settings > Products > Placeholder image.', 'wpc-composite-products' ); ?></span>
-                                        <div class="wooco_option_none_image_custom" style="display: none">
-                                            <?php wp_enqueue_media(); ?>
-                                            <span class="wooco_option_none_image_preview"
-                                                  id="wooco_option_none_image_preview">
-                                                        <?php if ( $option_none_image_id ) {
-                                                            echo '<img src="' . esc_url( wp_get_attachment_url( $option_none_image_id ) ) . '"/>';
-                                                        } ?>
-                                                    </span>
-                                            <input id="wooco_option_none_image_upload" type="button" class="button"
-                                                   value="<?php esc_attr_e( 'Upload image', 'wpc-composite-products' ); ?>"/>
-                                            <input type="hidden" name="wooco_settings[option_none_image_id]"
-                                                   id="wooco_option_none_image_id"
-                                                   value="<?php echo esc_attr( $option_none_image_id ); ?>"/>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th><?php esc_html_e( 'Change image gallery', 'wpc-composite-products' ); ?></th>
-                                    <td>
-                                        <label> <select name="wooco_settings[change_image]">
-                                                <option value="yes" <?php selected( $change_image, 'yes' ); ?>><?php esc_html_e( 'Yes', 'wpc-composite-products' ); ?></option>
-                                                <option value="no" <?php selected( $change_image, 'no' ); ?>><?php esc_html_e( 'No', 'wpc-composite-products' ); ?></option>
-                                            </select> </label>
-                                        <span class="description"><?php esc_html_e( 'Change the main product’s image gallery based on selected products.', 'wpc-composite-products' ); ?></span>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th><?php esc_html_e( 'Change price', 'wpc-composite-products' ); ?></th>
-                                    <td>
-                                        <label> <select name="wooco_settings[change_price]" class="wooco_change_price">
-                                                <option value="yes" <?php selected( $change_price, 'yes' ); ?>><?php esc_html_e( 'Yes', 'wpc-composite-products' ); ?></option>
-                                                <option value="yes_custom" <?php selected( $change_price, 'yes_custom' ); ?>><?php esc_html_e( 'Yes, custom selector', 'wpc-composite-products' ); ?></option>
-                                                <option value="no" <?php selected( $change_price, 'no' ); ?>><?php esc_html_e( 'No', 'wpc-composite-products' ); ?></option>
-                                            </select> </label> <label>
-                                            <input type="text" name="wooco_settings[change_price_custom]"
-                                                   value="<?php echo esc_attr( $change_price_custom ); ?>"
-                                                   placeholder=".summary > .price" class="wooco_change_price_custom"/>
-                                        </label>
-                                        <p class="description"><?php esc_html_e( 'Change the main product’s price based on the changes in prices of selected variations in a grouped products. This uses Javascript to change the main product’s price to it depends heavily on theme’s HTML. If the price doesn\'t change when this option is enabled, please contact us and we can help you adjust the JS file.', 'wpc-composite-products' ); ?></p>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th><?php esc_html_e( 'Link to individual product', 'wpc-composite-products' ); ?></th>
-                                    <td>
-                                        <label> <select name="wooco_settings[product_link]">
-                                                <option value="yes" <?php selected( $product_link, 'yes' ); ?>><?php esc_html_e( 'Yes, open on the same tab', 'wpc-composite-products' ); ?></option>
-                                                <option value="yes_blank" <?php selected( $product_link, 'yes_blank' ); ?>><?php esc_html_e( 'Yes, open on a new tab', 'wpc-composite-products' ); ?></option>
-                                                <option value="yes_popup" <?php selected( $product_link, 'yes_popup' ); ?>><?php esc_html_e( 'Yes, open quick view popup', 'wpc-composite-products' ); ?></option>
-                                                <option value="no" <?php selected( $product_link, 'no' ); ?>><?php esc_html_e( 'No', 'wpc-composite-products' ); ?></option>
-                                            </select> </label>
-                                        <p class="description"><?php esc_html_e( 'Add a link to the target individual product below this selection.', 'wpc-composite-products' ); ?>
-                                            If you choose "Open quick view popup", please install
-                                            <a href="<?php echo esc_url( admin_url( 'plugin-install.php?tab=plugin-information&plugin=woo-smart-quick-view&TB_iframe=true&width=800&height=550' ) ); ?>"
-                                               class="thickbox" title="WPC Smart Quick View">WPC Smart Quick View</a> to
-                                            make it work.
-                                        </p>
-                                    </td>
-                                </tr>
-                                <tr class="heading">
-                                    <th colspan="2">
-                                        <?php esc_html_e( 'Cart & Checkout', 'wpc-composite-products' ); ?>
-                                    </th>
-                                </tr>
-                                <tr>
-                                    <th><?php esc_html_e( 'Coupon restrictions', 'wpc-composite-products' ); ?></th>
-                                    <td>
-                                        <label> <select name="wooco_settings[coupon_restrictions]">
-                                                <option value="no" <?php selected( $coupon_restrictions, 'no' ); ?>><?php esc_html_e( 'No', 'wpc-composite-products' ); ?></option>
-                                                <option value="composite" <?php selected( $coupon_restrictions, 'composite' ); ?>><?php esc_html_e( 'Exclude composite', 'wpc-composite-products' ); ?></option>
-                                                <option value="component" <?php selected( $coupon_restrictions, 'component' ); ?>><?php esc_html_e( 'Exclude component products', 'wpc-composite-products' ); ?></option>
-                                                <option value="both" <?php selected( $coupon_restrictions, 'both' ); ?>><?php esc_html_e( 'Exclude both composite and component products', 'wpc-composite-products' ); ?></option>
-                                            </select> </label>
-                                        <span class="description"><?php esc_html_e( 'Choose products you want to exclude from coupons.', 'wpc-composite-products' ); ?></span>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th><?php esc_html_e( 'Cart content count', 'wpc-composite-products' ); ?></th>
-                                    <td>
-                                        <label> <select name="wooco_settings[cart_contents_count]">
-                                                <option value="composite" <?php selected( $cart_contents_count, 'composite' ); ?>><?php esc_html_e( 'Composite only', 'wpc-composite-products' ); ?></option>
-                                                <option value="component_products" <?php selected( $cart_contents_count, 'component_products' ); ?>><?php esc_html_e( 'Component products only', 'wpc-composite-products' ); ?></option>
-                                                <option value="both" <?php selected( $cart_contents_count, 'both' ); ?>><?php esc_html_e( 'Both composite and component products', 'wpc-composite-products' ); ?></option>
-                                            </select> </label>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th><?php esc_html_e( 'Hide composite name before component products', 'wpc-composite-products' ); ?></th>
-                                    <td>
-                                        <label> <select name="wooco_settings[hide_composite_name]">
-                                                <option value="yes" <?php selected( $hide_composite_name, 'yes' ); ?>><?php esc_html_e( 'Yes', 'wpc-composite-products' ); ?></option>
-                                                <option value="no" <?php selected( $hide_composite_name, 'no' ); ?>><?php esc_html_e( 'No', 'wpc-composite-products' ); ?></option>
-                                            </select> </label>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th><?php esc_html_e( 'Hide component name before component products', 'wpc-composite-products' ); ?></th>
-                                    <td>
-                                        <label> <select name="wooco_settings[hide_component_name]">
-                                                <option value="yes" <?php selected( $hide_component_name, 'yes' ); ?>><?php esc_html_e( 'Yes', 'wpc-composite-products' ); ?></option>
-                                                <option value="no" <?php selected( $hide_component_name, 'no' ); ?>><?php esc_html_e( 'No', 'wpc-composite-products' ); ?></option>
-                                            </select> </label>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th><?php esc_html_e( 'Hide component products on mini-cart', 'wpc-composite-products' ); ?></th>
-                                    <td>
-                                        <label> <select name="wooco_settings[hide_component_mini_cart]">
-                                                <option value="yes" <?php selected( $hide_component_mini_cart, 'yes' ); ?>><?php esc_html_e( 'Yes', 'wpc-composite-products' ); ?></option>
-                                                <option value="no" <?php selected( $hide_component_mini_cart, 'no' ); ?>><?php esc_html_e( 'No', 'wpc-composite-products' ); ?></option>
-                                            </select> </label>
-                                        <span class="description"><?php esc_html_e( 'Hide component products, just show the main composite on mini-cart.', 'wpc-composite-products' ); ?></span>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th><?php esc_html_e( 'Hide component products on cart & checkout page', 'wpc-composite-products' ); ?></th>
-                                    <td>
-                                        <label> <select name="wooco_settings[hide_component]">
-                                                <option value="yes" <?php selected( $hide_component, 'yes' ); ?>><?php esc_html_e( 'Yes, just show the main composite', 'wpc-composite-products' ); ?></option>
-                                                <option value="yes_text" <?php selected( $hide_component, 'yes_text' ); ?>><?php esc_html_e( 'Yes, but shortly list component sub-product names under the main composite in one line', 'wpc-composite-products' ); ?></option>
-                                                <option value="yes_list" <?php selected( $hide_component, 'yes_list' ); ?>><?php esc_html_e( 'Yes, but list component sub-product names under the main composite in separate lines', 'wpc-composite-products' ); ?></option>
-                                                <option value="no" <?php selected( $hide_component, 'no' ); ?>><?php esc_html_e( 'No', 'wpc-composite-products' ); ?></option>
-                                            </select> </label>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th><?php esc_html_e( 'Hide component products on order details', 'wpc-composite-products' ); ?></th>
-                                    <td>
-                                        <label> <select name="wooco_settings[hide_component_order]">
-                                                <option value="yes" <?php selected( $hide_component_order, 'yes' ); ?>><?php esc_html_e( 'Yes', 'wpc-composite-products' ); ?></option>
-                                                <option value="yes_text" <?php selected( $hide_component_order, 'yes_text' ); ?>><?php esc_html_e( 'Yes, but shortly list component sub-product names under the main composite in one line', 'wpc-composite-products' ); ?></option>
-                                                <option value="yes_list" <?php selected( $hide_component_order, 'yes_list' ); ?>><?php esc_html_e( 'Yes, but list component sub-product names under the main composite in separate lines', 'wpc-composite-products' ); ?></option>
-                                                <option value="no" <?php selected( $hide_component_order, 'no' ); ?>><?php esc_html_e( 'No', 'wpc-composite-products' ); ?></option>
-                                            </select> </label>
-                                        <p class="description"><?php esc_html_e( 'Hide component products, just show the main composite on order details (order confirmation or emails).', 'wpc-composite-products' ); ?></p>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th><?php esc_html_e( 'Edit link (Beta)', 'wpc-composite-products' ); ?></th>
-                                    <td>
-                                        <label> <select name="wooco_settings[edit_link]">
-                                                <option value="yes" <?php selected( $edit_link, 'yes' ); ?>><?php esc_html_e( 'Yes', 'wpc-composite-products' ); ?></option>
-                                                <option value="no" <?php selected( $edit_link, 'no' ); ?>><?php esc_html_e( 'No', 'wpc-composite-products' ); ?></option>
-                                            </select> </label> <span
-                                                class="description"><?php esc_html_e( 'Enable the edit link for composite products on the cart page.', 'wpc-composite-products' ); ?></span>
-                                    </td>
-                                </tr>
-                                <tr class="submit">
-                                    <th colspan="2">
-                                        <div class="wpclever_submit">
-                                            <?php
-                                            settings_fields( 'wooco_settings' );
-                                            submit_button( '', 'primary', 'submit', false );
-
-                                            if ( function_exists( 'wpc_last_saved' ) ) {
-                                                wpc_last_saved( self::get_settings() );
-                                            }
-                                            ?>
-                                        </div>
-                                        <a style="display: none;" class="wpclever_export" data-key="wooco_settings"
-                                           data-name="settings"
-                                           href="#"><?php esc_html_e( 'import / export', 'wpc-composite-products' ); ?></a>
-                                    </th>
-                                </tr>
-                            </table>
-                        </form>
-                    <?php } elseif ( $active_tab === 'localization' ) { ?>
-                        <form method="post" action="options.php">
-                            <table class="form-table">
-                                <tr class="heading">
-                                    <th scope="row"><?php esc_html_e( 'General', 'wpc-composite-products' ); ?></th>
-                                    <td>
-                                        <?php esc_html_e( 'Leave blank to use the default text and its equivalent translation in multiple languages.', 'wpc-composite-products' ); ?>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th><?php esc_html_e( 'Option none (optional component)', 'wpc-composite-products' ); ?></th>
-                                    <td>
-                                        <label>
-                                            <input type="text" class="regular-text"
-                                                   name="wooco_localization[option_none]"
-                                                   value="<?php echo esc_attr( self::localization( 'option_none' ) ); ?>"
-                                                   placeholder="<?php esc_attr_e( 'No, thanks. I don\'t need this', 'wpc-composite-products' ); ?>"/>
-                                        </label>
-                                        <span class="description"><?php esc_html_e( 'Text to display for showing a "Don\'t choose any product" option.', 'wpc-composite-products' ); ?></span>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th><?php esc_html_e( 'Option none (required component)', 'wpc-composite-products' ); ?></th>
-                                    <td>
-                                        <label>
-                                            <input type="text" class="regular-text"
-                                                   name="wooco_localization[option_none_required]"
-                                                   value="<?php echo esc_attr( self::localization( 'option_none_required' ) ); ?>"
-                                                   placeholder="<?php esc_attr_e( 'Please make your choice here', 'wpc-composite-products' ); ?>"/>
-                                        </label>
-                                        <span class="description"><?php esc_html_e( 'Text to display for showing a "Don\'t choose any product" option.', 'wpc-composite-products' ); ?></span>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th><?php esc_html_e( 'Total text', 'wpc-composite-products' ); ?></th>
-                                    <td>
-                                        <label>
-                                            <input type="text" name="wooco_localization[total]" class="regular-text"
-                                                   value="<?php echo esc_attr( self::localization( 'total' ) ); ?>"
-                                                   placeholder="<?php esc_attr_e( 'Total price:', 'wpc-composite-products' ); ?>"/>
-                                        </label>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th><?php esc_html_e( 'Selected text', 'wpc-composite-products' ); ?></th>
-                                    <td>
-                                        <label>
-                                            <input type="text" name="wooco_localization[selected]" class="regular-text"
-                                                   value="<?php echo esc_attr( self::localization( 'selected' ) ); ?>"
-                                                   placeholder="<?php esc_attr_e( 'Selected:', 'wpc-composite-products' ); ?>"/>
-                                        </label>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th><?php esc_html_e( 'Saved text', 'wpc-composite-products' ); ?></th>
-                                    <td>
-                                        <label>
-                                            <input type="text" name="wooco_localization[saved]" class="regular-text"
-                                                   value="<?php echo esc_attr( self::localization( 'saved' ) ); ?>"
-                                                   placeholder="<?php esc_attr_e( '(saved [d])', 'wpc-composite-products' ); ?>"/>
-                                        </label>
-                                        <span class="description"><?php esc_html_e( 'Use [d] to show the saved percentage.', 'wpc-composite-products' ); ?></span>
-                                    </td>
-                                </tr>
-                                <tr class="heading">
-                                    <th colspan="2">
-                                        <?php esc_html_e( '"Add to cart" button labels', 'wpc-composite-products' ); ?>
-                                    </th>
-                                </tr>
-                                <tr>
-                                    <th><?php esc_html_e( 'Shop/archive page', 'wpc-composite-products' ); ?></th>
-                                    <td>
-                                        <div style="margin-bottom: 5px">
-                                            <label>
-                                                <input type="text" class="regular-text"
-                                                       name="wooco_localization[button_select]"
-                                                       value="<?php echo esc_attr( self::localization( 'button_select' ) ); ?>"
-                                                       placeholder="<?php esc_attr_e( 'Select options', 'wpc-composite-products' ); ?>"/>
-                                            </label>
-                                            <span class="description"><?php esc_html_e( 'For purchasable composites.', 'wpc-composite-products' ); ?></span>
-                                        </div>
-                                        <div>
-                                            <label>
-                                                <input type="text" class="regular-text"
-                                                       name="wooco_localization[button_read]"
-                                                       value="<?php echo esc_attr( self::localization( 'button_read' ) ); ?>"
-                                                       placeholder="<?php esc_attr_e( 'Read more', 'wpc-composite-products' ); ?>"/>
-                                            </label>
-                                            <span class="description"><?php esc_html_e( 'For unpurchasable composites.', 'wpc-composite-products' ); ?></span>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th><?php esc_html_e( 'Single product page', 'wpc-composite-products' ); ?></th>
-                                    <td>
-                                        <label>
-                                            <input type="text" class="regular-text"
-                                                   name="wooco_localization[button_single]"
-                                                   value="<?php echo esc_attr( self::localization( 'button_single' ) ); ?>"
-                                                   placeholder="<?php esc_attr_e( 'Add to cart', 'wpc-composite-products' ); ?>"/>
-                                        </label>
-                                    </td>
-                                </tr>
-                                <tr class="heading">
-                                    <th colspan="2">
-                                        <?php esc_html_e( 'Cart & Checkout', 'wpc-composite-products' ); ?>
-                                    </th>
-                                </tr>
-                                <tr>
-                                    <th><?php esc_html_e( 'Components', 'wpc-composite-products' ); ?></th>
-                                    <td>
-                                        <label>
-                                            <input type="text" class="regular-text"
-                                                   name="wooco_localization[cart_components]"
-                                                   value="<?php echo esc_attr( self::localization( 'cart_components' ) ); ?>"
-                                                   placeholder="<?php esc_attr_e( 'Components', 'wpc-composite-products' ); ?>"/>
-                                        </label>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th><?php /* translators: components */
-                                        esc_html_e( 'Components: %s', 'wpc-composite-products' ); ?></th>
-                                    <td>
-                                        <label>
-                                            <input type="text" class="regular-text"
-                                                   name="wooco_localization[cart_components_s]"
-                                                   value="<?php echo esc_attr( self::localization( 'cart_components_s' ) ); ?>"
-                                                   placeholder="<?php /* translators: components */
-                                                   esc_attr_e( 'Components: %s', 'wpc-composite-products' ); ?>"/>
-                                        </label>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th><?php /* translators: composite */
-                                        esc_html_e( 'Composite: %s', 'wpc-composite-products' ); ?></th>
-                                    <td>
-                                        <label>
-                                            <input type="text" class="regular-text"
-                                                   name="wooco_localization[cart_composite_s]"
-                                                   value="<?php echo esc_attr( self::localization( 'cart_composite_s' ) ); ?>"
-                                                   placeholder="<?php /* translators: composite */
-                                                   esc_attr_e( 'Composite: %s', 'wpc-composite-products' ); ?>"/>
-                                        </label>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th><?php esc_html_e( 'Edit', 'wpc-composite-products' ); ?></th>
-                                    <td>
-                                        <label>
-                                            <input type="text" class="regular-text"
-                                                   name="wooco_localization[cart_item_edit]"
-                                                   value="<?php echo esc_attr( self::localization( 'cart_item_edit' ) ); ?>"
-                                                   placeholder="<?php esc_attr_e( 'Edit', 'wpc-composite-products' ); ?>"/>
-                                        </label>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th><?php esc_html_e( 'Update', 'wpc-composite-products' ); ?></th>
-                                    <td>
-                                        <label>
-                                            <input type="text" class="regular-text"
-                                                   name="wooco_localization[cart_item_update]"
-                                                   value="<?php echo esc_attr( self::localization( 'cart_item_update' ) ); ?>"
-                                                   placeholder="<?php esc_attr_e( 'Update', 'wpc-composite-products' ); ?>"/>
-                                        </label>
-                                    </td>
-                                </tr>
-                                <tr class="heading">
-                                    <th colspan="2">
-                                        <?php esc_html_e( 'Alert', 'wpc-composite-products' ); ?>
-                                    </th>
-                                </tr>
-                                <tr>
-                                    <th><?php esc_html_e( 'Require selection', 'wpc-composite-products' ); ?></th>
-                                    <td>
-                                        <label>
-                                            <input type="text" class="large-text"
-                                                   name="wooco_localization[alert_selection]"
-                                                   value="<?php echo esc_attr( self::localization( 'alert_selection' ) ); ?>"
-                                                   placeholder="<?php esc_attr_e( 'Please choose a purchasable product for the component [name] before adding this composite to the cart.', 'wpc-composite-products' ); ?>"/>
-                                        </label>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th><?php esc_html_e( 'Different selection', 'wpc-composite-products' ); ?></th>
-                                    <td>
-                                        <label>
-                                            <input type="text" class="large-text" name="wooco_localization[alert_same]"
-                                                   value="<?php echo esc_attr( self::localization( 'alert_same' ) ); ?>"
-                                                   placeholder="<?php esc_attr_e( 'Please select a different product for each component.', 'wpc-composite-products' ); ?>"/>
-                                        </label>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th><?php esc_html_e( 'Whole component\'s quantity minimum required', 'wpc-composite-products' ); ?></th>
-                                    <td>
-                                        <label>
-                                            <input type="text" class="large-text" name="wooco_localization[alert_m_min]"
-                                                   value="<?php echo esc_attr( self::localization( 'alert_m_min' ) ); ?>"
-                                                   placeholder="<?php esc_attr_e( 'Please choose at least a total quantity of [min] products for the component [name].', 'wpc-composite-products' ); ?>"/>
-                                        </label>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th><?php esc_html_e( 'Whole component\'s quantity maximum reached', 'wpc-composite-products' ); ?></th>
-                                    <td>
-                                        <label>
-                                            <input type="text" class="large-text" name="wooco_localization[alert_m_max]"
-                                                   value="<?php echo esc_attr( self::localization( 'alert_m_max' ) ); ?>"
-                                                   placeholder="<?php esc_attr_e( 'Sorry, you can only choose at max a total quantity of [max] products for the component [name].', 'wpc-composite-products' ); ?>"/>
-                                        </label>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th><?php esc_html_e( 'Minimum required', 'wpc-composite-products' ); ?></th>
-                                    <td>
-                                        <label>
-                                            <input type="text" class="large-text" name="wooco_localization[alert_min]"
-                                                   value="<?php echo esc_attr( self::localization( 'alert_min' ) ); ?>"
-                                                   placeholder="<?php esc_attr_e( 'Please choose at least a total quantity of [min] products before adding this composite to the cart.', 'wpc-composite-products' ); ?>"/>
-                                        </label>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th><?php esc_html_e( 'Maximum reached', 'wpc-composite-products' ); ?></th>
-                                    <td>
-                                        <label>
-                                            <input type="text" class="large-text" name="wooco_localization[alert_max]"
-                                                   value="<?php echo esc_attr( self::localization( 'alert_max' ) ); ?>"
-                                                   placeholder="<?php esc_attr_e( 'Sorry, you can only choose at max a total quantity of [max] products before adding this composite to the cart.', 'wpc-composite-products' ); ?>"/>
-                                        </label>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th><?php esc_html_e( 'Total minimum required', 'wpc-composite-products' ); ?></th>
-                                    <td>
-                                        <label>
-                                            <input type="text" class="large-text"
-                                                   name="wooco_localization[alert_total_min]"
-                                                   value="<?php echo esc_attr( self::localization( 'alert_total_min' ) ); ?>"
-                                                   placeholder="<?php esc_attr_e( 'The total must meet the minimum amount of [min].', 'wpc-composite-products' ); ?>"/>
-                                        </label>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th><?php esc_html_e( 'Total maximum required', 'wpc-composite-products' ); ?></th>
-                                    <td>
-                                        <label>
-                                            <input type="text" class="large-text"
-                                                   name="wooco_localization[alert_total_max]"
-                                                   value="<?php echo esc_attr( self::localization( 'alert_total_max' ) ); ?>"
-                                                   placeholder="<?php esc_attr_e( 'The total must meet the maximum amount of [max].', 'wpc-composite-products' ); ?>"/>
-                                        </label>
-                                    </td>
-                                </tr>
-                                <tr class="submit">
-                                    <th colspan="2">
-                                        <div class="wpclever_submit">
-                                            <?php
-                                            settings_fields( 'wooco_localization' );
-                                            submit_button( '', 'primary', 'submit', false );
-
-                                            if ( function_exists( 'wpc_last_saved' ) ) {
-                                                wpc_last_saved( get_option( 'wooco_localization', [] ) );
-                                            }
-                                            ?>
-                                        </div>
-                                        <a style="display: none;" class="wpclever_export" data-key="wooco_localization"
-                                           data-name="settings"
-                                           href="#"><?php esc_html_e( 'import / export', 'wpc-composite-products' ); ?></a>
-                                    </th>
-                                </tr>
-                            </table>
-                        </form>
-                    <?php } elseif ( $active_tab == 'tools' ) { ?>
-                        <table class="form-table">
-                            <tr class="heading">
-                                <th scope="row"><?php esc_html_e( 'Data Migration', 'wpc-composite-products' ); ?></th>
-                                <td>
-                                    <?php esc_html_e( 'If selected products don\'t appear on the current version. Please try running Migrate tool.', 'wpc-composite-products' ); ?>
-
-                                    <?php
-                                    echo '<p>';
-                                    $num   = absint( $_GET['num'] ?? 50 );
-                                    $paged = absint( $_GET['paged'] ?? 1 );
-
-                                    if ( isset( $_GET['act'] ) && ( $_GET['act'] === 'migrate' ) ) {
-                                        $args = [
-                                                'post_type'      => 'product',
-                                                'posts_per_page' => $num,
-                                                'paged'          => $paged,
-                                                'meta_query'     => [
-                                                        [
-                                                                'key'     => 'wooco_components',
-                                                                'compare' => 'EXISTS'
-                                                        ]
-                                                ]
-                                        ];
-
-                                        $posts = get_posts( $args );
-
-                                        if ( ! empty( $posts ) ) {
-                                            foreach ( $posts as $post ) {
-                                                $components = get_post_meta( $post->ID, 'wooco_components', true );
-
-                                                if ( is_array( $components ) && ! empty( $components ) ) {
-                                                    $new_components = [];
-
-                                                    foreach ( $components as $component ) {
-                                                        if ( ! empty( $component['products'] ) && is_string( $component['products'] ) ) {
-                                                            $component['products'] = explode( ',', $component['products'] );
-                                                        }
-
-                                                        if ( ( $component['type'] === 'categories' ) && ! empty( $component['categories'] ) ) {
-                                                            $component['type'] = 'product_cat';
-
-                                                            if ( is_string( $component['categories'] ) ) {
-                                                                $component['other'] = explode( ',', $component['categories'] );
-                                                            } else {
-                                                                $component['other'] = $component['categories'];
-                                                            }
-
-                                                            foreach ( $component['other'] as $k => $c ) {
-                                                                $component['other'][ $k ] = self::get_term_slug( $c, 'product_cat' );
-                                                            }
-
-                                                            unset( $component['categories'] );
-                                                        }
-
-                                                        if ( ( $component['type'] === 'tags' ) && ! empty( $component['tags'] ) ) {
-                                                            $component['type'] = 'product_tag';
-
-                                                            if ( is_string( $component['tags'] ) ) {
-                                                                $component['other'] = explode( ',', $component['tags'] );
-                                                            } else {
-                                                                $component['other'] = $component['tags'];
-                                                            }
-
-                                                            foreach ( $component['other'] as $k => $t ) {
-                                                                $component['other'][ $k ] = self::get_term_slug( $t, 'product_tag' );
-                                                            }
-
-                                                            unset( $component['tags'] );
-                                                        }
-
-                                                        $new_key                    = self::generate_key();
-                                                        $new_components[ $new_key ] = $component;
-                                                    }
-
-                                                    update_post_meta( $post->ID, 'wooco_components', $new_components );
-                                                }
-                                            }
-
-                                            echo '<span style="color: #2271b1; font-weight: 700">' . esc_html__( 'Migrating...', 'wpc-composite-products' ) . '</span>';
-                                            echo '<p class="description">' . esc_html__( 'Please wait until it has finished!', 'wpc-composite-products' ) . '</p>';
-                                            ?>
-                                            <script type="text/javascript">
-                                                (function ($) {
-                                                    $(function () {
-                                                        setTimeout(function () {
-                                                            window.location.href = '<?php echo esc_url_raw( admin_url( 'admin.php?page=wpclever-wooco&tab=tools&act=migrate&num=' . $num . '&paged=' . ( $paged + 1 ) ) ); ?>';
-                                                        }, 1000);
-                                                    });
-                                                })(jQuery);
-                                            </script>
-                                        <?php } else {
-                                            echo '<span style="color: #2271b1; font-weight: 700">' . esc_html__( 'Finished!', 'wpc-composite-products' ) . '</span>';
-                                        }
-                                    } else {
-                                        echo '<a class="button btn" href="' . esc_url( admin_url( 'admin.php?page=wpclever-wooco&tab=tools&act=migrate' ) ) . '">' . esc_html__( 'Migrate', 'wpc-composite-products' ) . '</a>';
-                                    }
-                                    echo '</p>';
-                                    ?>
-                                </td>
-                            </tr>
-                        </table>
-                    <?php } elseif ( $active_tab == 'premium' ) { ?>
-                        <div class="wpclever_settings_page_content_text">
-                            <p>
-                                Get the Premium Version just $29!
-                                <a href="https://wpclever.net/downloads/composite-products?utm_source=pro&utm_medium=wooco&utm_campaign=wporg"
-                                   target="_blank">https://wpclever.net/downloads/composite-products</a>
-                            </p>
-                            <p><strong>Extra features for Premium Version:</strong></p>
-                            <ul style="margin-bottom: 0">
-                                <li>- Use Categories, Tags, or Attributes as the source for component options.</li>
-                                <li>- Get the lifetime update & premium support.</li>
-                            </ul>
-                        </div>
-                    <?php } ?>
-                </div><!-- /.wpclever_settings_page_content -->
-                <div class="wpclever_settings_page_suggestion">
-                    <div class="wpclever_settings_page_suggestion_label">
-                        <span class="dashicons dashicons-yes-alt"></span> Suggestion
-                    </div>
-                    <div class="wpclever_settings_page_suggestion_content">
-                        <div>
-                            To display custom engaging real-time messages on any wished positions, please install
-                            <a href="https://wordpress.org/plugins/wpc-smart-messages/" target="_blank">WPC Smart
-                                Messages</a> plugin. It's free!
-                        </div>
-                        <div>
-                            Wanna save your precious time working on variations? Try our brand-new free plugin
-                            <a href="https://wordpress.org/plugins/wpc-variation-bulk-editor/" target="_blank">WPC
-                                Variation Bulk Editor</a> and
-                            <a href="https://wordpress.org/plugins/wpc-variation-duplicator/" target="_blank">WPC
-                                Variation Duplicator</a>.
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <?php
-        }
-
-        function get_term_slug( $slug_or_id, $taxonomy ) {
-            if ( is_numeric( $slug_or_id ) && ( $term = get_term_by( 'id', $slug_or_id, $taxonomy ) ) ) {
-                return $term->slug;
-            }
-
-            return $slug_or_id;
-        }
-
-        function enqueue_scripts() {
-            if ( self::get_setting( 'selector', 'ddslick' ) === 'ddslick' ) {
+        public function enqueue_scripts() {
+            if ( WPCleverWooco_Helper::get_setting( 'selector', 'ddslick' ) === 'ddslick' ) {
                 wp_enqueue_script( 'ddslick', WOOCO_URI . 'assets/libs/ddslick/jquery.ddslick.min.js', [ 'jquery' ], WOOCO_VERSION, true );
             }
 
-            if ( self::get_setting( 'selector', 'ddslick' ) === 'select2' ) {
+            if ( WPCleverWooco_Helper::get_setting( 'selector', 'ddslick' ) === 'select2' ) {
                 wp_enqueue_style( 'select2' );
                 wp_enqueue_script( 'select2', WC()->plugin_url() . '/assets/js/select2/select2.full.min.js', [ 'jquery' ], WOOCO_VERSION, true );
             }
@@ -1719,7 +263,10 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                     'jquery',
                     'imagesloaded'
             ], WOOCO_VERSION, true );
-            wp_localize_script( 'wooco-frontend', 'wooco_vars', apply_filters( 'wooco_vars', [
+            wp_localize_script(
+                    'wooco-frontend',
+                    'wooco_vars',
+                    apply_filters( 'wooco_vars', [
                             'wc_ajax_url'              => WC_AJAX::get_endpoint( '%%endpoint%%' ),
                             'nonce'                    => wp_create_nonce( 'wooco_nonce' ),
                             'price_decimals'           => wc_get_price_decimals(),
@@ -1731,85 +278,31 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                             'quickview_variation'      => apply_filters( 'wooco_quickview_variation', 'default' ),
                             'gallery_selector'         => apply_filters( 'wooco_gallery_selector', '.woocommerce-product-gallery' ),
                             'main_gallery_selector'    => apply_filters( 'wooco_main_gallery_selector', '.woocommerce-product-gallery:not(.woocommerce-product-gallery--wooco)' ),
-                            'selector'                 => self::get_setting( 'selector', 'ddslick' ),
-                            'change_image'             => self::get_setting( 'change_image', 'yes' ),
-                            'change_price'             => self::get_setting( 'change_price', 'yes' ),
-                            'price_selector'           => self::get_setting( 'change_price_custom', '' ),
-                            'product_link'             => self::get_setting( 'product_link', 'no' ),
-                            'show_alert'               => self::get_setting( 'show_alert', 'load' ),
-                            'hide_component_name'      => self::get_setting( 'hide_component_name', 'yes' ),
-                            'total_text'               => self::localization( 'total', esc_html__( 'Total price:', 'wpc-composite-products' ) ),
-                            'selected_text'            => self::localization( 'selected', esc_html__( 'Selected:', 'wpc-composite-products' ) ),
-                            'saved_text'               => self::localization( 'saved', esc_html__( '(saved [d])', 'wpc-composite-products' ) ),
-                            'alert_min'                => self::localization( 'alert_min', esc_html__( 'Please choose at least a total quantity of [min] products before adding this composite to the cart.', 'wpc-composite-products' ) ),
-                            'alert_max'                => self::localization( 'alert_max', esc_html__( 'Sorry, you can only choose at max a total quantity of [max] products before adding this composite to the cart.', 'wpc-composite-products' ) ),
-                            'alert_m_min'              => self::localization( 'alert_m_min', esc_html__( 'Please choose at least a total quantity of [min] products for the component [name].', 'wpc-composite-products' ) ),
-                            'alert_m_max'              => self::localization( 'alert_m_max', esc_html__( 'Sorry, you can only choose at max a total quantity of [max] products for the component [name].', 'wpc-composite-products' ) ),
-                            'alert_same'               => self::localization( 'alert_same', esc_html__( 'Please select a different product for each component.', 'wpc-composite-products' ) ),
-                            'alert_selection'          => self::localization( 'alert_selection', esc_html__( 'Please choose a purchasable product for the component [name] before adding this composite to the cart.', 'wpc-composite-products' ) ),
-                            'alert_total_min'          => self::localization( 'alert_total_min', esc_html__( 'The total must meet the minimum amount of [min].', 'wpc-composite-products' ) ),
-                            'alert_total_max'          => self::localization( 'alert_total_max', esc_html__( 'The total must meet the maximum amount of [max].', 'wpc-composite-products' ) )
+                            'selector'                 => WPCleverWooco_Helper::get_setting( 'selector', 'ddslick' ),
+                            'change_image'             => WPCleverWooco_Helper::get_setting( 'change_image', 'yes' ),
+                            'change_price'             => WPCleverWooco_Helper::get_setting( 'change_price', 'yes' ),
+                            'price_selector'           => WPCleverWooco_Helper::get_setting( 'change_price_custom', '' ),
+                            'product_link'             => WPCleverWooco_Helper::get_setting( 'product_link', 'no' ),
+                            'show_alert'               => WPCleverWooco_Helper::get_setting( 'show_alert', 'load' ),
+                            'hide_component_name'      => WPCleverWooco_Helper::get_setting( 'hide_component_name', 'yes' ),
+                            'total_text'               => WPCleverWooco_Helper::localization( 'total', esc_html__( 'Total price:', 'wpc-composite-products' ) ),
+                            'selected_text'            => WPCleverWooco_Helper::localization( 'selected', esc_html__( 'Selected:', 'wpc-composite-products' ) ),
+                            'saved_text'               => WPCleverWooco_Helper::localization( 'saved', esc_html__( '(saved [d])', 'wpc-composite-products' ) ),
+                            'alert_min'                => WPCleverWooco_Helper::localization( 'alert_min', esc_html__( 'Please choose at least a total quantity of [min] products before adding this composite to the cart.', 'wpc-composite-products' ) ),
+                            'alert_max'                => WPCleverWooco_Helper::localization( 'alert_max', esc_html__( 'Sorry, you can only choose at max a total quantity of [max] products before adding this composite to the cart.', 'wpc-composite-products' ) ),
+                            'alert_m_min'              => WPCleverWooco_Helper::localization( 'alert_m_min', esc_html__( 'Please choose at least a total quantity of [min] products for the component [name].', 'wpc-composite-products' ) ),
+                            'alert_m_max'              => WPCleverWooco_Helper::localization( 'alert_m_max', esc_html__( 'Sorry, you can only choose at max a total quantity of [max] products for the component [name].', 'wpc-composite-products' ) ),
+                            'alert_same'               => WPCleverWooco_Helper::localization( 'alert_same', esc_html__( 'Please select a different product for each component.', 'wpc-composite-products' ) ),
+                            'alert_selection'          => WPCleverWooco_Helper::localization( 'alert_selection', esc_html__( 'Please choose a purchasable product for the component [name] before adding this composite to the cart.', 'wpc-composite-products' ) ),
+                            'alert_total_min'          => WPCleverWooco_Helper::localization( 'alert_total_min', esc_html__( 'The total must meet the minimum amount of [min].', 'wpc-composite-products' ) ),
+                            'alert_total_max'          => WPCleverWooco_Helper::localization( 'alert_total_max', esc_html__( 'The total must meet the maximum amount of [max].', 'wpc-composite-products' ) )
                     ] )
             );
         }
 
-        function admin_enqueue_scripts( $hook ) {
-            if ( apply_filters( 'wooco_ignore_backend_scripts', false, $hook ) ) {
-                return null;
-            }
 
-            wp_enqueue_style( 'hint', WOOCO_URI . 'assets/css/hint.css' );
-            wp_enqueue_style( 'wooco-backend', WOOCO_URI . 'assets/css/backend.css', [ 'woocommerce_admin_styles' ], WOOCO_VERSION );
-            wp_enqueue_script( 'wooco-backend', WOOCO_URI . 'assets/js/backend.js', [
-                    'jquery',
-                    'jquery-ui-dialog',
-                    'jquery-ui-sortable',
-                    'wc-enhanced-select',
-                    'selectWoo'
-            ], WOOCO_VERSION, true );
-            wp_localize_script( 'wooco-backend', 'wooco_vars', [
-                            'nonce' => wp_create_nonce( 'wooco_nonce' )
-                    ]
-            );
-        }
-
-        function action_links( $links, $file ) {
-            static $plugin;
-
-            if ( ! isset( $plugin ) ) {
-                $plugin = plugin_basename( WOOCO_FILE );
-            }
-
-            if ( $plugin === $file ) {
-                $settings             = '<a href="' . esc_url( admin_url( 'admin.php?page=wpclever-wooco&tab=settings' ) ) . '">' . esc_html__( 'Settings', 'wpc-composite-products' ) . '</a>';
-                $links['wpc-premium'] = '<a href="' . esc_url( admin_url( 'admin.php?page=wpclever-wooco&tab=premium' ) ) . '">' . esc_html__( 'Premium Version', 'wpc-composite-products' ) . '</a>';
-                array_unshift( $links, $settings );
-            }
-
-            return (array) $links;
-        }
-
-        function row_meta( $links, $file ) {
-            static $plugin;
-
-            if ( ! isset( $plugin ) ) {
-                $plugin = plugin_basename( WOOCO_FILE );
-            }
-
-            if ( $plugin === $file ) {
-                $row_meta = [
-                        'docs'    => '<a href="' . esc_url( WOOCO_DOCS ) . '" target="_blank">' . esc_html__( 'Docs', 'wpc-composite-products' ) . '</a>',
-                        'support' => '<a href="' . esc_url( WOOCO_DISCUSSION ) . '" target="_blank">' . esc_html__( 'Community support', 'wpc-composite-products' ) . '</a>',
-                ];
-
-                return array_merge( $links, $row_meta );
-            }
-
-            return (array) $links;
-        }
-
-        function cart_contents_count( $count ) {
-            $cart_contents_count = self::get_setting( 'cart_contents_count', 'composite' );
+        public function cart_contents_count( $count ) {
+            $cart_contents_count = WPCleverWooco_Helper::get_setting( 'cart_contents_count', 'composite' );
 
             if ( $cart_contents_count !== 'both' ) {
                 $cart_contents = WC()->cart->cart_contents;
@@ -1828,15 +321,15 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
             return $count;
         }
 
-        function cart_item_name( $name, $item ) {
+        public function cart_item_name( $name, $item ) {
             if ( ! empty( $item['wooco_parent_id'] ) ) {
-                if ( ( self::get_setting( 'hide_component_name', 'yes' ) === 'no' ) && ! empty( $item['wooco_component'] ) ) {
+                if ( ( WPCleverWooco_Helper::get_setting( 'hide_component_name', 'yes' ) === 'no' ) && ! empty( $item['wooco_component'] ) ) {
                     $_name = $item['wooco_component'] . ': ' . $name;
                 } else {
                     $_name = $name;
                 }
 
-                if ( self::get_setting( 'hide_composite_name', 'no' ) === 'no' ) {
+                if ( WPCleverWooco_Helper::get_setting( 'hide_composite_name', 'no' ) === 'no' ) {
                     if ( $parent_product = wc_get_product( $item['wooco_parent_id'] ) ) {
                         if ( str_contains( $name, '</a>' ) ) {
                             $_name = '<a href="' . get_permalink( $item['wooco_parent_id'] ) . '">' . $parent_product->get_name() . '</a>' . apply_filters( 'wooco_name_separator', ' &rarr; ' ) . $_name;
@@ -1852,7 +345,7 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
             return $name;
         }
 
-        function formatted_line_subtotal( $subtotal, $item ) {
+        public function formatted_line_subtotal( $subtotal, $item ) {
             if ( ! empty( $item['wooco_ids'] ) && isset( $item['wooco_price'] ) && ( $item['wooco_price'] !== '' ) ) {
                 return apply_filters( 'wooco_order_item_subtotal', wc_price( (float) $item['wooco_price'] * $item['quantity'] ), $subtotal, $item );
             }
@@ -1860,7 +353,7 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
             return $subtotal;
         }
 
-        function cart_item_price( $price, $cart_item ) {
+        public function cart_item_price( $price, $cart_item ) {
             if ( isset( $cart_item['wooco_ids'], $cart_item['wooco_keys'], $cart_item['wooco_price'] ) && method_exists( $cart_item['data'], 'get_pricing' ) && ( $cart_item['data']->get_pricing() !== 'only' ) ) {
                 // composite
                 return apply_filters( 'wooco_cart_item_price', wc_price( $cart_item['wooco_price'] ), $price, $cart_item );
@@ -1881,7 +374,7 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
             return $price;
         }
 
-        function cart_item_subtotal( $subtotal, $cart_item = null ) {
+        public function cart_item_subtotal( $subtotal, $cart_item = null ) {
             if ( isset( $cart_item['wooco_ids'], $cart_item['wooco_keys'], $cart_item['wooco_price'] ) && method_exists( $cart_item['data'], 'get_pricing' ) && ( $cart_item['data']->get_pricing() !== 'only' ) ) {
                 // composite
                 return apply_filters( 'wooco_cart_item_subtotal', wc_price( $cart_item['wooco_price'] * $cart_item['quantity'] ), $subtotal, $cart_item );
@@ -1902,8 +395,8 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
             return $subtotal;
         }
 
-        function cart_item_edit( $cart_item, $cart_item_key ) {
-            $edit_link = self::get_setting( 'edit_link', 'no' ) === 'yes';
+        public function cart_item_edit( $cart_item, $cart_item_key ) {
+            $edit_link = WPCleverWooco_Helper::get_setting( 'edit_link', 'no' ) === 'yes';
 
             if ( ! $edit_link ) {
                 return;
@@ -1914,13 +407,13 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                         'edit' => base64_encode( $cart_item['wooco_ids'] ),
                         'key'  => $cart_item_key
                 ], $cart_item['data']->get_permalink() ), $cart_item, $cart_item_key );
-                $edit_link = ' <a class="wooco-cart-item-edit" href="' . esc_url( $edit_url ) . '">' . esc_html( self::localization( 'cart_item_edit', esc_html__( 'Edit', 'wpc-composite-products' ) ) ) . '</a>';
+                $edit_link = ' <a class="wooco-cart-item-edit" href="' . esc_url( $edit_url ) . '">' . esc_html( WPCleverWooco_Helper::localization( 'cart_item_edit', esc_html__( 'Edit', 'wpc-composite-products' ) ) ) . '</a>';
 
                 echo apply_filters( 'wooco_cart_item_edit_link', $edit_link, $cart_item, $cart_item_key );
             }
         }
 
-        function cart_item_removed( $cart_item_key, $cart ) {
+        public function cart_item_removed( $cart_item_key, $cart ) {
             $new_keys = [];
 
             foreach ( $cart->cart_contents as $cart_k => $cart_i ) {
@@ -1950,7 +443,7 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
             }
         }
 
-        function check_in_cart( $product_id ) {
+        public function check_in_cart( $product_id ) {
             foreach ( WC()->cart->get_cart() as $cart_item ) {
                 if ( $cart_item['product_id'] === $product_id ) {
                     return true;
@@ -1960,7 +453,7 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
             return false;
         }
 
-        function add_cart_item_data( $cart_item_data, $product_id ) {
+        public function add_cart_item_data( $cart_item_data, $product_id ) {
             $_product = wc_get_product( $product_id );
 
             if ( $_product && $_product->is_type( 'composite' ) && $_product->get_components() ) {
@@ -1968,7 +461,7 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                 $ids = '';
 
                 if ( isset( $_REQUEST['wooco_ids'] ) ) {
-                    $ids = self::clean_ids( sanitize_text_field( $_REQUEST['wooco_ids'] ) );
+                    $ids = WPCleverWooco_Helper::clean_ids( sanitize_text_field( $_REQUEST['wooco_ids'] ) );
                     unset( $_REQUEST['wooco_ids'] );
                 }
 
@@ -1980,7 +473,7 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
             return $cart_item_data;
         }
 
-        function found_in_cart( $found_in_cart, $product_id ) {
+        public function found_in_cart( $found_in_cart, $product_id ) {
             if ( apply_filters( 'wooco_sold_individually_found_in_cart', true ) && self::check_in_cart( $product_id ) ) {
                 return true;
             }
@@ -1988,16 +481,16 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
             return $found_in_cart;
         }
 
-        function add_to_cart_validation( $passed, $product_id, $qty ) {
+        public function add_to_cart_validation( $passed, $product_id, $qty ) {
             if ( ( $_product = wc_get_product( $product_id ) ) && $_product->is_type( 'composite' ) && ( $components = $_product->get_components() ) ) {
                 $ids   = '';
                 $items = [];
 
                 if ( isset( $_REQUEST['wooco_ids'] ) ) {
-                    $ids = self::clean_ids( sanitize_text_field( $_REQUEST['wooco_ids'] ) );
+                    $ids = WPCleverWooco_Helper::clean_ids( sanitize_text_field( $_REQUEST['wooco_ids'] ) );
                 }
 
-                if ( ! empty( $ids ) && ( $items = self::get_items( $ids ) ) ) {
+                if ( ! empty( $ids ) && ( $items = WPCleverWooco_Helper::get_items( $ids ) ) ) {
                     foreach ( $items as $item ) {
                         $item_id      = $item['id'];
                         $item_key     = $item['key'];
@@ -2087,7 +580,7 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                         if ( $item_product->managing_stock() ) {
                             $qty_in_cart  = ( $quantities = WC()->cart->get_cart_item_quantities() ) && isset( $quantities[ $item_product->get_stock_managed_by_id() ] ) ? $quantities[ $item_product->get_stock_managed_by_id() ] : 0;
                             $qty_to_check = 0;
-                            $_items       = self::get_items( $ids );
+                            $_items       = $items; // reuse $items already parsed above, avoid re-parsing
 
                             foreach ( $_items as $_item ) {
                                 if ( $_item['id'] == $item_id ) {
@@ -2128,36 +621,36 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
             return $passed;
         }
 
-        function add_to_cart( $cart_item_key, $product_id, $quantity, $variation_id, $variation, $cart_item_data ) {
-            $edit_link = self::get_setting( 'edit_link', 'no' ) === 'yes';
+        public function add_to_cart( $cart_item_key, $product_id, $quantity, $variation_id, $variation, $cart_item_data ) {
+            $edit_link = WPCleverWooco_Helper::get_setting( 'edit_link', 'no' ) === 'yes';
 
             if ( $edit_link && ! empty( $_REQUEST['wooco_update'] ) ) {
                 $edit_key = sanitize_key( wp_unslash( $_REQUEST['wooco_update'] ) );
 
                 if ( WC()->cart->get_cart_item( $edit_key ) ) {
-                    WC()->cart->remove_cart_item( sanitize_key( wp_unslash( $_REQUEST['wooco_update'] ) ) );
+                    WC()->cart->remove_cart_item( $edit_key );
                 }
             }
 
-            if ( ! empty( $cart_item_data['wooco_ids'] ) && ( $items = self::get_items( $cart_item_data['wooco_ids'] ) ) ) {
+            if ( ! empty( $cart_item_data['wooco_ids'] ) && ( $items = WPCleverWooco_Helper::get_items( $cart_item_data['wooco_ids'] ) ) ) {
                 self::add_to_cart_items( $items, $cart_item_key, $product_id, $quantity );
             }
         }
 
-        function restore_cart_item( $cart_item_key ) {
+        public function restore_cart_item( $cart_item_key ) {
             if ( isset( WC()->cart->cart_contents[ $cart_item_key ]['wooco_ids'] ) ) {
                 unset( WC()->cart->cart_contents[ $cart_item_key ]['wooco_keys'] );
 
                 $product_id = WC()->cart->cart_contents[ $cart_item_key ]['product_id'];
                 $quantity   = WC()->cart->cart_contents[ $cart_item_key ]['quantity'];
 
-                if ( $items = self::get_items( WC()->cart->cart_contents[ $cart_item_key ]['wooco_ids'] ) ) {
+                if ( $items = WPCleverWooco_Helper::get_items( WC()->cart->cart_contents[ $cart_item_key ]['wooco_ids'] ) ) {
                     self::add_to_cart_items( $items, $cart_item_key, $product_id, $quantity );
                 }
             }
         }
 
-        function add_to_cart_items( $items, $cart_item_key, $product_id, $quantity ) {
+        public function add_to_cart_items( $items, $cart_item_key, $product_id, $quantity ) {
             if ( apply_filters( 'wooco_exclude_components', false ) ) {
                 return;
             }
@@ -2188,12 +681,24 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                             $item_variation    = $item_product->get_variation_attributes();
                         }
 
+                        $item_price = WPCleverWooco_Helper::format_price( $components[ $item_key ]['price'] ?? '100%' );
+
+                        if ( $item_price === 'd' && ! empty( $components[ $item_key ]['default'] ) && ( $default_product = wc_get_product( WPCleverWooco_Helper::get_product_id( $components[ $item_key ]['default'] ) ) ) ) {
+                            if ( $default_product->get_id() == $item_id ) {
+                                $item_price = 0;
+                            } else {
+                                $product_price = $item_product->get_price();
+                                $default_price = $default_product->get_price();
+                                $item_price    = abs( $product_price - $default_price );
+                            }
+                        }
+
                         // add to cart
                         if ( ! $separately ) {
                             $item_data = [
                                     'wooco_pos'        => $count,
                                     'wooco_qty'        => $item_qty,
-                                    'wooco_price'      => self::format_price( $components[ $item_key ]['price'] ?? '100%' ),
+                                    'wooco_price'      => $item_price,
                                     'wooco_component'  => $components[ $item_key ]['name'] ?? '',
                                     'wooco_parent_id'  => $product_id,
                                     'wooco_parent_key' => $cart_item_key
@@ -2234,11 +739,11 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
             }
         }
 
-        function before_mini_cart_contents() {
+        public function before_mini_cart_contents() {
             WC()->cart->calculate_totals();
         }
 
-        function before_calculate_totals( $cart_object ) {
+        public function before_calculate_totals( $cart_object ) {
             if ( ! defined( 'DOING_AJAX' ) && is_admin() ) {
                 // This is necessary for WC 3.0+
                 return;
@@ -2272,7 +777,13 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
 
                 // child product price
                 if ( ! empty( $cart_item['wooco_parent_id'] ) ) {
-                    $parent_product = wc_get_product( $cart_item['wooco_parent_id'] );
+                    $_pid = $cart_item['wooco_parent_id'];
+
+                    if ( ! isset( $parent_product_cache[ $_pid ] ) ) {
+                        $parent_product_cache[ $_pid ] = wc_get_product( $_pid );
+                    }
+
+                    $parent_product = $parent_product_cache[ $_pid ];
 
                     if ( $parent_product && $parent_product->is_type( 'composite' ) && method_exists( $parent_product, 'get_pricing' ) ) {
                         if ( $parent_product->get_pricing() === 'only' ) {
@@ -2280,11 +791,11 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                         } else {
                             $new_price = false;
                             $_product  = apply_filters( 'wooco_product_original', wc_get_product( $cart_item['variation_id'] ?: $cart_item['product_id'] ), $cart_item );
-                            $_price    = apply_filters( 'wooco_product_original_price', ( self::get_setting( 'product_price', 'sale_price' ) === 'regular_price' ) ? $_product->get_regular_price( 'edit' ) : $_product->get_price( 'edit' ), $cart_item['data'] );
+                            $_price    = apply_filters( 'wooco_product_original_price', ( WPCleverWooco_Helper::get_setting( 'product_price', 'sale_price' ) === 'regular_price' ) ? $_product->get_regular_price( 'edit' ) : $_product->get_price( 'edit' ), $cart_item['data'] );
 
                             if ( isset( $cart_item['wooco_price'] ) && ( $cart_item['wooco_price'] !== '' ) ) {
                                 $new_price = true;
-                                $_price    = self::get_new_price( $_price, $cart_item['wooco_price'] );
+                                $_price    = WPCleverWooco_Helper::get_new_price( $_price, $cart_item['wooco_price'] );
                             }
 
                             if ( $discount = $parent_product->get_discount() ) {
@@ -2308,10 +819,10 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                         foreach ( $cart_item['wooco_keys'] as $key ) {
                             if ( isset( $cart_contents[ $key ] ) ) {
                                 $_product = apply_filters( 'wooco_product_original', wc_get_product( $cart_contents[ $key ]['variation_id'] ?: $cart_contents[ $key ]['product_id'] ), $cart_contents[ $key ] );
-                                $_price   = apply_filters( 'wooco_product_original_price', ( self::get_setting( 'product_price', 'sale_price' ) === 'regular_price' ) ? $_product->get_regular_price( 'edit' ) : $_product->get_price( 'edit' ), $cart_contents[ $key ]['data'] );
+                                $_price   = apply_filters( 'wooco_product_original_price', ( WPCleverWooco_Helper::get_setting( 'product_price', 'sale_price' ) === 'regular_price' ) ? $_product->get_regular_price( 'edit' ) : $_product->get_price( 'edit' ), $cart_contents[ $key ]['data'] );
 
                                 if ( isset( $cart_contents[ $key ]['wooco_price'] ) && ( $cart_contents[ $key ]['wooco_price'] !== '' ) ) {
-                                    $_price = self::get_new_price( $_price, $cart_contents[ $key ]['wooco_price'] );
+                                    $_price = WPCleverWooco_Helper::get_new_price( $_price, $cart_contents[ $key ]['wooco_price'] );
                                 }
 
                                 if ( $discount = $cart_item['data']->get_discount() ) {
@@ -2335,7 +846,7 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
             }
         }
 
-        function cart_item_visible( $visible, $item ) {
+        public function cart_item_visible( $visible, $item ) {
             if ( isset( $item['wooco_parent_id'] ) ) {
                 return false;
             }
@@ -2343,7 +854,7 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
             return $visible;
         }
 
-        function order_item_visible( $visible, $order_item ) {
+        public function order_item_visible( $visible, $order_item ) {
             if ( $order_item->get_meta( 'wooco_parent_id' ) || $order_item->get_meta( '_wooco_parent_id' ) ) {
                 return false;
             }
@@ -2351,13 +862,13 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
             return $visible;
         }
 
-        function cart_item_class( $class, $item ) {
+        public function cart_item_class( $class, $item ) {
             if ( isset( $item['wooco_parent_id'] ) ) {
                 $class .= ' wooco-cart-item wooco-cart-child wooco-item-child';
             } elseif ( isset( $item['wooco_ids'] ) ) {
                 $class .= ' wooco-cart-item wooco-cart-parent wooco-item-parent';
 
-                if ( self::get_setting( 'hide_component', 'no' ) !== 'no' ) {
+                if ( WPCleverWooco_Helper::get_setting( 'hide_component', 'no' ) !== 'no' ) {
                     $class .= ' wooco-hide-component';
                 }
             }
@@ -2365,18 +876,21 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
             return $class;
         }
 
-        function cart_item_meta( $item_data, $cart_item ) {
+        public function cart_item_meta( $item_data, $cart_item ) {
             if ( empty( $cart_item['wooco_ids'] ) ) {
                 return $item_data;
             }
 
-            if ( self::get_setting( 'hide_component', 'no' ) === 'yes_list' ) {
+            if ( WPCleverWooco_Helper::get_setting( 'hide_component', 'no' ) === 'yes_list' ) {
                 $items_str = [];
 
-                if ( $items = self::get_items( $cart_item['wooco_ids'] ) ) {
+                if ( $items = WPCleverWooco_Helper::get_items( $cart_item['wooco_ids'] ) ) {
+                    // Prime WP post cache for all IDs in one query, avoid N database hits
+                    _prime_post_caches( array_column( $items, 'id' ), false, true );
+
                     foreach ( $items as $item ) {
                         if ( $item_product = wc_get_product( $item['id'] ) ) {
-                            if ( ( self::get_setting( 'hide_component_name', 'yes' ) === 'no' ) && ! empty( $item['component'] ) ) {
+                            if ( ( WPCleverWooco_Helper::get_setting( 'hide_component_name', 'yes' ) === 'no' ) && ! empty( $item['component'] ) ) {
                                 $items_str[] = apply_filters( 'wooco_order_component_product_name', '<li>' . $item['component'] . ': ' . $item['qty'] . ' × ' . $item_product->get_name() . '</li>', $item, $cart_item );
                             } else {
                                 $items_str[] = apply_filters( 'wooco_order_component_product_name', '<li>' . $item['qty'] . ' × ' . $item_product->get_name() . '</li>', $item, $cart_item );
@@ -2387,7 +901,7 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
 
                 if ( ! empty( $items_str ) ) {
                     $item_data[] = [
-                            'key'     => self::localization( 'cart_components', esc_html__( 'Components', 'wpc-composite-products' ) ),
+                            'key'     => WPCleverWooco_Helper::localization( 'cart_components', esc_html__( 'Components', 'wpc-composite-products' ) ),
                             'value'   => esc_html( $cart_item['wooco_ids'] ),
                             'display' => apply_filters( 'wooco_order_component_product_names', '<ul>' . implode( '', $items_str ) . '</ul>', $items, $cart_item ),
                     ];
@@ -2395,10 +909,13 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
             } else {
                 $items_str = [];
 
-                if ( $items = self::get_items( $cart_item['wooco_ids'] ) ) {
+                if ( $items = WPCleverWooco_Helper::get_items( $cart_item['wooco_ids'] ) ) {
+                    // Prime WP post cache for all IDs in one query, avoid N database hits
+                    _prime_post_caches( array_column( $items, 'id' ), false, true );
+
                     foreach ( $items as $item ) {
                         if ( $item_product = wc_get_product( $item['id'] ) ) {
-                            if ( ( self::get_setting( 'hide_component_name', 'yes' ) === 'no' ) && ! empty( $item['component'] ) ) {
+                            if ( ( WPCleverWooco_Helper::get_setting( 'hide_component_name', 'yes' ) === 'no' ) && ! empty( $item['component'] ) ) {
                                 $items_str[] = apply_filters( 'wooco_order_component_product_name', $item['component'] . ': ' . $item['qty'] . ' × ' . $item_product->get_name(), $item, $cart_item );
                             } else {
                                 $items_str[] = apply_filters( 'wooco_order_component_product_name', $item['qty'] . ' × ' . $item_product->get_name(), $item, $cart_item );
@@ -2409,7 +926,7 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
 
                 if ( ! empty( $items_str ) ) {
                     $item_data[] = [
-                            'key'     => self::localization( 'cart_components', esc_html__( 'Components', 'wpc-composite-products' ) ),
+                            'key'     => WPCleverWooco_Helper::localization( 'cart_components', esc_html__( 'Components', 'wpc-composite-products' ) ),
                             'value'   => esc_html( $cart_item['wooco_ids'] ),
                             'display' => apply_filters( 'wooco_order_component_product_names', implode( '; ', $items_str ), $items, $cart_item ),
                     ];
@@ -2419,7 +936,7 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
             return $item_data;
         }
 
-        function order_item_get_formatted_meta_data( $formatted_meta ) {
+        public function order_item_get_formatted_meta_data( $formatted_meta ) {
             foreach ( $formatted_meta as $key => $meta ) {
                 if ( ( $meta->key === 'wooco_ids' ) || ( $meta->key === 'wooco_parent_id' ) || ( $meta->key === 'wooco_qty' ) || ( $meta->key === 'wooco_price' ) || ( $meta->key === 'wooco_component' ) ) {
                     unset( $formatted_meta[ $key ] );
@@ -2429,7 +946,7 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
             return $formatted_meta;
         }
 
-        function add_order_item_meta( $item, $cart_item_key, $values ) {
+        public function add_order_item_meta( $item, $cart_item_key, $values ) {
             if ( isset( $values['wooco_parent_id'] ) ) {
                 $item->update_meta_data( 'wooco_parent_id', $values['wooco_parent_id'] );
             }
@@ -2451,26 +968,19 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
             }
         }
 
-        function hidden_order_itemmeta( $hidden ) {
-            return array_merge( $hidden, [
-                    'wooco_parent_id',
-                    'wooco_qty',
-                    'wooco_ids',
-                    'wooco_price',
-                    'wooco_pos',
-                    'wooco_component'
-            ] );
-        }
 
-        function order_item_meta_start( $order_item_id, $order_item ) {
+        public function order_item_meta_start( $order_item_id, $order_item ) {
             if ( $ids = $order_item->get_meta( 'wooco_ids' ) ) {
-                if ( $items = self::get_items( $ids ) ) {
-                    if ( self::get_setting( 'hide_component_order', 'no' ) === 'yes_list' ) {
+                if ( $items = WPCleverWooco_Helper::get_items( $ids ) ) {
+                    // Prime WP post cache for composite items about to be processed in one query
+                    _prime_post_caches( array_column( $items, 'id' ), false, true );
+
+                    if ( WPCleverWooco_Helper::get_setting( 'hide_component_order', 'no' ) === 'yes_list' ) {
                         $items_str = [];
 
                         foreach ( $items as $item ) {
                             if ( $item_product = wc_get_product( $item['id'] ) ) {
-                                if ( ( self::get_setting( 'hide_component_name', 'yes' ) === 'no' ) && ! empty( $item['component'] ) ) {
+                                if ( ( WPCleverWooco_Helper::get_setting( 'hide_component_name', 'yes' ) === 'no' ) && ! empty( $item['component'] ) ) {
                                     $items_str[] = apply_filters( 'wooco_order_component_product_name', '<li>' . $item['component'] . ': ' . $item['qty'] . ' × ' . $item_product->get_name() . '</li>', $item );
                                 } else {
                                     $items_str[] = apply_filters( 'wooco_order_component_product_name', '<li>' . $item['qty'] . ' × ' . $item_product->get_name() . '</li>', $item );
@@ -2484,7 +994,7 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
 
                         foreach ( $items as $item ) {
                             if ( $item_product = wc_get_product( $item['id'] ) ) {
-                                if ( ( self::get_setting( 'hide_component_name', 'yes' ) === 'no' ) && ! empty( $item['component'] ) ) {
+                                if ( ( WPCleverWooco_Helper::get_setting( 'hide_component_name', 'yes' ) === 'no' ) && ! empty( $item['component'] ) ) {
                                     $items_str[] = apply_filters( 'wooco_order_component_product_name', $item['component'] . ': ' . $item['qty'] . ' × ' . $item_product->get_name(), $item );
                                 } else {
                                     $items_str[] = apply_filters( 'wooco_order_component_product_name', $item['qty'] . ' × ' . $item_product->get_name(), $item );
@@ -2495,50 +1005,21 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                         $items_str = apply_filters( 'wooco_order_component_product_names', implode( '; ', $items_str ), $items );
                     }
 
-                    echo wp_kses_post( apply_filters( 'wooco_before_order_itemmeta_composite', '<div class="wooco-itemmeta-composite">' . sprintf( self::localization( 'cart_components_s', /* translators: components */ esc_html__( 'Components: %s', 'wpc-composite-products' ) ), $items_str ) . '</div>', $order_item_id, $order_item ) );
+                    echo wp_kses_post( apply_filters( 'wooco_before_order_itemmeta_composite', '<div class="wooco-itemmeta-composite">' . sprintf( WPCleverWooco_Helper::localization( 'cart_components_s', /* translators: components */ esc_html__( 'Components: %s', 'wpc-composite-products' ) ), $items_str ) . '</div>', $order_item_id, $order_item ) );
                 }
             }
 
             if ( ( $parent_id = $order_item->get_meta( 'wooco_parent_id' ) ) && ( $parent_product = wc_get_product( $parent_id ) ) ) {
                 if ( ( $component = $order_item->get_meta( 'wooco_component' ) ) && ! empty( $component ) ) {
-                    echo wp_kses_post( apply_filters( 'wooco_before_order_itemmeta_component', '<div class="wooco-itemmeta-component">' . sprintf( self::localization( 'cart_composite_s', /* translators: composite */ esc_html__( 'Composite: %s', 'wpc-composite-products' ) ), $parent_product->get_name() . apply_filters( 'wooco_name_separator', ' &rarr; ' ) . $component ) . '</div>', $order_item_id, $order_item ) );
+                    echo wp_kses_post( apply_filters( 'wooco_before_order_itemmeta_component', '<div class="wooco-itemmeta-component">' . sprintf( WPCleverWooco_Helper::localization( 'cart_composite_s', /* translators: composite */ esc_html__( 'Composite: %s', 'wpc-composite-products' ) ), $parent_product->get_name() . apply_filters( 'wooco_name_separator', ' &rarr; ' ) . $component ) . '</div>', $order_item_id, $order_item ) );
                 } else {
-                    echo wp_kses_post( apply_filters( 'wooco_before_order_itemmeta_component', '<div class="wooco-itemmeta-component">' . sprintf( self::localization( 'cart_composite_s', /* translators: composite */ esc_html__( 'Composite: %s', 'wpc-composite-products' ) ), $parent_product->get_name() ) . '</div>', $order_item_id, $order_item ) );
+                    echo wp_kses_post( apply_filters( 'wooco_before_order_itemmeta_component', '<div class="wooco-itemmeta-component">' . sprintf( WPCleverWooco_Helper::localization( 'cart_composite_s', /* translators: composite */ esc_html__( 'Composite: %s', 'wpc-composite-products' ) ), $parent_product->get_name() ) . '</div>', $order_item_id, $order_item ) );
                 }
             }
         }
 
-        function before_order_itemmeta( $order_item_id, $order_item ) {
-            if ( $ids = $order_item->get_meta( 'wooco_ids' ) ) {
-                if ( $items = self::get_items( $ids ) ) {
-                    $items_str = [];
 
-                    foreach ( $items as $item ) {
-                        if ( $item_product = wc_get_product( $item['id'] ) ) {
-                            if ( ( self::get_setting( 'hide_component_name', 'yes' ) === 'no' ) && ! empty( $item['component'] ) ) {
-                                $items_str[] = apply_filters( 'wooco_admin_order_component_product_name', '<li>' . $item['component'] . ': ' . $item['qty'] . ' × ' . $item_product->get_name() . '</li>', $item );
-                            } else {
-                                $items_str[] = apply_filters( 'wooco_admin_order_component_product_name', '<li>' . $item['qty'] . ' × ' . $item_product->get_name() . '</li>', $item );
-                            }
-                        }
-                    }
-
-                    $items_str = apply_filters( 'wooco_order_component_product_names', '<ul>' . implode( '', $items_str ) . '</ul>', $items );
-
-                    echo wp_kses_post( apply_filters( 'wooco_before_admin_order_itemmeta_composite', '<div class="wooco-itemmeta-composite">' . sprintf( self::localization( 'cart_components_s', /* translators: components */ esc_html__( 'Components: %s', 'wpc-composite-products' ) ), $items_str ) . '</div>', $order_item_id, $order_item ) );
-                }
-            }
-
-            if ( ( $parent_id = $order_item->get_meta( 'wooco_parent_id' ) ) && ( $parent_product = wc_get_product( $parent_id ) ) ) {
-                if ( ( $component = $order_item->get_meta( 'wooco_component' ) ) && ! empty( $component ) ) {
-                    echo wp_kses_post( apply_filters( 'wooco_before_admin_order_itemmeta_component', '<div class="wooco-itemmeta-component">' . sprintf( self::localization( 'cart_composite_s', /* translators: composite */ esc_html__( 'Composite: %s', 'wpc-composite-products' ) ), $parent_product->get_name() . apply_filters( 'wooco_name_separator', ' &rarr; ' ) . $component ) . '</div>', $order_item_id, $order_item ) );
-                } else {
-                    echo wp_kses_post( apply_filters( 'wooco_before_admin_order_itemmeta_component', '<div class="wooco-itemmeta-component">' . sprintf( self::localization( 'cart_composite_s', /* translators: composite */ esc_html__( 'Composite: %s', 'wpc-composite-products' ) ), $parent_product->get_name() ) . '</div>', $order_item_id, $order_item ) );
-                }
-            }
-        }
-
-        function get_cart_item_from_session( $cart_item, $item_session_values ) {
+        public function get_cart_item_from_session( $cart_item, $item_session_values ) {
             if ( ! empty( $item_session_values['wooco_ids'] ) ) {
                 $cart_item['wooco_ids']   = $item_session_values['wooco_ids'];
                 $cart_item['wooco_price'] = $item_session_values['wooco_price'] ?? '';
@@ -2556,23 +1037,8 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
             return $cart_item;
         }
 
-        function display_post_states( $states, $post ) {
-            if ( 'product' == get_post_type( $post->ID ) ) {
-                if ( ( $product = wc_get_product( $post->ID ) ) && $product->is_type( 'composite' ) ) {
-                    $count = 0;
 
-                    if ( ( $components = $product->get_components() ) && is_array( $components ) ) {
-                        $count = count( $components );
-                    }
-
-                    $states[] = apply_filters( 'wooco_post_states', '<span class="wooco-state">' . sprintf( /* translators: count */ esc_html__( 'Composite (%d)', 'wpc-composite-products' ), $count ) . '</span>', $count, $product );
-                }
-            }
-
-            return $states;
-        }
-
-        function cart_item_remove_link( $link, $cart_item_key ) {
+        public function cart_item_remove_link( $link, $cart_item_key ) {
             if ( isset( WC()->cart->cart_contents[ $cart_item_key ]['wooco_parent_key'] ) ) {
                 $parent_key = WC()->cart->cart_contents[ $cart_item_key ]['wooco_parent_key'];
 
@@ -2584,7 +1050,7 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
             return $link;
         }
 
-        function cart_item_quantity( $quantity, $cart_item_key, $cart_item ) {
+        public function cart_item_quantity( $quantity, $cart_item_key, $cart_item ) {
             // add qty as text - not input
             if ( isset( $cart_item['wooco_parent_id'] ) ) {
                 return $cart_item['quantity'];
@@ -2593,285 +1059,11 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
             return $quantity;
         }
 
-        function product_type_selector( $types ) {
-            $types['composite'] = esc_html__( 'Smart composite', 'wpc-composite-products' );
 
-            return $types;
-        }
-
-        function product_data_tabs( $tabs ) {
-            $tabs['composite'] = [
-                    'label'  => esc_html__( 'Components', 'wpc-composite-products' ),
-                    'target' => 'wooco_settings',
-                    'class'  => [ 'show_if_composite' ],
-            ];
-
-            return $tabs;
-        }
-
-        function product_data_panels() {
-            global $post, $thepostid, $product_object;
-
-            if ( $product_object instanceof WC_Product ) {
-                $product_id = $product_object->get_id();
-            } elseif ( is_numeric( $thepostid ) ) {
-                $product_id = $thepostid;
-            } elseif ( $post instanceof WP_Post ) {
-                $product_id = $post->ID;
-            } else {
-                $product_id = 0;
-            }
-
-            if ( ! $product_id ) {
-                ?>
-                <div id='wooco_settings' class='panel woocommerce_options_panel wooco_table'>
-                    <p style="padding: 0 12px; color: #c9356e"><?php esc_html_e( 'Product wasn\'t returned.', 'wpc-composite-products' ); ?></p>
-                </div>
-                <?php
-                return;
-            }
-
-            $components    = get_post_meta( $product_id, 'wooco_components', true );
-            $pricing       = get_post_meta( $product_id, 'wooco_pricing', true );
-            $same_products = get_post_meta( $product_id, 'wooco_same_products', true );
-            $shipping_fee  = get_post_meta( $product_id, 'wooco_shipping_fee', true );
-            ?>
-            <div id='wooco_settings' class='panel woocommerce_options_panel wooco_table'>
-                <table class="wooco_components">
-                    <thead></thead>
-                    <tbody>
-                    <?php if ( ! empty( $components ) && is_array( $components ) ) {
-                        foreach ( $components as $component_key => $component ) {
-                            self::component( false, $component, $component_key );
-                        }
-                    } else {
-                        self::component( true );
-                    } ?>
-                    </tbody>
-                    <tfoot>
-                    <tr>
-                        <td>
-                            <div>
-                                <a href="#" class="wooco_add_component button">
-                                    <?php esc_html_e( '+ Add component', 'wpc-composite-products' ); ?>
-                                </a> <a href="#" class="wooco_expand_all">
-                                    <?php esc_html_e( 'Expand All', 'wpc-composite-products' ); ?>
-                                </a> <a href="#" class="wooco_collapse_all">
-                                    <?php esc_html_e( 'Collapse All', 'wpc-composite-products' ); ?>
-                                </a>
-                            </div>
-                            <div>
-                                <!--
-								<a href="#" class="wooco_export_components hint--left" aria-label="<?php esc_attr_e( 'Remember to save current components before exporting to get the latest version.', 'wpc-composite-products' ); ?>">
-									<?php esc_html_e( 'Export', 'wpc-composite-products' ); ?>
-								</a>
-								-->
-                                <a href="#" class="wooco_save_components button button-primary">
-                                    <?php esc_html_e( 'Save components', 'wpc-composite-products' ); ?>
-                                </a>
-                            </div>
-                        </td>
-                    </tr>
-                    </tfoot>
-                </table>
-                <table>
-                    <tr class="wooco_tr_space">
-                        <th><?php esc_html_e( 'Pricing', 'wpc-composite-products' ); ?></th>
-                        <td>
-                            <label for="wooco_pricing"></label><select id="wooco_pricing" name="wooco_pricing">
-                                <option value="only" <?php selected( $pricing, 'only' ); ?>><?php esc_html_e( 'Only base price', 'wpc-composite-products' ); ?></option>
-                                <option value="include" <?php selected( $pricing, 'include' ); ?>><?php esc_html_e( 'Include base price', 'wpc-composite-products' ); ?></option>
-                                <option value="exclude" <?php selected( $pricing, 'exclude' ); ?>><?php esc_html_e( 'Exclude base price', 'wpc-composite-products' ); ?></option>
-                            </select>
-                            <span class="woocommerce-help-tip"
-                                  data-tip="<?php esc_attr_e( '"Base price" is the price set in the General tab. When "Only base price" is chosen, the total price won\'t change despite the price changes in variable components.', 'wpc-composite-products' ); ?>"></span>
-                            <span style="color: #c9356e">* <?php esc_html_e( 'Always put a price in the General tab to display the Add to Cart button. This is also the base price.', 'wpc-composite-products' ); ?></span>
-                        </td>
-                    </tr>
-                    <tr class="wooco_tr_space">
-                        <th><?php esc_html_e( 'Discount', 'wpc-composite-products' ); ?></th>
-                        <td style="vertical-align: middle; line-height: 30px;">
-                            <label for="wooco_discount_percent"></label><input id="wooco_discount_percent"
-                                                                               name="wooco_discount_percent"
-                                                                               type="number" min="0.0001" step="0.0001"
-                                                                               max="99.9999"
-                                                                               value="<?php echo esc_attr( get_post_meta( $product_id, 'wooco_discount_percent', true ) ?: '' ); ?>"
-                                                                               style="width: 80px"/>%.
-                            <span class="woocommerce-help-tip"
-                                  data-tip="<?php esc_attr_e( 'The universal percentage discount will be applied equally on each component\'s price, not on the total.', 'wpc-composite-products' ); ?>"></span>
-                        </td>
-                    </tr>
-                    <tr class="wooco_tr_space">
-                        <?php
-                        $min = get_post_meta( $product_id, 'wooco_qty_min', true ) ?: '';
-                        $max = get_post_meta( $product_id, 'wooco_qty_max', true ) ?: '';
-
-                        if ( class_exists( 'WPCleverWoopq' ) && ( WPCleverWoopq::get_setting( 'decimal', 'no' ) === 'yes' ) ) {
-                            $step = '0.000001';
-                        } else {
-                            $step = '1';
-
-                            if ( ! empty( $min ) ) {
-                                $min = (int) $min;
-                            }
-
-                            if ( ! empty( $max ) ) {
-                                $max = (int) $max;
-                            }
-                        }
-                        ?>
-                        <th><?php esc_html_e( 'Quantity', 'wpc-composite-products' ); ?></th>
-                        <td style="vertical-align: middle; line-height: 30px;">
-                            Min <label>
-                                <input name="wooco_qty_min" type="number" style="width: 80px" min="0"
-                                       step="<?php echo esc_attr( $step ); ?>" value="<?php echo esc_attr( $min ); ?>"/>
-                            </label> Max <label>
-                                <input name="wooco_qty_max" type="number" min="0" style="width: 80px"
-                                       step="<?php echo esc_attr( $step ); ?>" value="<?php echo esc_attr( $max ); ?>"/>
-                            </label>
-                        </td>
-                    </tr>
-                    <tr class="wooco_tr_space">
-                        <th><?php esc_html_e( 'Total limits', 'wpc-composite-products' ); ?></th>
-                        <td>
-                            <input id="wooco_total_limits" name="wooco_total_limits"
-                                   type="checkbox" <?php echo( get_post_meta( $product_id, 'wooco_total_limits', true ) === 'on' ? 'checked' : '' ); ?>/>
-                            <label for="wooco_total_limits"><?php esc_html_e( 'Configure total limits for the current composite.', 'wpc-composite-products' ); ?></label>
-                            <span class="wooco_show_if_total_limits">
-                                        Min <label for="wooco_total_limits_min"></label><input
-                                        id="wooco_total_limits_min" name="wooco_total_limits_min" type="number" min="0"
-                                        style="width: 80px"
-                                        value="<?php echo esc_attr( get_post_meta( $product_id, 'wooco_total_limits_min', true ) ); ?>"/>
-                                        Max <label for="wooco_total_limits_max"></label><input
-                                        id="wooco_total_limits_max" name="wooco_total_limits_max" type="number" min="0"
-                                        style="width: 80px"
-                                        value="<?php echo esc_attr( get_post_meta( $product_id, 'wooco_total_limits_max', true ) ); ?>"/> <?php echo esc_html( get_woocommerce_currency_symbol() ); ?>
-                                    </span>
-                        </td>
-                    </tr>
-                    <tr class="wooco_tr_space">
-                        <th><?php esc_html_e( 'Same products', 'wpc-composite-products' ); ?></th>
-                        <td>
-                            <label for="wooco_same_products"></label><select id="wooco_same_products"
-                                                                             name="wooco_same_products">
-                                <option value="allow" <?php selected( $same_products, 'allow' ); ?>><?php esc_html_e( 'Allow', 'wpc-composite-products' ); ?></option>
-                                <option value="do_not_allow" <?php selected( $same_products, 'do_not_allow' ); ?>><?php esc_html_e( 'Do not allow', 'wpc-composite-products' ); ?></option>
-                            </select>
-                            <span class="woocommerce-help-tip"
-                                  data-tip="<?php esc_attr_e( 'Allow/Do not allow the buyer to choose the same products in the components.', 'wpc-composite-products' ); ?>"></span>
-                        </td>
-                    </tr>
-                    <tr class="wooco_tr_space">
-                        <th><?php esc_html_e( 'Shipping fee', 'wpc-composite-products' ); ?></th>
-                        <td>
-                            <label for="wooco_shipping_fee"></label><select id="wooco_shipping_fee"
-                                                                            name="wooco_shipping_fee">
-                                <option value="both" <?php selected( $shipping_fee, 'both' ); ?>><?php esc_html_e( 'Apply to both composite & component', 'wpc-composite-products' ); ?></option>
-                                <option value="whole" <?php selected( $shipping_fee, 'whole' ); ?>><?php esc_html_e( 'Apply to the main composite product', 'wpc-composite-products' ); ?></option>
-                                <option value="each" <?php selected( $shipping_fee, 'each' ); ?>><?php esc_html_e( 'Apply to each component product', 'wpc-composite-products' ); ?></option>
-                            </select>
-                        </td>
-                    </tr>
-                    <tr class="wooco_tr_space">
-                        <th><?php esc_html_e( 'Custom display price', 'wpc-composite-products' ); ?></th>
-                        <td>
-                            <label>
-                                <input type="text" name="wooco_custom_price" id="wooco_custom_price"
-                                       value="<?php echo esc_attr( get_post_meta( $product_id, 'wooco_custom_price', true ) ); ?>"/>
-                            </label> E.g: <code>From $10 to $100</code>
-                        </td>
-                    </tr>
-                    <tr class="wooco_tr_space">
-                        <th><?php esc_html_e( 'Above text', 'wpc-composite-products' ); ?></th>
-                        <td>
-                            <div class="w100">
-                                <label>
-                                    <textarea
-                                            name="wooco_before_text"><?php echo esc_textarea( get_post_meta( $product_id, 'wooco_before_text', true ) ); ?></textarea>
-                                </label>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr class="wooco_tr_space">
-                        <th><?php esc_html_e( 'Under text', 'wpc-composite-products' ); ?></th>
-                        <td>
-                            <div class="w100">
-                                <label>
-                                    <textarea
-                                            name="wooco_after_text"><?php echo esc_textarea( get_post_meta( $product_id, 'wooco_after_text', true ) ); ?></textarea>
-                                </label>
-                            </div>
-                        </td>
-                    </tr>
-                    <?php do_action( 'wooco_product_settings', $product_id ); ?>
-                </table>
-            </div>
-            <?php
-        }
-
-        function process_meta_composite( $post_id ) {
-            if ( isset( $_POST['wooco_components'] ) ) {
-                update_post_meta( $post_id, 'wooco_components', self::sanitize_array( $_POST['wooco_components'] ) );
-            }
-
-            if ( isset( $_POST['wooco_pricing'] ) ) {
-                update_post_meta( $post_id, 'wooco_pricing', sanitize_text_field( $_POST['wooco_pricing'] ) );
-            }
-
-            if ( isset( $_POST['wooco_discount_percent'] ) ) {
-                update_post_meta( $post_id, 'wooco_discount_percent', sanitize_text_field( $_POST['wooco_discount_percent'] ) );
-            }
-
-            if ( isset( $_POST['wooco_qty_min'] ) ) {
-                update_post_meta( $post_id, 'wooco_qty_min', sanitize_text_field( $_POST['wooco_qty_min'] ) );
-            }
-
-            if ( isset( $_POST['wooco_qty_max'] ) ) {
-                update_post_meta( $post_id, 'wooco_qty_max', sanitize_text_field( $_POST['wooco_qty_max'] ) );
-            }
-
-            if ( isset( $_POST['wooco_total_limits'] ) ) {
-                update_post_meta( $post_id, 'wooco_total_limits', 'on' );
-            } else {
-                update_post_meta( $post_id, 'wooco_total_limits', 'off' );
-            }
-
-            if ( isset( $_POST['wooco_total_limits_min'] ) ) {
-                update_post_meta( $post_id, 'wooco_total_limits_min', sanitize_text_field( $_POST['wooco_total_limits_min'] ) );
-            }
-
-            if ( isset( $_POST['wooco_total_limits_max'] ) ) {
-                update_post_meta( $post_id, 'wooco_total_limits_max', sanitize_text_field( $_POST['wooco_total_limits_max'] ) );
-            }
-
-            if ( isset( $_POST['wooco_same_products'] ) ) {
-                update_post_meta( $post_id, 'wooco_same_products', sanitize_text_field( $_POST['wooco_same_products'] ) );
-            }
-
-            if ( isset( $_POST['wooco_shipping_fee'] ) ) {
-                update_post_meta( $post_id, 'wooco_shipping_fee', sanitize_text_field( $_POST['wooco_shipping_fee'] ) );
-            }
-
-            if ( isset( $_POST['wooco_custom_price'] ) ) {
-                update_post_meta( $post_id, 'wooco_custom_price', sanitize_post_field( 'post_content', $_POST['wooco_custom_price'], $post_id, 'display' ) );
-            }
-
-            if ( isset( $_POST['wooco_before_text'] ) ) {
-                update_post_meta( $post_id, 'wooco_before_text', sanitize_post_field( 'post_content', $_POST['wooco_before_text'], $post_id, 'display' ) );
-            }
-
-            if ( isset( $_POST['wooco_after_text'] ) ) {
-                update_post_meta( $post_id, 'wooco_after_text', sanitize_post_field( 'post_content', $_POST['wooco_after_text'], $post_id, 'display' ) );
-            }
-
-            // delete cache
-            delete_transient( 'wooco_show_items_' . $post_id );
-        }
-
-        function add_to_cart_form() {
+        public function add_to_cart_form() {
             self::show_items();
 
-            $edit_link = self::get_setting( 'edit_link', 'no' ) === 'yes';
+            $edit_link = WPCleverWooco_Helper::get_setting( 'edit_link', 'no' ) === 'yes';
             $edit_ids  = isset( $_GET['edit'] ) ? explode( ',', base64_decode( sanitize_text_field( wp_unslash( $_GET['edit'] ) ) ) ) : [];
             $edit_key  = sanitize_key( wp_unslash( $_GET['key'] ?? '' ) );
 
@@ -2886,7 +1078,7 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                     echo '<input type="hidden" name="wooco_ids" class="wooco-ids wooco-ids-' . esc_attr( $product_id ) . '" value=""/>';
                     echo '<input type="hidden" name="wooco_update" value="' . esc_attr( $edit_key ) . '"/>';
                     echo '<input type="hidden" name="quantity" value="' . esc_attr( $quantity ) . '"/>';
-                    echo '<button type="submit" name="add-to-cart" value="' . esc_attr( $product_id ) . '" class="single_add_to_cart_button button alt">' . esc_html( self::localization( 'cart_item_update', esc_html__( 'Update', 'wpc-composite-products' ) ) ) . '</button>';
+                    echo '<button type="submit" name="add-to-cart" value="' . esc_attr( $product_id ) . '" class="single_add_to_cart_button button alt">' . esc_html( WPCleverWooco_Helper::localization( 'cart_item_update', esc_html__( 'Update', 'wpc-composite-products' ) ) ) . '</button>';
                     echo '</form>';
                 }
             } else {
@@ -2895,7 +1087,7 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
             }
         }
 
-        function add_to_cart_button() {
+        public function add_to_cart_button() {
             global $product;
 
             if ( $product && $product->is_type( 'composite' ) ) {
@@ -2903,7 +1095,7 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
             }
         }
 
-        function loop_add_to_cart_link( $link, $product ) {
+        public function loop_add_to_cart_link( $link, $product ) {
             if ( $product->is_type( 'composite' ) ) {
                 $link = str_replace( 'ajax_add_to_cart', '', $link );
             }
@@ -2911,19 +1103,33 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
             return $link;
         }
 
-        function cart_shipping_packages( $packages ) {
+        public function cart_shipping_packages( $packages ) {
             if ( ! empty( $packages ) ) {
+                $shipping_fee_cache = []; // memoize get_post_meta 'wooco_shipping_fee' by product ID
+
                 foreach ( $packages as $package_key => $package ) {
                     if ( ! empty( $package['contents'] ) ) {
                         foreach ( $package['contents'] as $cart_item_key => $cart_item ) {
                             if ( ! empty( $cart_item['wooco_parent_id'] ) ) {
-                                if ( get_post_meta( $cart_item['wooco_parent_id'], 'wooco_shipping_fee', true ) === 'whole' ) {
+                                $pid = $cart_item['wooco_parent_id'];
+
+                                if ( ! array_key_exists( $pid, $shipping_fee_cache ) ) {
+                                    $shipping_fee_cache[ $pid ] = get_post_meta( $pid, 'wooco_shipping_fee', true );
+                                }
+
+                                if ( $shipping_fee_cache[ $pid ] === 'whole' ) {
                                     unset( $packages[ $package_key ]['contents'][ $cart_item_key ] );
                                 }
                             }
 
                             if ( ! empty( $cart_item['wooco_ids'] ) ) {
-                                if ( get_post_meta( $cart_item['data']->get_id(), 'wooco_shipping_fee', true ) === 'each' ) {
+                                $pid = $cart_item['data']->get_id();
+
+                                if ( ! array_key_exists( $pid, $shipping_fee_cache ) ) {
+                                    $shipping_fee_cache[ $pid ] = get_post_meta( $pid, 'wooco_shipping_fee', true );
+                                }
+
+                                if ( $shipping_fee_cache[ $pid ] === 'each' ) {
                                     unset( $packages[ $package_key ]['contents'][ $cart_item_key ] );
                                 }
                             }
@@ -2935,17 +1141,29 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
             return $packages;
         }
 
-        function get_price_html( $price, $product ) {
+        public function get_price_html( $price, $product ) {
+            if ( is_admin() ) {
+                return $price;
+            }
+
             if ( $product->is_type( 'composite' ) ) {
-                $product_id   = $product->get_id();
-                $custom_price = stripslashes( get_post_meta( $product_id, 'wooco_custom_price', true ) );
+                $product_id = $product->get_id();
+
+                // wp_cache to avoid get_post_meta on hot path (shop loop, mini-cart, ...)
+                $cache_key    = 'wooco_custom_price_' . $product_id;
+                $custom_price = wp_cache_get( $cache_key, 'wooco' );
+
+                if ( $custom_price === false ) {
+                    $custom_price = stripslashes( (string) get_post_meta( $product_id, 'wooco_custom_price', true ) );
+                    wp_cache_set( $cache_key, $custom_price, 'wooco' );
+                }
 
                 if ( ! empty( $custom_price ) ) {
                     return $custom_price;
                 }
 
                 if ( $product->get_pricing() !== 'only' ) {
-                    switch ( self::get_setting( 'price_format', 'from_regular' ) ) {
+                    switch ( WPCleverWooco_Helper::get_setting( 'price_format', 'from_regular' ) ) {
                         case 'from_regular':
                             return esc_html__( 'From', 'wpc-composite-products' ) . ' ' . wc_price( wc_get_price_to_display( $product, [ 'price' => $product->get_regular_price() ] ) );
                         case 'from_sale':
@@ -2957,7 +1175,7 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
             return $price;
         }
 
-        function product_price_class( $class ) {
+        public function product_price_class( $class ) {
             global $product;
 
             if ( $product && $product->is_type( 'composite' ) ) {
@@ -2967,7 +1185,7 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
             return $class;
         }
 
-        function order_again_cart_item_data( $item_data, $item ) {
+        public function order_again_cart_item_data( $item_data, $item ) {
             if ( isset( $item['wooco_ids'] ) ) {
                 $item_data['wooco_ids']         = $item['wooco_ids'];
                 $item_data['wooco_order_again'] = 'yes';
@@ -2981,32 +1199,32 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
             return $item_data;
         }
 
-        function cart_loaded_from_session() {
+        public function cart_loaded_from_session() {
             foreach ( WC()->cart->cart_contents as $cart_item_key => $cart_item ) {
                 if ( isset( $cart_item['wooco_order_again'], $cart_item['wooco_parent_id'] ) ) {
                     WC()->cart->remove_cart_item( $cart_item_key );
                 }
 
                 if ( isset( $cart_item['wooco_order_again'], $cart_item['wooco_ids'] ) ) {
-                    if ( $items = self::get_items( $cart_item['wooco_ids'] ) ) {
+                    if ( $items = WPCleverWooco_Helper::get_items( $cart_item['wooco_ids'] ) ) {
                         self::add_to_cart_items( $items, $cart_item_key, $cart_item['product_id'], $cart_item['quantity'] );
                     }
                 }
             }
         }
 
-        function coupon_is_valid_for_product( $valid, $product, $coupon, $item ) {
-            if ( ( self::get_setting( 'coupon_restrictions', 'no' ) === 'both' ) && ( isset( $item['wooco_parent_id'] ) || isset( $item['wooco_ids'] ) ) ) {
+        public function coupon_is_valid_for_product( $valid, $product, $coupon, $item ) {
+            if ( ( WPCleverWooco_Helper::get_setting( 'coupon_restrictions', 'no' ) === 'both' ) && ( isset( $item['wooco_parent_id'] ) || isset( $item['wooco_ids'] ) ) ) {
                 // exclude both composite and component products
                 return false;
             }
 
-            if ( ( self::get_setting( 'coupon_restrictions', 'no' ) === 'composite' ) && isset( $item['wooco_ids'] ) ) {
+            if ( ( WPCleverWooco_Helper::get_setting( 'coupon_restrictions', 'no' ) === 'composite' ) && isset( $item['wooco_ids'] ) ) {
                 // exclude composite
                 return false;
             }
 
-            if ( ( self::get_setting( 'coupon_restrictions', 'no' ) === 'component' ) && isset( $item['wooco_parent_id'] ) ) {
+            if ( ( WPCleverWooco_Helper::get_setting( 'coupon_restrictions', 'no' ) === 'component' ) && isset( $item['wooco_parent_id'] ) ) {
                 // exclude component products
                 return false;
             }
@@ -3014,7 +1232,7 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
             return $valid;
         }
 
-        function show_items( $product = null ) {
+        public function show_items( $product = null ) {
             if ( ! $product ) {
                 global $product;
             }
@@ -3035,35 +1253,39 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
 
             do_action( 'wooco_before_wrap', $product );
 
-            if ( ! self::enable_cache( 'show_items' ) || ( false === ( $show_items = get_transient( 'wooco_show_items_' . $product_id ) ) ) ) {
+            if ( ! WPCleverWooco_Helper::enable_cache( 'show_items' ) || ( false === ( $show_items = get_transient( 'wooco_show_items_' . $product_id ) ) ) ) {
                 ob_start();
+
+                // Batch load all post meta of this product into WP object cache
+                // so subsequent get_post_meta calls don't need individual database hits
+                update_postmeta_cache( [ $product_id ] );
 
                 if ( $components = $product->get_components() ) {
                     // get settings
-                    $selector             = apply_filters( 'wooco_selector', self::get_setting( 'selector', 'ddslick' ) );
-                    $show_price           = self::get_setting( 'show_price', 'yes' ) === 'yes';
-                    $show_availability    = self::get_setting( 'show_availability', 'yes' ) === 'yes';
-                    $show_image           = self::get_setting( 'show_image', 'yes' ) === 'yes';
-                    $plus_minus           = self::get_setting( 'show_plus_minus', 'yes' ) === 'yes';
-                    $checked              = self::get_setting( 'checked', 'yes' ) === 'yes';
-                    $checkbox             = self::get_setting( 'checkbox', 'no' ) === 'yes';
-                    $product_link         = self::get_setting( 'product_link', 'no' );
-                    $option_none_required = self::get_setting( 'option_none_required', 'no' ) === 'yes';
+                    $selector             = apply_filters( 'wooco_selector', WPCleverWooco_Helper::get_setting( 'selector', 'ddslick' ) );
+                    $show_price           = WPCleverWooco_Helper::get_setting( 'show_price', 'yes' ) === 'yes';
+                    $show_availability    = WPCleverWooco_Helper::get_setting( 'show_availability', 'yes' ) === 'yes';
+                    $show_image           = WPCleverWooco_Helper::get_setting( 'show_image', 'yes' ) === 'yes';
+                    $plus_minus           = WPCleverWooco_Helper::get_setting( 'show_plus_minus', 'yes' ) === 'yes';
+                    $checked              = WPCleverWooco_Helper::get_setting( 'checked', 'yes' ) === 'yes';
+                    $checkbox             = WPCleverWooco_Helper::get_setting( 'checkbox', 'no' ) === 'yes';
+                    $product_link         = WPCleverWooco_Helper::get_setting( 'product_link', 'no' );
+                    $option_none_required = WPCleverWooco_Helper::get_setting( 'option_none_required', 'no' ) === 'yes';
                     $total_limit          = get_post_meta( $product_id, 'wooco_total_limits', true ) === 'on';
                     $total_limit_min      = get_post_meta( $product_id, 'wooco_total_limits_min', true );
                     $total_limit_max      = get_post_meta( $product_id, 'wooco_total_limits_max', true );
 
                     // option none image
-                    $option_none_image = $option_none_image_full = self::get_setting( 'option_none_image', 'placeholder' ) !== 'none' ? wc_placeholder_img_src() : '';
+                    $option_none_image = $option_none_image_full = WPCleverWooco_Helper::get_setting( 'option_none_image', 'placeholder' ) !== 'none' ? wc_placeholder_img_src() : '';
 
-                    if ( ( self::get_setting( 'option_none_image', 'placeholder' ) === 'product' ) && ( $product_image_id = $product->get_image_id() ) ) {
+                    if ( ( WPCleverWooco_Helper::get_setting( 'option_none_image', 'placeholder' ) === 'product' ) && ( $product_image_id = $product->get_image_id() ) ) {
                         $product_image          = wp_get_attachment_image_src( $product_image_id, self::$image_size );
                         $product_image_full     = wp_get_attachment_image_src( $product_image_id, 'full' );
                         $option_none_image      = $product_image[0] ?? '';
                         $option_none_image_full = $product_image_full[0] ?? '';
                     }
 
-                    if ( ( self::get_setting( 'option_none_image', 'placeholder' ) === 'custom' ) && ( $option_none_image_id = self::get_setting( 'option_none_image_id' ) ) ) {
+                    if ( ( WPCleverWooco_Helper::get_setting( 'option_none_image', 'placeholder' ) === 'custom' ) && ( $option_none_image_id = WPCleverWooco_Helper::get_setting( 'option_none_image_id' ) ) ) {
                         $custom_image           = wp_get_attachment_image_src( $option_none_image_id, self::$image_size );
                         $custom_image_full      = wp_get_attachment_image_src( $option_none_image_id, 'full' );
                         $option_none_image      = $custom_image[0] ?? '';
@@ -3091,10 +1313,10 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                             'total-max'     => $total_limit && $total_limit_max ? $total_limit_max : '-1'
                     ], $product );
 
-                    echo '<div class="' . esc_attr( apply_filters( 'wooco_components_class', 'wooco_components wooco-components', $product ) ) . '" ' . self::data_attributes( $components_attrs ) . '>';
+                    echo '<div class="' . esc_attr( apply_filters( 'wooco_components_class', 'wooco_components wooco-components', $product ) ) . '" ' . WPCleverWooco_Helper::data_attributes( $components_attrs ) . '>';
 
                     foreach ( $components as $key => $component ) {
-                        $component_type = $component['type'];
+                        $component_type = $component['type'] ?? '';
 
                         if ( $component_type === 'products' ) {
                             $component_val = $component['products'] ?? [];
@@ -3103,7 +1325,7 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                         }
 
                         $component_default    = $component['default'] ?? 0;
-                        $component_default_id = self::get_product_id( $component_default );
+                        $component_default_id = WPCleverWooco_Helper::get_product_id( $component_default );
                         $component_default    = absint( $df_ids[ $order - 1 ] ?? $component_default_id );
                         $component_default    = apply_filters( 'wooco_component_default', $component_default, $component );
                         $component['default'] = $component_default;
@@ -3114,17 +1336,19 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                         $component_exclude    = $component['exclude'] ?? [];
                         $component_orderby    = (string) ( $component['orderby'] ?? 'default' );
                         $component_order      = (string) ( $component['order'] ?? 'default' );
-                        $component_price      = isset( $component['price'] ) ? self::format_price( $component['price'] ) : '';
+                        $component_price      = isset( $component['price'] ) ? WPCleverWooco_Helper::format_price( $component['price'] ) : '';
                         $component_products   = self::get_products( $component_type, $component_val, $component_orderby, $component_order, $component_exclude, $component_default, $component_qty, $component_price, $component_custom_qty );
                         $component_selector   = isset( $component['selector'] ) && $component['selector'] !== 'default' ? $component['selector'] : $selector;
 
                         // force set 'grid_3' if enable multiple
-                        if ( $component_multiple && ! in_array( $component_selector, [
+                        if (
+                                $component_multiple && ! in_array( $component_selector, [
                                         'list',
                                         'grid_2',
                                         'grid_3',
                                         'grid_4'
-                                ] ) ) {
+                                ] )
+                        ) {
                             $component_selector = 'grid_3';
                         }
 
@@ -3194,7 +1418,7 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
 
                             $option_none_image       = apply_filters( 'wooco_option_none_img_src', $option_none_image, $component, $product );
                             $option_none_image_full  = apply_filters( 'wooco_option_none_img_full', $option_none_image_full, $component, $product );
-                            $option_none             = $component_required ? self::localization( 'option_none_required', esc_html__( 'Please make your choice here', 'wpc-composite-products' ) ) : self::localization( 'option_none', esc_html__( 'No, thanks. I don\'t need this', 'wpc-composite-products' ) );
+                            $option_none             = $component_required ? WPCleverWooco_Helper::localization( 'option_none_required', esc_html__( 'Please make your choice here', 'wpc-composite-products' ) ) : WPCleverWooco_Helper::localization( 'option_none', esc_html__( 'No, thanks. I don\'t need this', 'wpc-composite-products' ) );
                             $option_none_label       = apply_filters( 'wooco_option_none', $option_none, $component, $product );
                             $option_none_description = apply_filters( 'wooco_option_none_description', wc_price( 0 ), $component, $product );
                             $option_none_data        = apply_filters( 'wooco_option_none_data', [
@@ -3227,7 +1451,7 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                                     'count'         => count( $component_products )
                             ], $component, $product );
 
-                            echo '<div class="wooco_component_product" ' . self::data_attributes( $component_product_attrs ) . '>';
+                            echo '<div class="wooco_component_product" ' . WPCleverWooco_Helper::data_attributes( $component_product_attrs ) . '>';
 
                             if ( $checkbox && $component_dropdown ) {
                                 $components_checked = $checked || $component_required;
@@ -3243,8 +1467,7 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                                 <div class="wooco_component_product_checkbox">
                                     <label>
                                         <input class="wooco-checkbox"
-                                               type="checkbox" <?php echo( apply_filters( 'wooco_component_checkbox_checked', $components_checked, $component ) ? 'checked="checked"' : '' ); ?>
-                                                <?php echo( apply_filters( 'wooco_component_checkbox_disabled', $component_required, $component ) ? 'disabled' : '' ); ?>/>
+                                               type="checkbox" <?php echo( apply_filters( 'wooco_component_checkbox_checked', $components_checked, $component ) ? 'checked="checked"' : '' ); ?>                                 <?php echo( apply_filters( 'wooco_component_checkbox_disabled', $component_required, $component ) ? 'disabled' : '' ); ?> />
                                     </label>
                                 </div>
                             <?php } ?>
@@ -3283,7 +1506,7 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                                                     }
                                                 }
 
-                                                echo '<div class="wooco_component_product_selection_list_item wooco_component_product_selection_item ' . ( $item_selected || $one_required ? 'wooco_item_selected' : '' ) . '" ' . self::data_attributes( $component_product ) . '>';
+                                                echo '<div class="wooco_component_product_selection_list_item wooco_component_product_selection_item ' . ( $item_selected || $one_required ? 'wooco_item_selected' : '' ) . '" ' . WPCleverWooco_Helper::data_attributes( $component_product ) . '>';
                                                 echo '<div class="wooco_component_product_selection_list_item_choose"><span></span></div>';
                                                 echo '<div class="wooco_component_product_selection_list_item_image">' . wp_kses_post( apply_filters( 'wooco_component_product_image', $component_product_obj->get_image(), $component_product_obj ) ) . '</div>';
                                                 echo '<div class="wooco_component_product_selection_list_item_info">';
@@ -3379,7 +1602,7 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                                                     }
                                                 }
 
-                                                echo '<div class="wooco_component_product_selection_grid_item wooco_component_product_selection_item ' . ( $item_selected || $one_required ? 'wooco_item_selected' : '' ) . '" ' . self::data_attributes( $component_product ) . '>';
+                                                echo '<div class="wooco_component_product_selection_grid_item wooco_component_product_selection_item ' . ( $item_selected || $one_required ? 'wooco_item_selected' : '' ) . '" ' . WPCleverWooco_Helper::data_attributes( $component_product ) . '>';
                                                 echo '<div class="wooco_component_product_selection_grid_item_image">' . wp_kses_post( apply_filters( 'wooco_component_product_image', $component_product_obj->get_image(), $component_product_obj ) ) . '</div>';
                                                 echo '<div class="wooco_component_product_selection_grid_item_info">';
                                                 echo '<div class="wooco_component_product_selection_grid_item_name">' . wp_kses_post( $component_product['name'] ) . '</div>';
@@ -3459,7 +1682,7 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                                             id="<?php echo esc_attr( 'wooco_component_product_select_' . $order ); ?>">
                                         <?php
                                         if ( ! $checkbox && ( ! $component_required || $option_none_required ) && ! $one_required ) {
-                                            echo '<option value="-1" ' . self::data_attributes( $option_none_data ) . '>' . esc_html( $option_none_label ) . '</option>';
+                                            echo '<option value="-1" ' . WPCleverWooco_Helper::data_attributes( $option_none_data ) . '>' . esc_html( $option_none_label ) . '</option>';
                                         }
 
                                         foreach ( $component_products as $component_product ) {
@@ -3481,7 +1704,7 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                                                 }
                                             }
 
-                                            echo '<option value="' . esc_attr( $component_product['purchasable'] === 'yes' ? $component_product['id'] : 0 ) . '" ' . self::data_attributes( $component_product ) . ' ' . esc_attr( $component_product['purchasable'] !== 'yes' ? 'disabled' : '' ) . ' ' . esc_attr( $item_selected ? 'selected' : '' ) . '>' . esc_html( $component_product['name'] ) . '</option>';
+                                            echo '<option value="' . esc_attr( $component_product['purchasable'] === 'yes' ? $component_product['id'] : 0 ) . '" ' . WPCleverWooco_Helper::data_attributes( $component_product ) . ' ' . esc_attr( $component_product['purchasable'] !== 'yes' ? 'disabled' : '' ) . ' ' . esc_attr( $item_selected ? 'selected' : '' ) . '>' . esc_html( $component_product['name'] ) . '</option>';
                                         }
                                         ?>
                                     </select>
@@ -3540,7 +1763,7 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
 
                     echo '<div class="wooco_summary wooco-summary wooco-text"><div class="wooco_total wooco-total"></div><div class="wooco_count wooco-count"></div></div>';
 
-                    if ( self::get_setting( 'show_alert', 'load' ) !== 'no' ) {
+                    if ( WPCleverWooco_Helper::get_setting( 'show_alert', 'load' ) !== 'no' ) {
                         echo '<div class="wooco_alert wooco-alert wooco-text" style="display: none"></div>';
                     }
 
@@ -3555,7 +1778,8 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
 
                 $show_items = ob_get_clean();
 
-                if ( self::enable_cache( 'show_items' ) ) {
+                // Prime WP post cache for all products in selection - optimization for shop loop/mini-cart
+                if ( WPCleverWooco_Helper::enable_cache( 'show_items' ) ) {
                     set_transient( 'wooco_show_items_' . $product_id, $show_items, 24 * HOUR_IN_SECONDS );
                 }
             }
@@ -3565,27 +1789,17 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
             do_action( 'wooco_after_wrap', $product );
         }
 
-        function get_product_id( $id = null ) {
-            $product_id = ! ( is_numeric( $id ) && (int) $id == $id ) || ( is_string( $id ) && str_starts_with( $id, '_sku_' ) ) ? wc_get_product_id_by_sku( str_replace( '_sku_', '', $id ) ) : false;
-            $product_id = $product_id ?: absint( $id );
 
-            return apply_filters( 'wooco_get_product_id', $product_id, $id );
-        }
-
-        function get_product_sku_or_id( $product ) {
-            return apply_filters( 'wooco_get_product_sku_or_id', $product->get_sku( 'edit' ) ? '_sku_' . $product->get_sku( 'edit' ) : $product->get_id(), $product );
-        }
-
-        function get_products( $type, $val, $orderby, $order, $exclude = [], $default = 0, $qty = 1, $price = '', $custom_qty = false ) {
+        public function get_products( $type, $val, $orderby, $order, $exclude = [], $default = 0, $qty = 1, $price = '', $custom_qty = false ) {
             $has_default           = false;
             $products              = $_products = [];
             $val_arr               = array_unique( ! is_array( $val ) ? array_map( 'trim', explode( ',', $val ) ) : $val );
             $exclude_ids           = $type != 'products' ? ( ! is_array( $exclude ) ? explode( ',', $exclude ) : $exclude ) : [];
-            $exclude_ids           = array_map( [ $this, 'get_product_id' ], $exclude_ids );
+            $exclude_ids           = array_map( [ 'WPCleverWooco_Helper', 'get_product_id' ], $exclude_ids );
             $limit                 = apply_filters( 'wooco_limit', - 1 );
-            $exclude_hidden        = apply_filters( 'wooco_exclude_hidden', self::get_setting( 'exclude_hidden', 'no' ) === 'yes' );
-            $exclude_unpurchasable = apply_filters( 'wooco_exclude_unpurchasable', self::get_setting( 'exclude_unpurchasable', 'yes' ) === 'yes' );
-            $default_id            = self::get_product_id( $default );
+            $exclude_hidden        = apply_filters( 'wooco_exclude_hidden', WPCleverWooco_Helper::get_setting( 'exclude_hidden', 'no' ) === 'yes' );
+            $exclude_unpurchasable = apply_filters( 'wooco_exclude_unpurchasable', WPCleverWooco_Helper::get_setting( 'exclude_unpurchasable', 'yes' ) === 'yes' );
+            $default_id            = WPCleverWooco_Helper::get_product_id( $default );
 
             if ( $orderby === 'name' ) {
                 $orderby = 'title';
@@ -3602,7 +1816,7 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                         $val_arr = array_reverse( $val_arr );
                     }
 
-                    $val_arr = array_map( [ $this, 'get_product_id' ], $val_arr );
+                    $val_arr = array_map( [ 'WPCleverWooco_Helper', 'get_product_id' ], $val_arr );
 
                     if ( $orderby === 'default' ) {
                         $orderby = 'post__in';
@@ -3616,8 +1830,6 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                             'order'    => $order,
                             'limit'    => $limit
                     ];
-                } else {
-                    $args = [];
                 }
 
                 // order by price
@@ -3648,8 +1860,6 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                             'order'          => $order,
                             'posts_per_page' => $limit
                     ] );
-                } else {
-                    $args = [];
                 }
 
                 $_posts = apply_filters( 'wooco_wp_get_posts', get_posts( $args ), $type, $val_arr, $orderby, $order, $limit );
@@ -3712,7 +1922,7 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                                     }
                                 }
 
-                                $products[ 'pid_' . $child ] = self::get_product_data( $child_product, $qty, $price, $custom_qty );
+                                $products[ 'pid_' . $child ] = self::get_product_data( $child_product, $qty, $price, $custom_qty, $default_id );
 
                                 if ( $child == $default_id ) {
                                     $has_default = true;
@@ -3724,7 +1934,7 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                             continue;
                         }
 
-                        $products[ 'pid_' . $_product_id ] = self::get_product_data( $_product, $qty, $price, $custom_qty );
+                        $products[ 'pid_' . $_product_id ] = self::get_product_data( $_product, $qty, $price, $custom_qty, $default_id );
 
                         if ( $_product_id == $default_id ) {
                             $has_default = true;
@@ -3762,7 +1972,7 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                                 }
 
                                 // add variation
-                                $products = [ 'pid_' . $available_variation_id => self::get_product_data( $available_variation_product, $qty, $price, $custom_qty ) ] + $products;
+                                $products = [ 'pid_' . $available_variation_id => self::get_product_data( $available_variation_product, $qty, $price, $custom_qty, $default_id ) ] + $products;
                             }
 
                             foreach ( $available_variations as $available_variation ) {
@@ -3771,14 +1981,14 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
 
                                 if ( $available_variation_product && self::is_purchasable( $available_variation_product, $qty ) ) {
                                     // select default variation
-                                    $products = [ 'pid_' . $available_variation_id => self::get_product_data( $available_variation_product, $qty, $price, $custom_qty ) ] + $products;
+                                    $products = [ 'pid_' . $available_variation_id => self::get_product_data( $available_variation_product, $qty, $price, $custom_qty, $default_id ) ] + $products;
                                     break;
                                 }
                             }
                         }
                     } else {
                         if ( self::is_purchasable( $product_default, $qty ) || ! $exclude_unpurchasable ) {
-                            $products = [ 'pid_' . $default_id => self::get_product_data( $product_default, $qty, $price, $custom_qty ) ] + $products;
+                            $products = [ 'pid_' . $default_id => self::get_product_data( $product_default, $qty, $price, $custom_qty, $default_id ) ] + $products;
                         }
                     }
                 }
@@ -3787,17 +1997,17 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
             return apply_filters( 'wooco_get_products', $products, $type, $val, $orderby, $order, $exclude, $default, $qty, $price, $custom_qty );
         }
 
-        function is_purchasable( $product, $qty ) {
+        public function is_purchasable( $product, $qty ) {
             return $product->is_purchasable() && $product->is_in_stock() && $product->has_enough_stock( $qty ) && ( 'trash' !== $product->get_status() );
         }
 
-        function get_product_data( $product, $qty = 1, $price = '', $custom_qty = false ) {
+        public function get_product_data( $product, $qty = 1, $price = '', $custom_qty = false, $default_id = 0 ) {
             // settings
-            $show_price             = self::get_setting( 'show_price', 'yes' ) === 'yes';
-            $show_availability      = self::get_setting( 'show_availability', 'yes' ) === 'yes';
-            $show_short_description = self::get_setting( 'show_short_description', 'no' ) === 'yes';
-            $show_image             = self::get_setting( 'show_image', 'yes' ) === 'yes';
-            $show_qty               = self::get_setting( 'show_qty', 'yes' ) === 'yes';
+            $show_price             = WPCleverWooco_Helper::get_setting( 'show_price', 'yes' ) === 'yes';
+            $show_availability      = WPCleverWooco_Helper::get_setting( 'show_availability', 'yes' ) === 'yes';
+            $show_short_description = WPCleverWooco_Helper::get_setting( 'show_short_description', 'no' ) === 'yes';
+            $show_image             = WPCleverWooco_Helper::get_setting( 'show_image', 'yes' ) === 'yes';
+            $show_qty               = WPCleverWooco_Helper::get_setting( 'show_qty', 'yes' ) === 'yes';
 
             if ( $show_image ) {
                 if ( $product_image_id = $product->get_image_id() ) {
@@ -3814,13 +2024,33 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                 $img_src = $img_full_src = $img_gallery_src = '';
             }
 
-            $price_ori     = apply_filters( 'wooco_product_original_price', ( self::get_setting( 'product_price', 'sale_price' ) === 'regular_price' ) ? $product->get_regular_price() : $product->get_price(), $product );
+            $price_ori     = apply_filters( 'wooco_product_original_price', ( WPCleverWooco_Helper::get_setting( 'product_price', 'sale_price' ) === 'regular_price' ) ? $product->get_regular_price() : $product->get_price(), $product );
             $price_display = wc_get_price_to_display( $product, [ 'price' => $price_ori ] );
             $price_html    = apply_filters( 'wooco_product_original_price_html', $product->get_price_html(), $product );
 
             if ( $price !== '' ) {
-                // new price
-                $new_price = self::get_new_price( $price_ori, $price );
+                // new price — use static cache to avoid calling wc_get_product($default_id) repeatedly in loop
+                static $default_product_cache = [];
+
+                if ( ( $price === 'd' ) && $default_id ) {
+                    if ( ! isset( $default_product_cache[ $default_id ] ) ) {
+                        $default_product_cache[ $default_id ] = wc_get_product( $default_id );
+                    }
+
+                    $_default_product = $default_product_cache[ $default_id ];
+
+                    if ( $_default_product ) {
+                        if ( $default_id == $product->get_id() ) {
+                            $new_price = 0;
+                        } else {
+                            $new_price = abs( $price_ori - $_default_product->get_price() );
+                        }
+                    } else {
+                        $new_price = WPCleverWooco_Helper::get_new_price( $price_ori, $price );
+                    }
+                } else {
+                    $new_price = WPCleverWooco_Helper::get_new_price( $price_ori, $price );
+                }
 
                 if ( $new_price !== (float) $price_ori ) {
                     $price_display = wc_get_price_to_display( $product, [ 'price' => $new_price ] );
@@ -3875,32 +2105,8 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
             ], $product, $qty, $price );
         }
 
-        function export_process( $value, $meta, $product ) {
-            if ( $meta->key === 'wooco_components' ) {
-                $components = get_post_meta( $product->get_id(), 'wooco_components', true );
 
-                if ( ! empty( $components ) && is_array( $components ) ) {
-                    return json_encode( $components );
-                }
-            }
-
-            return $value;
-        }
-
-        function import_process( $object, $data ) {
-            if ( isset( $data['meta_data'] ) ) {
-                foreach ( $data['meta_data'] as $meta ) {
-                    if ( $meta['key'] === 'wooco_components' ) {
-                        $object->update_meta_data( 'wooco_components', json_decode( $meta['value'], true ) );
-                        break;
-                    }
-                }
-            }
-
-            return $object;
-        }
-
-        function wpcsm_locations( $locations ) {
+        public function wpcsm_locations( $locations ) {
             $locations['WPC Composite Products'] = [
                     'wooco_before_wrap'       => esc_html__( 'Before container', 'wpc-composite-products' ),
                     'wooco_after_wrap'        => esc_html__( 'After container', 'wpc-composite-products' ),
@@ -3912,118 +2118,9 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
 
             return $locations;
         }
-
-        function sanitize_array( $arr ) {
-            foreach ( (array) $arr as $k => $v ) {
-                if ( is_array( $v ) ) {
-                    $arr[ $k ] = self::sanitize_array( $v );
-                } else {
-                    $arr[ $k ] = sanitize_post_field( 'post_content', $v, 0, 'db' );
-                }
-            }
-
-            return $arr;
-        }
-
-        function clean_ids( $ids ) {
-            $ids = preg_replace( '/[^,.%\/0-9a-zA-Z]/', '', $ids );
-
-            return $ids;
-        }
-
-        function data_attributes( $attrs ) {
-            $attrs_arr = [];
-
-            foreach ( $attrs as $key => $attr ) {
-                $attrs_arr[] = esc_attr( 'data-' . sanitize_title( $key ) ) . '="' . esc_attr( $attr ) . '"';
-            }
-
-            return implode( ' ', $attrs_arr );
-        }
-
-        public static function localization( $key = '', $default = '' ) {
-            $str = '';
-
-            if ( ! empty( $key ) && ! empty( self::$localization[ $key ] ) ) {
-                $str = self::$localization[ $key ];
-            } elseif ( ! empty( $default ) ) {
-                $str = $default;
-            }
-
-            return apply_filters( 'wooco_localization_' . $key, $str );
-        }
-
-        public static function enable_cache( $context = 'default' ) {
-            return apply_filters( 'wooco_enable_cache', false, $context );
-        }
-
-        public static function get_items( $ids ) {
-            $arr = [];
-
-            if ( ! empty( $ids ) ) {
-                $items = explode( ',', $ids );
-
-                if ( is_array( $items ) && count( $items ) > 0 ) {
-                    foreach ( $items as $item ) {
-                        $item_arr = explode( '/', $item );
-                        $arr[]    = [
-                                'id'  => absint( $item_arr[0] ?? 0 ),
-                                'qty' => (float) ( $item_arr[1] ?? 1 ),
-                                'key' => sanitize_key( $item_arr[2] ?? '' )
-                        ];
-                    }
-                }
-            }
-
-            return apply_filters( 'wooco_get_items', $arr, $ids );
-        }
-
-        public static function format_price( $price ) {
-            // format price to percent or number
-            return preg_replace( '/[^.%0-9]/', '', $price );
-        }
-
-        public static function get_new_price( $old_price, $new_price ) {
-            if ( str_contains( $new_price, '%' ) ) {
-                $calc_price = ( (float) $new_price * $old_price ) / 100;
-            } else {
-                $calc_price = (float) $new_price;
-            }
-
-            return $calc_price;
-        }
-
-        public static function get_discount( $number ) {
-            $discount = 0;
-
-            if ( is_numeric( $number ) && ( (float) $number < 100 ) && ( (float) $number > 0 ) ) {
-                $discount = (float) $number;
-            }
-
-            return $discount;
-        }
-
-        public static function generate_key() {
-            $key         = '';
-            $key_str     = apply_filters( 'wooco_key_characters', 'abcdefghijklmnopqrstuvwxyz0123456789' );
-            $key_str_len = strlen( $key_str );
-
-            for ( $i = 0; $i < apply_filters( 'wooco_key_length', 4 ); $i ++ ) {
-                $key .= $key_str[ random_int( 0, $key_str_len - 1 ) ];
-            }
-
-            if ( is_numeric( $key ) ) {
-                $key = self::generate_key();
-            }
-
-            return apply_filters( 'wooco_generate_key', $key );
-        }
     }
 
     function WPCleverWooco() {
         return WPCleverWooco::instance();
     }
-
-    // start
-    WPCleverWooco();
 }
