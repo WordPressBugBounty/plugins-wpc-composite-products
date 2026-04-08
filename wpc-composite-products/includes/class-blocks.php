@@ -119,8 +119,8 @@ if ( ! class_exists( 'WPCleverWooco_Blocks' ) ) {
 			}
 
 			$cart_contents       = WC()->cart->get_cart();
-			$hide_composite_name = WPCleverWooco()::get_setting( 'hide_composite_name', 'no' ) !== 'no';
-			$hide_component      = WPCleverWooco()::get_setting( 'hide_component', 'no' ) !== 'no';
+			$hide_composite_name = WPCleverWooco_Helper::get_setting( 'hide_composite_name', 'no' ) !== 'no';
+			$hide_component      = WPCleverWooco_Helper::get_setting( 'hide_component', 'no' ) !== 'no';
 
 			foreach ( $data['items'] as &$item_data ) {
 				$cart_item_key = $item_data['key'];
