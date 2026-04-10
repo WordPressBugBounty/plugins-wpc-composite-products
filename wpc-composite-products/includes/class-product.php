@@ -5,9 +5,9 @@ if ( ! class_exists( 'WC_Product_Composite' ) && class_exists( 'WC_Product' ) ) 
 	class WC_Product_Composite extends WC_Product {
 		// Runtime cache — avoid calling get_post_meta multiple times in the same request
 		private ?string $_pricing = null;
-		private mixed $_components = null;
+		private $_components = null;
 
-		public function __construct( mixed $product = 0 ) {
+		public function __construct( $product = 0 ) {
 			parent::__construct( $product );
 		}
 
@@ -53,7 +53,7 @@ if ( ! class_exists( 'WC_Product_Composite' ) && class_exists( 'WC_Product' ) ) 
 
 		// extra functions
 
-		public function get_pricing(): mixed {
+		public function get_pricing() {
 			if ( $this->_pricing === null ) {
 				$this->_pricing = (string) get_post_meta( $this->id, 'wooco_pricing', true );
 			}
@@ -71,7 +71,7 @@ if ( ! class_exists( 'WC_Product_Composite' ) && class_exists( 'WC_Product' ) ) 
 			return (float) apply_filters( 'wooco_product_get_discount', $discount, $this );
 		}
 
-		public function get_components(): mixed {
+		public function get_components() {
 			if ( $this->_components === null ) {
 				$this->_components = get_post_meta( $this->id, 'wooco_components', true );
 			}
@@ -79,12 +79,12 @@ if ( ! class_exists( 'WC_Product_Composite' ) && class_exists( 'WC_Product' ) ) 
 			return apply_filters( 'wooco_product_get_components', $this->_components, $this );
 		}
 
-		public function get_composite_price(): mixed {
+		public function get_composite_price() {
 			// FB for WC
 			return $this->get_price();
 		}
 
-		public function get_composite_price_including_tax(): mixed {
+		public function get_composite_price_including_tax() {
 			// FB for WC
 			return $this->get_price();
 		}

@@ -15,7 +15,7 @@ if ( ! class_exists( 'WPCleverWooco_Helper' ) ) {
 			return apply_filters( 'wooco_get_settings', self::$settings );
 		}
 
-		public static function get_setting( string $name, mixed $default = false ): mixed {
+		public static function get_setting( string $name, $default = false ) {
 			$value = $default;
 
 			if ( isset( self::$settings[ $name ] ) && ( self::$settings[ $name ] !== '' ) ) {
@@ -49,8 +49,8 @@ if ( ! class_exists( 'WPCleverWooco_Helper' ) ) {
 			return $arr;
 		}
 
-		public static function get_product_id( mixed $id = null ): int {
-			$product_id = ! ( is_numeric( $id ) && (int) $id == $id ) || ( is_string( $id ) && str_starts_with( $id, '_sku_' ) )
+		public static function get_product_id( $id = null ): int {
+			$product_id = ! ( is_numeric( $id ) && (int) $id == $id ) || ( is_string( $id ) && ( str_starts_with( $id, '_sku_' ) ) )
 				? wc_get_product_id_by_sku( str_replace( '_sku_', '', $id ) )
 				: false;
 			$product_id = $product_id ?: absint( $id );
@@ -58,7 +58,7 @@ if ( ! class_exists( 'WPCleverWooco_Helper' ) ) {
 			return (int) apply_filters( 'wooco_get_product_id', $product_id, $id );
 		}
 
-		public static function get_product_sku_or_id( WC_Product $product ): string|int {
+		public static function get_product_sku_or_id( WC_Product $product ) {
 			return apply_filters(
 				'wooco_get_product_sku_or_id',
 				$product->get_sku( 'edit' ) ? '_sku_' . $product->get_sku( 'edit' ) : $product->get_id(),
@@ -102,7 +102,7 @@ if ( ! class_exists( 'WPCleverWooco_Helper' ) ) {
 			return (float) $new_price;
 		}
 
-		public static function get_discount( mixed $number ): float {
+		public static function get_discount( $number ): float {
 			if ( is_numeric( $number ) && ( (float) $number < 100 ) && ( (float) $number > 0 ) ) {
 				return (float) $number;
 			}
@@ -140,7 +140,7 @@ if ( ! class_exists( 'WPCleverWooco_Helper' ) ) {
 			return implode( ' ', $attrs_arr );
 		}
 
-		public static function get_term_slug( int|string $id, string $taxonomy ): string {
+		public static function get_term_slug( $id, string $taxonomy ): string {
 			$term = get_term( $id, $taxonomy );
 
 			if ( ! is_wp_error( $term ) && ! empty( $term->slug ) ) {
