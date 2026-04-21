@@ -2046,10 +2046,10 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                             $new_price = abs( $price_ori - $_default_product->get_price() );
                         }
                     } else {
-                        $new_price = WPCleverWooco_Helper::get_new_price( $price_ori, $price );
+                        $new_price = WPCleverWooco_Helper::get_new_price( (float) $price_ori, $price );
                     }
                 } else {
-                    $new_price = WPCleverWooco_Helper::get_new_price( $price_ori, $price );
+                    $new_price = WPCleverWooco_Helper::get_new_price( (float) $price_ori, $price );
                 }
 
                 if ( $new_price !== (float) $price_ori ) {
