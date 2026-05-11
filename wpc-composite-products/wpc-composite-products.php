@@ -3,7 +3,7 @@
 Plugin Name: WPC Composite Products for WooCommerce
 Plugin URI: https://wpclever.net/
 Description: WPC Composite Products provide a powerful kit-building solution for WooCommerce store.
-Version: 7.8.3
+Version: 7.8.4
 Author: WPClever
 Author URI: https://wpclever.net
 Text Domain: wpc-composite-products
@@ -17,7 +17,7 @@ WC tested up to: 10.7
 
 defined( 'ABSPATH' ) || exit;
 
-! defined( 'WOOCO_VERSION' ) && define( 'WOOCO_VERSION', '7.8.3' );
+! defined( 'WOOCO_VERSION' ) && define( 'WOOCO_VERSION', '7.8.4' );
 ! defined( 'WOOCO_LITE' ) && define( 'WOOCO_LITE', __FILE__ );
 ! defined( 'WOOCO_FILE' ) && define( 'WOOCO_FILE', __FILE__ );
 ! defined( 'WOOCO_URI' ) && define( 'WOOCO_URI', plugin_dir_url( __FILE__ ) );
@@ -27,12 +27,14 @@ defined( 'ABSPATH' ) || exit;
 ! defined( 'WOOCO_REVIEWS' ) && define( 'WOOCO_REVIEWS', 'https://wordpress.org/support/plugin/wpc-composite-products/reviews/' );
 ! defined( 'WOOCO_CHANGELOG' ) && define( 'WOOCO_CHANGELOG', 'https://wordpress.org/plugins/wpc-composite-products/#developers' );
 ! defined( 'WOOCO_DISCUSSION' ) && define( 'WOOCO_DISCUSSION', 'https://wordpress.org/support/plugin/wpc-composite-products' );
-! defined( 'WPC_URI' ) && define( 'WPC_URI', WOOCO_URI );
 
-include 'includes/log/wpc-log.php';
-include 'includes/dashboard/wpc-dashboard.php';
-include 'includes/kit/wpc-kit.php';
-include 'includes/hpos.php';
+// WPC Core
+require_once __DIR__ . '/includes/wpc-core/wpc-core.php';
+wpc_core_register( [
+        'file'    => __FILE__,
+        'version' => WOOCO_VERSION,
+        'prefix'  => 'wooco',
+] );
 
 if ( ! function_exists( 'wooco_init' ) ) {
     add_action( 'plugins_loaded', 'wooco_init', 11 );

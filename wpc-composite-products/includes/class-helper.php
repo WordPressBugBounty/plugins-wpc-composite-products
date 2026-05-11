@@ -90,8 +90,8 @@ if ( ! class_exists( 'WPCleverWooco_Helper' ) ) {
 		}
 
 		public static function format_price( string $price ): string {
-			// Fix: use \d to match digits instead of the character 'd'
-			return preg_replace( '/[^\d.%]/', '', $price );
+			// Keep 'd' for different price from default product
+			return preg_replace( '/[^d\d.%]/', '', $price );
 		}
 
 		public static function get_new_price( float $old_price, string $new_price ): float {

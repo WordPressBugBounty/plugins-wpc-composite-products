@@ -3,8 +3,8 @@ Contributors: wpclever
 Donate link: https://wpclever.net
 Tags: woocommerce, wpc, composite, component, kits
 Tested up to: 6.9
-Version: 7.8.3
-Stable tag: 7.8.3
+Version: 7.8.4
+Stable tag: 7.8.4
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,6 +62,10 @@ Please try other plugins from us:
 5. Almost done! Click Save and see the result
 
 == Changelog ==
+
+= 7.8.4 =
+* Updated: Optimized the code
+* Updated: Compatible with WP 6.9 & Woo 10.7
 
 = 7.8.3 =
 * Updated: Optimized the code
