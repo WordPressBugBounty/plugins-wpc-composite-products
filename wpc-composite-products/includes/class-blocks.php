@@ -118,6 +118,10 @@ if ( ! class_exists( 'WPCleverWooco_Blocks' ) ) {
 				return $response;
 			}
 
+			if ( ! function_exists( 'WC' ) || ! WC() || ! WC()->cart ) {
+				return $response;
+			}
+
 			$cart_contents       = WC()->cart->get_cart();
 			$hide_composite_name = WPCleverWooco_Helper::get_setting( 'hide_composite_name', 'no' ) !== 'no';
 			$hide_component      = WPCleverWooco_Helper::get_setting( 'hide_component', 'no' ) !== 'no';
