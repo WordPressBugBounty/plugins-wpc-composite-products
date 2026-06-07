@@ -240,8 +240,6 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
         }
 
         public function init() {
-            // load text-domain
-            load_plugin_textdomain( 'wpc-composite-products', false, basename( WOOCO_DIR ) . '/languages/' );
 
             // image size
             self::$image_size = apply_filters( 'wooco_image_size', self::$image_size );
