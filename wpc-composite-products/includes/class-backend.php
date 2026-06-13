@@ -152,7 +152,7 @@ if ( ! class_exists( 'WPCleverWooco_Backend' ) ) {
                                             <option value=""><?php esc_html_e( 'Select source', 'wpc-composite-products' ); ?>
                                             </option>
                                             <option value="products" <?php selected( $component['type'], 'products' ); ?>>
-                                                <?php esc_html_e( 'Products', 'wpc-composite-products' ); ?>
+                                                <?php esc_html_e( 'Selected products', 'wpc-composite-products' ); ?>
                                             </option>
                                             <?php
                                             $taxonomies = get_object_taxonomies( 'product', 'objects' );
