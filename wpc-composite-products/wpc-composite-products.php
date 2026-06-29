@@ -3,21 +3,21 @@
 Plugin Name: WPC Composite Products for WooCommerce
 Plugin URI: https://wpclever.net/
 Description: WPC Composite Products provide a powerful kit-building solution for WooCommerce store.
-Version: 7.8.7
+Version: 7.8.8
 Author: WPClever
 Author URI: https://wpclever.net
 Text Domain: wpc-composite-products
 Domain Path: /languages/
 Requires Plugins: woocommerce
-Requires at least: 4.0
+Requires at least: 5.9
 Tested up to: 7.0
 WC requires at least: 3.0
-WC tested up to: 10.8
+WC tested up to: 10.9
 */
 
 defined( 'ABSPATH' ) || exit;
 
-! defined( 'WOOCO_VERSION' ) && define( 'WOOCO_VERSION', '7.8.7' );
+! defined( 'WOOCO_VERSION' ) && define( 'WOOCO_VERSION', '7.8.8' );
 ! defined( 'WOOCO_LITE' ) && define( 'WOOCO_LITE', __FILE__ );
 ! defined( 'WOOCO_FILE' ) && define( 'WOOCO_FILE', __FILE__ );
 ! defined( 'WOOCO_URI' ) && define( 'WOOCO_URI', plugin_dir_url( __FILE__ ) );

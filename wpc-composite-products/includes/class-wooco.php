@@ -132,7 +132,7 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
 
         public function ajax_load_gallery() {
             if ( ! apply_filters( 'wooco_disable_nonce_check', false, 'load_gallery' ) ) {
-                if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_key( $_POST['nonce'] ), 'wooco_nonce' ) ) {
+                if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_key( wp_unslash( $_POST['nonce'] ) ), 'wooco_nonce' ) ) {
                     die( 'Permissions check failed!' );
                 }
             }
@@ -141,11 +141,11 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                 wp_send_json_error();
             }
 
-            $main_product_id = absint( $_POST['product_id'] ?? 0 );
-            $key             = sanitize_text_field( $_POST['key'] ?? '' );
+            $main_product_id = absint( wp_unslash( $_POST['product_id'] ?? 0 ) );
+            $key             = sanitize_text_field( wp_unslash( $_POST['key'] ?? '' ) );
             $image_ids       = [];
 
-            foreach ( $_POST['ids'] as $id ) {
+            foreach ( wp_unslash( $_POST['ids'] ?? '' ) as $id ) {
                 $id_arr = explode( '/', $id );
                 $_id    = absint( $id_arr[0] ?? 0 );
 
@@ -459,7 +459,7 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                 $ids = '';
 
                 if ( isset( $_REQUEST['wooco_ids'] ) ) {
-                    $ids = WPCleverWooco_Helper::clean_ids( sanitize_text_field( $_REQUEST['wooco_ids'] ) );
+                    $ids = WPCleverWooco_Helper::clean_ids( sanitize_text_field( wp_unslash( $_REQUEST['wooco_ids'] ?? '' ) ) );
                     unset( $_REQUEST['wooco_ids'] );
                 }
 
@@ -485,7 +485,7 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                 $items = [];
 
                 if ( isset( $_REQUEST['wooco_ids'] ) ) {
-                    $ids = WPCleverWooco_Helper::clean_ids( sanitize_text_field( $_REQUEST['wooco_ids'] ) );
+                    $ids = WPCleverWooco_Helper::clean_ids( sanitize_text_field( wp_unslash( $_REQUEST['wooco_ids'] ?? '' ) ) );
                 }
 
                 if ( ! empty( $ids ) && ( $items = WPCleverWooco_Helper::get_items( $ids ) ) ) {
@@ -623,7 +623,7 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
             $edit_link = WPCleverWooco_Helper::get_setting( 'edit_link', 'no' ) === 'yes';
 
             if ( $edit_link && ! empty( $_REQUEST['wooco_update'] ) ) {
-                $edit_key = sanitize_key( wp_unslash( $_REQUEST['wooco_update'] ) );
+                $edit_key = sanitize_key( wp_unslash( $_REQUEST['wooco_update'] ?? '' ) );
 
                 if ( WC()->cart->get_cart_item( $edit_key ) ) {
                     WC()->cart->remove_cart_item( $edit_key );
@@ -1062,7 +1062,7 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
             self::show_items();
 
             $edit_link = WPCleverWooco_Helper::get_setting( 'edit_link', 'no' ) === 'yes';
-            $edit_ids  = isset( $_GET['edit'] ) ? explode( ',', base64_decode( sanitize_text_field( wp_unslash( $_GET['edit'] ) ) ) ) : [];
+            $edit_ids  = isset( $_GET['edit'] ) ? explode( ',', base64_decode( sanitize_text_field( wp_unslash( $_GET['edit'] ?? '' ) ) ) ) : [];
             $edit_key  = sanitize_key( wp_unslash( $_GET['key'] ?? '' ) );
 
             if ( $edit_link && ! empty( $edit_ids ) && ! empty( $edit_key ) ) {
@@ -1241,8 +1241,8 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
 
             $order      = 1;
             $product_id = $product->get_id();
-            $df_ids     = isset( $_GET['df'] ) ? explode( ',', sanitize_text_field( $_GET['df'] ) ) : [];
-            $edit_ids   = isset( $_GET['edit'] ) ? explode( ',', base64_decode( sanitize_text_field( $_GET['edit'] ) ) ) : [];
+            $df_ids     = isset( $_GET['df'] ) ? explode( ',', sanitize_text_field( wp_unslash( $_GET['df'] ?? '' ) ) ) : [];
+            $edit_ids   = isset( $_GET['edit'] ) ? explode( ',', base64_decode( sanitize_text_field( wp_unslash( $_GET['edit'] ?? '' ) ) ) ) : [];
 
             if ( ! empty( $edit_ids ) ) {
                 // ignore $df_ids
@@ -1418,7 +1418,7 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                             $option_none_image_full  = apply_filters( 'wooco_option_none_img_full', $option_none_image_full, $component, $product );
                             $option_none             = $component_required ? WPCleverWooco_Helper::localization( 'option_none_required', esc_html__( 'Please make your choice here', 'wpc-composite-products' ) ) : WPCleverWooco_Helper::localization( 'option_none', esc_html__( 'No, thanks. I don\'t need this', 'wpc-composite-products' ) );
                             $option_none_label       = apply_filters( 'wooco_option_none', $option_none, $component, $product );
-                            $option_none_description = apply_filters( 'wooco_option_none_description', wc_price( 0 ), $component, $product );
+                            $option_none_description = apply_filters( 'wooco_option_none_description', $show_price ? wc_price( 0 ) : '', $component, $product );
                             $option_none_data        = apply_filters( 'wooco_option_none_data', [
                                     'id'            => '-1',
                                     'pid'           => '-1',
@@ -2074,9 +2074,9 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
 
             if ( $show_short_description ) {
                 if ( $product->is_type( 'variation' ) ) {
-                    $desc .= '<div class="wooco_component_product_short_description wooco_component_variation_short_description">' . $product->get_description() . '</div>';
+                    $desc .= '<div class="wooco_component_product_short_description wooco_component_variation_short_description">' . apply_filters( 'wooco_product_short_description', $product->get_description(), $product ) . '</div>';
                 } else {
-                    $desc .= '<div class="wooco_component_product_short_description">' . $product->get_short_description() . '</div>';
+                    $desc .= '<div class="wooco_component_product_short_description">' . apply_filters( 'wooco_product_short_description', $product->get_short_description(), $product ) . '</div>';
                 }
             }
 

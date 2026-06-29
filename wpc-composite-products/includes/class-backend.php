@@ -499,12 +499,12 @@ if ( ! class_exists( 'WPCleverWooco_Backend' ) ) {
         <?php }
 
         public function ajax_add_component() {
-            if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_key( $_POST['nonce'] ), 'wooco_nonce' ) ) {
+            if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_key( wp_unslash( $_POST['nonce'] ) ), 'wooco_nonce' ) ) {
                 die( 'Permissions check failed!' );
             }
 
             $component = [];
-            $form_data = isset( $_POST['form_data'] ) ? sanitize_post( $_POST['form_data'] ) : '';
+            $form_data = isset( $_POST['form_data'] ) ? sanitize_post( wp_unslash( $_POST['form_data'] ) ) : '';
 
             if ( ! empty( $form_data ) ) {
                 $components = [];
@@ -520,16 +520,16 @@ if ( ! class_exists( 'WPCleverWooco_Backend' ) ) {
         }
 
         public function ajax_save_components() {
-            if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_key( $_POST['nonce'] ), 'wooco_nonce' ) ) {
+            if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_key( wp_unslash( $_POST['nonce'] ) ), 'wooco_nonce' ) ) {
                 die( 'Permissions check failed!' );
             }
 
-            if ( ! isset( $_POST['pid'] ) || ! current_user_can( 'edit_post', absint( sanitize_text_field( $_POST['pid'] ) ) ) ) {
+            if ( ! isset( $_POST['pid'] ) || ! current_user_can( 'edit_post', absint( sanitize_text_field( wp_unslash( $_POST['pid'] ?? '' ) ) ) ) ) {
                 die( 'Permissions check failed!' );
             }
 
-            $pid       = absint( sanitize_text_field( $_POST['pid'] ) );
-            $form_data = isset( $_POST['form_data'] ) ? sanitize_post( $_POST['form_data'] ) : '';
+            $pid       = absint( sanitize_text_field( wp_unslash( $_POST['pid'] ?? '' ) ) );
+            $form_data = isset( $_POST['form_data'] ) ? sanitize_post( wp_unslash( $_POST['form_data'] ) ) : '';
 
             if ( $pid && $form_data ) {
                 $components = [];
@@ -547,11 +547,11 @@ if ( ! class_exists( 'WPCleverWooco_Backend' ) ) {
         }
 
         public function ajax_export_components() {
-            if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_key( $_POST['nonce'] ), 'wooco_nonce' ) ) {
+            if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_key( wp_unslash( $_POST['nonce'] ) ), 'wooco_nonce' ) ) {
                 die( 'Permissions check failed!' );
             }
 
-            $product_id = absint( $_POST['pid'] ?? 0 );
+            $product_id = absint( wp_unslash( $_POST['pid'] ?? 0 ) );
             $components = get_post_meta( $product_id, 'wooco_components', true );
             echo '<textarea style="width: 100%; height: 200px">' . esc_textarea( ! empty( $components ) ? serialize( $components ) : '' ) . '</textarea>';
             echo '<div>' . esc_html__( 'You can copy this field and use it for a CSV import file.', 'wpc-composite-products' ) . '</div>';
@@ -560,19 +560,19 @@ if ( ! class_exists( 'WPCleverWooco_Backend' ) ) {
         }
 
         public function ajax_search_term() {
-            if ( ! isset( $_REQUEST['nonce'] ) || ! wp_verify_nonce( sanitize_key( $_REQUEST['nonce'] ), 'wooco_nonce' ) ) {
+            if ( ! isset( $_REQUEST['nonce'] ) || ! wp_verify_nonce( sanitize_key( wp_unslash( $_REQUEST['nonce'] ) ), 'wooco_nonce' ) ) {
                 die( 'Permissions check failed!' );
             }
 
             $return = [];
 
             $args = [
-                    'taxonomy'   => sanitize_text_field( $_REQUEST['taxonomy'] ),
+                    'taxonomy'   => sanitize_text_field( wp_unslash( $_REQUEST['taxonomy'] ?? '' ) ),
                     'orderby'    => 'id',
                     'order'      => 'ASC',
                     'hide_empty' => false,
                     'fields'     => 'all',
-                    'name__like' => sanitize_text_field( $_REQUEST['term'] ),
+                    'name__like' => sanitize_text_field( wp_unslash( $_REQUEST['term'] ?? '' ) ),
             ];
 
             $terms = get_terms( $args );
@@ -588,12 +588,12 @@ if ( ! class_exists( 'WPCleverWooco_Backend' ) ) {
 
 
         public function ajax_search_product() {
-            if ( ! isset( $_REQUEST['nonce'] ) || ! wp_verify_nonce( sanitize_key( $_REQUEST['nonce'] ), 'wooco_nonce' ) ) {
+            if ( ! isset( $_REQUEST['nonce'] ) || ! wp_verify_nonce( sanitize_key( wp_unslash( $_REQUEST['nonce'] ) ), 'wooco_nonce' ) ) {
                 die( 'Permissions check failed!' );
             }
 
             if ( isset( $_REQUEST['term'] ) ) {
-                $term = (string) wc_clean( wp_unslash( $_REQUEST['term'] ) );
+                $term = (string) wc_clean( wp_unslash( $_REQUEST['term'] ?? '' ) );
             }
 
             if ( empty( $term ) ) {
@@ -653,7 +653,7 @@ if ( ! class_exists( 'WPCleverWooco_Backend' ) ) {
 
         public function admin_menu_content() {
             add_thickbox();
-            $active_tab = sanitize_key( $_GET['tab'] ?? 'settings' );
+            $active_tab = sanitize_key( wp_unslash( $_GET['tab'] ?? 'settings' ) );
             ?>
             <div class="wpclever_settings_page wrap">
                 <div class="wpclever_settings_page_header">
@@ -678,7 +678,7 @@ if ( ! class_exists( 'WPCleverWooco_Backend' ) ) {
                     </div>
                 </div>
                 <h2></h2>
-                <?php if ( isset( $_GET['settings-updated'] ) && $_GET['settings-updated'] ) { ?>
+                <?php if ( isset( $_GET['settings-updated'] ) && sanitize_text_field( wp_unslash( $_GET['settings-updated'] ?? '' ) ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended ?>
                     <div class="notice notice-success is-dismissible">
                         <p><?php esc_html_e( 'Settings updated.', 'wpc-composite-products' ); ?></p>
                     </div>
@@ -1552,8 +1552,8 @@ if ( ! class_exists( 'WPCleverWooco_Backend' ) ) {
 
                                     <?php
                                     echo '<p>';
-                                    $num   = absint( $_GET['num'] ?? 50 );
-                                    $paged = absint( $_GET['paged'] ?? 1 );
+                                    $num   = absint( wp_unslash( $_GET['num'] ?? 50 ) );
+                                    $paged = absint( wp_unslash( $_GET['paged'] ?? 1 ) );
 
                                     if ( isset( $_GET['act'] ) && ( $_GET['act'] === 'migrate' ) ) {
                                         $args = [
@@ -1688,7 +1688,7 @@ if ( ! class_exists( 'WPCleverWooco_Backend' ) ) {
                 return null;
             }
 
-            wp_enqueue_style( 'hint', WOOCO_URI . 'assets/css/hint.css' );
+            wp_enqueue_style( 'hint', WOOCO_URI . 'assets/css/hint.css', [], WOOCO_VERSION );
             wp_enqueue_style( 'wooco-backend', WOOCO_URI . 'assets/css/backend.css', [ 'woocommerce_admin_styles' ], WOOCO_VERSION );
             wp_enqueue_script( 'wooco-backend', WOOCO_URI . 'assets/js/backend.js', [
                     'jquery',
@@ -2039,23 +2039,23 @@ if ( ! class_exists( 'WPCleverWooco_Backend' ) ) {
 
         public function process_meta_composite( $post_id ) {
             if ( isset( $_POST['wooco_components'] ) ) {
-                update_post_meta( $post_id, 'wooco_components', WPCleverWooco_Helper::sanitize_array( $_POST['wooco_components'] ) );
+                update_post_meta( $post_id, 'wooco_components', WPCleverWooco_Helper::sanitize_array( wp_unslash( $_POST['wooco_components'] ?? '' ) ) );
             }
 
             if ( isset( $_POST['wooco_pricing'] ) ) {
-                update_post_meta( $post_id, 'wooco_pricing', sanitize_text_field( $_POST['wooco_pricing'] ) );
+                update_post_meta( $post_id, 'wooco_pricing', sanitize_text_field( wp_unslash( $_POST['wooco_pricing'] ?? '' ) ) );
             }
 
             if ( isset( $_POST['wooco_discount_percent'] ) ) {
-                update_post_meta( $post_id, 'wooco_discount_percent', sanitize_text_field( $_POST['wooco_discount_percent'] ) );
+                update_post_meta( $post_id, 'wooco_discount_percent', sanitize_text_field( wp_unslash( $_POST['wooco_discount_percent'] ?? '' ) ) );
             }
 
             if ( isset( $_POST['wooco_qty_min'] ) ) {
-                update_post_meta( $post_id, 'wooco_qty_min', sanitize_text_field( $_POST['wooco_qty_min'] ) );
+                update_post_meta( $post_id, 'wooco_qty_min', sanitize_text_field( wp_unslash( $_POST['wooco_qty_min'] ?? '' ) ) );
             }
 
             if ( isset( $_POST['wooco_qty_max'] ) ) {
-                update_post_meta( $post_id, 'wooco_qty_max', sanitize_text_field( $_POST['wooco_qty_max'] ) );
+                update_post_meta( $post_id, 'wooco_qty_max', sanitize_text_field( wp_unslash( $_POST['wooco_qty_max'] ?? '' ) ) );
             }
 
             if ( isset( $_POST['wooco_total_limits'] ) ) {
@@ -2065,31 +2065,31 @@ if ( ! class_exists( 'WPCleverWooco_Backend' ) ) {
             }
 
             if ( isset( $_POST['wooco_total_limits_min'] ) ) {
-                update_post_meta( $post_id, 'wooco_total_limits_min', sanitize_text_field( $_POST['wooco_total_limits_min'] ) );
+                update_post_meta( $post_id, 'wooco_total_limits_min', sanitize_text_field( wp_unslash( $_POST['wooco_total_limits_min'] ?? '' ) ) );
             }
 
             if ( isset( $_POST['wooco_total_limits_max'] ) ) {
-                update_post_meta( $post_id, 'wooco_total_limits_max', sanitize_text_field( $_POST['wooco_total_limits_max'] ) );
+                update_post_meta( $post_id, 'wooco_total_limits_max', sanitize_text_field( wp_unslash( $_POST['wooco_total_limits_max'] ?? '' ) ) );
             }
 
             if ( isset( $_POST['wooco_same_products'] ) ) {
-                update_post_meta( $post_id, 'wooco_same_products', sanitize_text_field( $_POST['wooco_same_products'] ) );
+                update_post_meta( $post_id, 'wooco_same_products', sanitize_text_field( wp_unslash( $_POST['wooco_same_products'] ?? '' ) ) );
             }
 
             if ( isset( $_POST['wooco_shipping_fee'] ) ) {
-                update_post_meta( $post_id, 'wooco_shipping_fee', sanitize_text_field( $_POST['wooco_shipping_fee'] ) );
+                update_post_meta( $post_id, 'wooco_shipping_fee', sanitize_text_field( wp_unslash( $_POST['wooco_shipping_fee'] ?? '' ) ) );
             }
 
             if ( isset( $_POST['wooco_custom_price'] ) ) {
-                update_post_meta( $post_id, 'wooco_custom_price', sanitize_post_field( 'post_content', $_POST['wooco_custom_price'], $post_id, 'display' ) );
+                update_post_meta( $post_id, 'wooco_custom_price', sanitize_post_field( 'post_content', wp_unslash( $_POST['wooco_custom_price'] ?? '' ), $post_id, 'display' ) ); // phpcs:ignore WordPress.Security.NonceVerification.Missing
             }
 
             if ( isset( $_POST['wooco_before_text'] ) ) {
-                update_post_meta( $post_id, 'wooco_before_text', sanitize_post_field( 'post_content', $_POST['wooco_before_text'], $post_id, 'display' ) );
+                update_post_meta( $post_id, 'wooco_before_text', sanitize_post_field( 'post_content', wp_unslash( $_POST['wooco_before_text'] ?? '' ), $post_id, 'display' ) ); // phpcs:ignore WordPress.Security.NonceVerification.Missing
             }
 
             if ( isset( $_POST['wooco_after_text'] ) ) {
-                update_post_meta( $post_id, 'wooco_after_text', sanitize_post_field( 'post_content', $_POST['wooco_after_text'], $post_id, 'display' ) );
+                update_post_meta( $post_id, 'wooco_after_text', sanitize_post_field( 'post_content', wp_unslash( $_POST['wooco_after_text'] ?? '' ), $post_id, 'display' ) ); // phpcs:ignore WordPress.Security.NonceVerification.Missing
             }
 
             // delete cache

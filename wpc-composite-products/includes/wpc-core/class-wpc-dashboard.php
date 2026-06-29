@@ -47,20 +47,20 @@ if ( ! class_exists( 'WPCleverDashboard' ) ) {
         public static function render_header( $active_page = 'about' ) {
             // Core nav items
             $nav_items = [
-                    'about' => [
-                            'url'   => admin_url( 'admin.php?page=wpclever' ),
-                            'label' => 'About',
-                    ],
-                    'kit'   => [
-                            'url'   => admin_url( 'admin.php?page=wpclever-kit' ),
-                            'label' => 'Essential Kit',
-                    ],
+                'about' => [
+                    'url'   => admin_url( 'admin.php?page=wpclever' ),
+                    'label' => 'About',
+                ],
+                'kit'   => [
+                    'url'   => admin_url( 'admin.php?page=wpclever-kit' ),
+                    'label' => 'Essential Kit',
+                ],
             ];
 
             /**
              * Filter the WPClever admin nav items.
              *
-             * @param array $nav_items Associative array of slug => ['url' => '', 'label' => ''].
+             * @param array  $nav_items   Associative array of slug => ['url' => '', 'label' => ''].
              * @param string $active_page The current active page slug.
              */
             $nav_items = apply_filters( 'wpc_admin_nav_items', $nav_items, $active_page );
@@ -73,8 +73,7 @@ if ( ! class_exists( 'WPCleverDashboard' ) ) {
                     </div>
                     <div>
                         <h1>WPClever | Make clever moves</h1>
-                        <p class="wpc-tagline">Must-have plugins for powering up online visibility, sales and
-                            profits.</p>
+                        <p class="wpc-tagline">Must-have plugins for powering up online visibility, sales and profits.</p>
                     </div>
                 </div>
             </div>
@@ -114,11 +113,10 @@ if ( ! class_exists( 'WPCleverDashboard' ) ) {
                         <span class="wpclever_plugins_order">
                             <a href="#" class="wpclever_plugins_order_a" data-o="p">popular</a> |
                             <a href="#" class="wpclever_plugins_order_a" data-o="u">last updated</a> |
-                            <a href="#" class="wpclever_plugins_search_btn" title="Search"><span
-                                        class="dashicons dashicons-search"></span></a>
+                            <a href="#" class="wpclever_plugins_search_btn" title="Search"><span class="dashicons dashicons-search"></span></a>
                         </span>
                         <span class="wpclever_plugins_search" style="display:none">
-                            <input type="text" class="wpclever_plugins_search_input" placeholder="Search plugins…"/>
+                            <input type="text" class="wpclever_plugins_search_input" placeholder="Search plugins…" />
                             <a href="#" class="wpclever_plugins_search_close" title="Close">&times;</a>
                         </span>
                     </h2>
@@ -129,7 +127,7 @@ if ( ! class_exists( 'WPCleverDashboard' ) ) {
         }
 
         function ajax_get_plugins() {
-            if ( ! isset( $_POST['security'] ) || ! wp_verify_nonce( sanitize_key( $_POST['security'] ), 'wpc_dashboard' ) ) {
+            if ( ! isset( $_POST['security'] ) || ! wp_verify_nonce( sanitize_key( wp_unslash( $_POST['security'] ) ), 'wpc_dashboard' ) ) {
                 die( 'Permissions check failed!' );
             }
 
@@ -155,26 +153,33 @@ if ( ! class_exists( 'WPCleverDashboard' ) ) {
                         'timeout' => 30,
                         'request' => serialize( $args )
                 ];
-                // https://codex.wordpress.org/WordPress.org_API
-                $url      = 'http://api.wordpress.org/plugins/info/1.0/';
+                // Use HTTPS to prevent man-in-the-middle attacks on the API request
+                $url      = 'https://api.wordpress.org/plugins/info/1.0/';
                 $response = wp_remote_post( $url, [ 'body' => $request ] );
 
                 if ( ! is_wp_error( $response ) ) {
                     $plugins_arr = [];
-                    $plugins     = unserialize( $response['body'] );
 
-                    if ( isset( $plugins->plugins ) && ( count( $plugins->plugins ) > 0 ) ) {
+                    // Restrict unserialize() to scalar types only to prevent PHP Object Injection
+                    $plugins = unserialize( $response['body'], [ 'allowed_classes' => false ] );
+
+                    // Validate the decoded structure before use
+                    if ( is_object( $plugins ) && isset( $plugins->plugins ) && is_array( $plugins->plugins ) && ( count( $plugins->plugins ) > 0 ) ) {
                         foreach ( $plugins->plugins as $pl ) {
+                            if ( ! is_object( $pl ) ) {
+                                continue;
+                            }
+
                             $plugins_arr[] = [
-                                    'slug'              => $pl->slug,
-                                    'name'              => $pl->name,
-                                    'version'           => $pl->version,
-                                    'downloaded'        => $pl->downloaded,
-                                    'active_installs'   => $pl->active_installs,
-                                    'last_updated'      => strtotime( $pl->last_updated ),
-                                    'rating'            => $pl->rating,
-                                    'num_ratings'       => $pl->num_ratings,
-                                    'short_description' => $pl->short_description,
+                                    'slug'              => isset( $pl->slug ) ? (string) $pl->slug : '',
+                                    'name'              => isset( $pl->name ) ? (string) $pl->name : '',
+                                    'version'           => isset( $pl->version ) ? (string) $pl->version : '',
+                                    'downloaded'        => isset( $pl->downloaded ) ? (int) $pl->downloaded : 0,
+                                    'active_installs'   => isset( $pl->active_installs ) ? (int) $pl->active_installs : 0,
+                                    'last_updated'      => isset( $pl->last_updated ) ? strtotime( (string) $pl->last_updated ) : 0,
+                                    'rating'            => isset( $pl->rating ) ? (float) $pl->rating : 0,
+                                    'num_ratings'       => isset( $pl->num_ratings ) ? (int) $pl->num_ratings : 0,
+                                    'short_description' => isset( $pl->short_description ) ? (string) $pl->short_description : '',
                             ];
                         }
                     }
@@ -205,7 +210,7 @@ if ( ! class_exists( 'WPCleverDashboard' ) ) {
         }
 
         function ajax_get_suggestion() {
-            if ( ! isset( $_POST['security'] ) || ! wp_verify_nonce( sanitize_key( $_POST['security'] ), 'wpc_dashboard' ) ) {
+            if ( ! isset( $_POST['security'] ) || ! wp_verify_nonce( sanitize_key( wp_unslash( $_POST['security'] ) ), 'wpc_dashboard' ) ) {
                 die( 'Permissions check failed!' );
             }
 
@@ -234,25 +239,31 @@ if ( ! class_exists( 'WPCleverDashboard' ) ) {
                         'timeout' => 30,
                         'request' => serialize( $args )
                 ];
-                // https://codex.wordpress.org/WordPress.org_API
-                $url      = 'http://api.wordpress.org/plugins/info/1.0/';
+                // Use HTTPS to prevent man-in-the-middle attacks on the API request
+                $url      = 'https://api.wordpress.org/plugins/info/1.0/';
                 $response = wp_remote_post( $url, [ 'body' => $request ] );
 
                 if ( ! is_wp_error( $response ) ) {
-                    $plugins = unserialize( $response['body'] );
+                    // Restrict unserialize() to scalar types only to prevent PHP Object Injection
+                    $plugins = unserialize( $response['body'], [ 'allowed_classes' => false ] );
 
-                    if ( isset( $plugins->plugins ) && ( count( $plugins->plugins ) > 0 ) ) {
+                    // Validate the decoded structure before use
+                    if ( is_object( $plugins ) && isset( $plugins->plugins ) && is_array( $plugins->plugins ) && ( count( $plugins->plugins ) > 0 ) ) {
                         foreach ( $plugins->plugins as $pl ) {
+                            if ( ! is_object( $pl ) ) {
+                                continue;
+                            }
+
                             $plugins_arr[] = [
-                                    'slug'              => $pl->slug,
-                                    'name'              => $pl->name,
-                                    'version'           => $pl->version,
-                                    'downloaded'        => $pl->downloaded,
-                                    'active_installs'   => $pl->active_installs,
-                                    'last_updated'      => strtotime( $pl->last_updated ),
-                                    'rating'            => $pl->rating,
-                                    'num_ratings'       => $pl->num_ratings,
-                                    'short_description' => $pl->short_description,
+                                    'slug'              => isset( $pl->slug ) ? (string) $pl->slug : '',
+                                    'name'              => isset( $pl->name ) ? (string) $pl->name : '',
+                                    'version'           => isset( $pl->version ) ? (string) $pl->version : '',
+                                    'downloaded'        => isset( $pl->downloaded ) ? (int) $pl->downloaded : 0,
+                                    'active_installs'   => isset( $pl->active_installs ) ? (int) $pl->active_installs : 0,
+                                    'last_updated'      => isset( $pl->last_updated ) ? strtotime( (string) $pl->last_updated ) : 0,
+                                    'rating'            => isset( $pl->rating ) ? (float) $pl->rating : 0,
+                                    'num_ratings'       => isset( $pl->num_ratings ) ? (int) $pl->num_ratings : 0,
+                                    'short_description' => isset( $pl->short_description ) ? (string) $pl->short_description : '',
                             ];
                         }
                     }
@@ -276,7 +287,7 @@ if ( ! class_exists( 'WPCleverDashboard' ) ) {
         }
 
         function ajax_export() {
-            if ( ! isset( $_POST['security'] ) || ! wp_verify_nonce( sanitize_key( $_POST['security'] ), 'wpc_dashboard' ) || ! current_user_can( 'manage_options' ) ) {
+            if ( ! isset( $_POST['security'] ) || ! wp_verify_nonce( sanitize_key( wp_unslash( $_POST['security'] ) ), 'wpc_dashboard' ) || ! current_user_can( 'manage_options' ) ) {
                 die( 'Permissions check failed!' );
             }
 
@@ -297,7 +308,7 @@ if ( ! class_exists( 'WPCleverDashboard' ) ) {
         }
 
         function ajax_import() {
-            if ( ! isset( $_POST['security'] ) || ! wp_verify_nonce( sanitize_key( $_POST['security'] ), 'wpc_dashboard' ) || ! current_user_can( 'manage_options' ) ) {
+            if ( ! isset( $_POST['security'] ) || ! wp_verify_nonce( sanitize_key( wp_unslash( $_POST['security'] ) ), 'wpc_dashboard' ) || ! current_user_can( 'manage_options' ) ) {
                 die( 'Permissions check failed!' );
             }
 
