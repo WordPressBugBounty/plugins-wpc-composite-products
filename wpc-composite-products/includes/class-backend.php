@@ -1841,7 +1841,7 @@ if ( ! class_exists( 'WPCleverWooco_Backend' ) ) {
             $components    = get_post_meta( $product_id, 'wooco_components', true );
             $pricing       = get_post_meta( $product_id, 'wooco_pricing', true );
             $same_products = get_post_meta( $product_id, 'wooco_same_products', true );
-            $shipping_fee  = get_post_meta( $product_id, 'wooco_shipping_fee', true );
+            $shipping_fee  = get_post_meta( $product_id, 'wooco_shipping_fee', true ) ?: apply_filters( 'wooco_shipping_fee_default', 'both' );
             ?>
             <div id='wooco_settings' class='panel woocommerce_options_panel wooco_table'>
                 <table class="wooco_components">

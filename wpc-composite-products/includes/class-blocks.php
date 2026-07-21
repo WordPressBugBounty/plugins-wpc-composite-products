@@ -108,13 +108,64 @@ if ( ! class_exists( 'WPCleverWooco_Blocks' ) ) {
 				return $response;
 			}
 
-			if ( ! str_contains( $request->get_route(), 'wc/store' ) ) {
+			$route = $request->get_route();
+
+			if ( ! str_contains( $route, 'wc/store' ) ) {
 				return $response;
 			}
 
 			$data = $response->get_data();
+			$items = null;
+			$has_cart = '';
 
-			if ( empty( $data['items'] ) ) {
+			// Safely search for items in Cart/Checkout REST API response (handles both array & object formats)
+			if ( is_array( $data ) ) {
+				if ( ! empty( $data['items'] ) ) {
+					$items = &$data['items'];
+				} elseif ( ! empty( $data['cart'] ) ) {
+					$cart = &$data['cart'];
+					if ( is_array( $cart ) && ! empty( $cart['items'] ) ) {
+						$items = &$cart['items'];
+						$has_cart = 'cart_arr';
+					} elseif ( is_object( $cart ) && ! empty( $cart->items ) ) {
+						$items = &$cart->items;
+						$has_cart = 'cart_obj';
+					}
+				} elseif ( ! empty( $data['__experimentalCart'] ) ) {
+					$ex_cart = &$data['__experimentalCart'];
+					if ( is_array( $ex_cart ) && ! empty( $ex_cart['items'] ) ) {
+						$items = &$ex_cart['items'];
+						$has_cart = 'experimental_arr';
+					} elseif ( is_object( $ex_cart ) && ! empty( $ex_cart->items ) ) {
+						$items = &$ex_cart->items;
+						$has_cart = 'experimental_obj';
+					}
+				}
+			} elseif ( is_object( $data ) ) {
+				if ( ! empty( $data->items ) ) {
+					$items = &$data->items;
+				} elseif ( ! empty( $data->cart ) ) {
+					$cart = &$data->cart;
+					if ( is_array( $cart ) && ! empty( $cart['items'] ) ) {
+						$items = &$cart['items'];
+						$has_cart = 'cart_arr';
+					} elseif ( is_object( $cart ) && ! empty( $cart->items ) ) {
+						$items = &$cart->items;
+						$has_cart = 'cart_obj';
+					}
+				} elseif ( ! empty( $data->__experimentalCart ) ) {
+					$ex_cart = &$data->__experimentalCart;
+					if ( is_array( $ex_cart ) && ! empty( $ex_cart['items'] ) ) {
+						$items = &$ex_cart['items'];
+						$has_cart = 'experimental_arr';
+					} elseif ( is_object( $ex_cart ) && ! empty( $ex_cart->items ) ) {
+						$items = &$ex_cart->items;
+						$has_cart = 'experimental_obj';
+					}
+				}
+			}
+
+			if ( empty( $items ) ) {
 				return $response;
 			}
 
@@ -126,29 +177,83 @@ if ( ! class_exists( 'WPCleverWooco_Blocks' ) ) {
 			$hide_composite_name = WPCleverWooco_Helper::get_setting( 'hide_composite_name', 'no' ) !== 'no';
 			$hide_component      = WPCleverWooco_Helper::get_setting( 'hide_component', 'no' ) !== 'no';
 
-			foreach ( $data['items'] as &$item_data ) {
-				$cart_item_key = $item_data['key'];
-				$cart_item     = $cart_contents[ $cart_item_key ] ?? null;
+			foreach ( $items as &$item_data ) {
+				// Handle both array and object structures of items
+				if ( is_array( $item_data ) ) {
+					$cart_item_key = $item_data['key'];
+					$cart_item     = $cart_contents[ $cart_item_key ] ?? null;
 
-				if ( ! empty( $cart_item['wooco_ids'] ) ) {
-					$item_data['wooco_composite'] = true;
-				}
-
-				if ( ! empty( $cart_item['wooco_parent_id'] ) ) {
-					$item_data['wooco_component']           = true;
-					$item_data['quantity_limits']->editable = false;
-
-					if ( ! $hide_composite_name ) {
-						$item_data['name'] = get_the_title( $cart_item['wooco_parent_id'] ) . apply_filters( 'wooco_name_separator', ' &rarr; ' ) . $item_data['name'];
+					if ( ! empty( $cart_item['wooco_ids'] ) ) {
+						$item_data['wooco_composite'] = true;
 					}
 
-					if ( $hide_component ) {
-						$item_data['wooco_hide_component'] = true;
+					if ( ! empty( $cart_item['wooco_parent_id'] ) ) {
+						$item_data['wooco_component']           = true;
+						$item_data['quantity_limits']->editable = false;
+
+						if ( ! $hide_composite_name ) {
+							$item_data['name'] = get_the_title( $cart_item['wooco_parent_id'] ) . apply_filters( 'wooco_name_separator', ' &rarr; ' ) . $item_data['name'];
+						}
+
+						if ( $hide_component ) {
+							$item_data['wooco_hide_component'] = true;
+						}
+					}
+
+					if ( ! empty( $cart_item['wooco_price'] ) ) {
+						$item_data['wooco_price'] = $cart_item['wooco_price'];
+					}
+				} elseif ( is_object( $item_data ) ) {
+					$cart_item_key = $item_data->key;
+					$cart_item     = $cart_contents[ $cart_item_key ] ?? null;
+
+					if ( ! empty( $cart_item['wooco_ids'] ) ) {
+						$item_data->wooco_composite = true;
+					}
+
+					if ( ! empty( $cart_item['wooco_parent_id'] ) ) {
+						$item_data->wooco_component           = true;
+						$item_data->quantity_limits->editable = false;
+
+						if ( ! $hide_composite_name ) {
+							$item_data->name = get_the_title( $cart_item['wooco_parent_id'] ) . apply_filters( 'wooco_name_separator', ' &rarr; ' ) . $item_data->name;
+						}
+
+						if ( $hide_component ) {
+							$item_data->wooco_hide_component = true;
+						}
+					}
+
+					if ( ! empty( $cart_item['wooco_price'] ) ) {
+						$item_data->wooco_price = $cart_item['wooco_price'];
 					}
 				}
+			}
 
-				if ( ! empty( $cart_item['wooco_price'] ) ) {
-					$item_data['wooco_price'] = $cart_item['wooco_price'];
+			// Re-assign mutated items list to response data structure
+			if ( is_array( $data ) ) {
+				if ( $has_cart === 'cart_arr' ) {
+					$data['cart']['items'] = $items;
+				} elseif ( $has_cart === 'cart_obj' ) {
+					$data['cart']->items = $items;
+				} elseif ( $has_cart === 'experimental_arr' ) {
+					$data['__experimentalCart']['items'] = $items;
+				} elseif ( $has_cart === 'experimental_obj' ) {
+					$data['__experimentalCart']->items = $items;
+				} else {
+					$data['items'] = $items;
+				}
+			} elseif ( is_object( $data ) ) {
+				if ( $has_cart === 'cart_arr' ) {
+					$data->cart['items'] = $items;
+				} elseif ( $has_cart === 'cart_obj' ) {
+					$data->cart->items = $items;
+				} elseif ( $has_cart === 'experimental_arr' ) {
+					$data->__experimentalCart['items'] = $items;
+				} elseif ( $has_cart === 'experimental_obj' ) {
+					$data->__experimentalCart->items = $items;
+				} else {
+					$data->items = $items;
 				}
 			}
 
