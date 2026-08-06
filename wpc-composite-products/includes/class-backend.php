@@ -727,6 +727,7 @@ if ( ! class_exists( 'WPCleverWooco_Backend' ) ) {
                         $exclude_hidden           = WPCleverWooco_Helper::get_setting( 'exclude_hidden', 'no' );
                         $exclude_unpurchasable    = WPCleverWooco_Helper::get_setting( 'exclude_unpurchasable', 'yes' );
                         $show_alert               = WPCleverWooco_Helper::get_setting( 'show_alert', 'load' );
+                        $show_selected            = WPCleverWooco_Helper::get_setting( 'show_selected', 'yes' );
                         $show_qty                 = WPCleverWooco_Helper::get_setting( 'show_qty', 'yes' );
                         $show_plus_minus          = WPCleverWooco_Helper::get_setting( 'show_plus_minus', 'yes' );
                         $show_image               = WPCleverWooco_Helper::get_setting( 'show_image', 'yes' );
@@ -871,6 +872,20 @@ if ( ! class_exists( 'WPCleverWooco_Backend' ) ) {
                                             </select> </label>
                                         <span
                                                 class="description"><?php esc_html_e( 'Show the inline alert under the components.', 'wpc-composite-products' ); ?></span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th><?php esc_html_e( 'Show selected products', 'wpc-composite-products' ); ?></th>
+                                    <td>
+                                        <label> <select name="wooco_settings[show_selected]">
+                                                <option value="yes" <?php selected( $show_selected, 'yes' ); ?>>
+                                                    <?php esc_html_e( 'Yes', 'wpc-composite-products' ); ?>
+                                                </option>
+                                                <option value="no" <?php selected( $show_selected, 'no' ); ?>>
+                                                    <?php esc_html_e( 'No', 'wpc-composite-products' ); ?>
+                                                </option>
+                                            </select> </label>
+                                        <span class="description"><?php esc_html_e( 'Show a summary of selected products above the total price.', 'wpc-composite-products' ); ?></span>
                                     </td>
                                 </tr>
                                 <tr>
@@ -1655,6 +1670,7 @@ if ( ! class_exists( 'WPCleverWooco_Backend' ) ) {
                             <p><strong>Extra features for Premium Version:</strong></p>
                             <ul style="margin-bottom: 0">
                                 <li>- Use Categories, Tags, or Attributes as the source for component options.</li>
+                                <li>- Use Step-by-step and Accordion layout for components.</li>
                                 <li>- Get the lifetime update & premium support.</li>
                             </ul>
                         </div>
@@ -2001,6 +2017,23 @@ if ( ! class_exists( 'WPCleverWooco_Backend' ) ) {
                         </td>
                     </tr>
                     <tr class="wooco_tr_space">
+                        <th><?php esc_html_e( 'Component layout', 'wpc-composite-products' ); ?></th>
+                        <td>
+                            <?php $component_layout = get_post_meta( $product_id, 'wooco_component_layout', true ) ?: 'default'; ?>
+                            <select id="wooco_component_layout" name="wooco_component_layout">
+                                <option value="default" <?php selected( $component_layout, 'default' ); ?>>
+                                    <?php esc_html_e( 'Default', 'wpc-composite-products' ); ?>
+                                </option>
+                                <option value="step_by_step" disabled="disabled">
+                                    <?php esc_html_e( 'Step-by-step (Premium)', 'wpc-composite-products' ); ?>
+                                </option>
+                                <option value="accordion" disabled="disabled">
+                                    <?php esc_html_e( 'Accordion (Premium)', 'wpc-composite-products' ); ?>
+                                </option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr class="wooco_tr_space">
                         <th><?php esc_html_e( 'Custom display price', 'wpc-composite-products' ); ?></th>
                         <td>
                             <label>
@@ -2090,6 +2123,11 @@ if ( ! class_exists( 'WPCleverWooco_Backend' ) ) {
 
             if ( isset( $_POST['wooco_after_text'] ) ) {
                 update_post_meta( $post_id, 'wooco_after_text', sanitize_post_field( 'post_content', wp_unslash( $_POST['wooco_after_text'] ?? '' ), $post_id, 'display' ) ); // phpcs:ignore WordPress.Security.NonceVerification.Missing
+            }
+
+            // Save component layout setting
+            if ( isset( $_POST['wooco_component_layout'] ) ) {
+                update_post_meta( $post_id, 'wooco_component_layout', sanitize_text_field( wp_unslash( $_POST['wooco_component_layout'] ) ) );
             }
 
             // delete cache

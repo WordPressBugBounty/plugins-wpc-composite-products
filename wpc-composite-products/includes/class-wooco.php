@@ -282,6 +282,7 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                             'price_selector'           => WPCleverWooco_Helper::get_setting( 'change_price_custom', '' ),
                             'product_link'             => WPCleverWooco_Helper::get_setting( 'product_link', 'no' ),
                             'show_alert'               => WPCleverWooco_Helper::get_setting( 'show_alert', 'load' ),
+                            'show_selected'            => WPCleverWooco_Helper::get_setting( 'show_selected', 'yes' ),
                             'hide_component_name'      => WPCleverWooco_Helper::get_setting( 'hide_component_name', 'yes' ),
                             'total_text'               => WPCleverWooco_Helper::localization( 'total', esc_html__( 'Total price:', 'wpc-composite-products' ) ),
                             'selected_text'            => WPCleverWooco_Helper::localization( 'selected', esc_html__( 'Selected:', 'wpc-composite-products' ) ),
@@ -1759,6 +1760,10 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
 
                     echo '</div><!-- /.wooco-components -->';
 
+                    if ( WPCleverWooco_Helper::get_setting( 'show_selected', 'yes' ) === 'yes' ) {
+                        echo '<div class="wooco-selected"></div>';
+                    }
+
                     echo '<div class="wooco_summary wooco-summary wooco-text"><div class="wooco_total wooco-total"></div><div class="wooco_count wooco-count"></div></div>';
 
                     if ( WPCleverWooco_Helper::get_setting( 'show_alert', 'load' ) !== 'no' ) {
@@ -1890,7 +1895,7 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                     }
 
                     if ( $_product->is_type( 'variable' ) ) {
-                        $children = $_product->get_children();
+                        $children = apply_filters( 'wooco_get_variable_children', $_product->get_children(), $_product );
 
                         if ( ! empty( $children ) ) {
                             foreach ( $children as $child ) {

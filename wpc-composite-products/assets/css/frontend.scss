@@ -612,6 +612,42 @@ body.rtl .wpc-select2-dropdown ul li .image {
   }
 }
 
+/* Selected products summary */
+.wooco-selected {
+  display: none;
+  margin-bottom: 12px;
+  padding: 10px 14px;
+  border: 1px solid #e5e5e5;
+  border-radius: 4px;
+  background: #fafafa;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.wooco-selected-row {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  padding: 2px 0;
+
+  &:not(:last-child) {
+    border-bottom: 1px dashed #eee;
+    padding-bottom: 4px;
+    margin-bottom: 2px;
+  }
+}
+
+.wooco-selected-label {
+  font-weight: 600;
+  color: #555;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.wooco-selected-name {
+  color: #333;
+}
+
 /* Responsive */
 
 @media only screen and (max-width: 767px) {

@@ -283,6 +283,16 @@ function wooco_init($wrap, context = null, $selected = null) {
         wooco_show_alert($wrap, context, $selected);
     }
 
+    // Update selected products summary when setting is enabled
+    if ((context === 'on_select' || context === 'on_click' || context === 'update_qty') && wooco_vars.show_selected === 'yes') {
+        wooco_step_update_selected($wrap);
+    }
+
+    // Refresh selected summary on initial load too
+    if ((context === 'loaded' || context === 'woosq_loaded' || context === 'selected') && wooco_vars.show_selected === 'yes') {
+        wooco_step_update_selected($wrap);
+    }
+
     jQuery(document).trigger('wooco_init', [$wrap, context, $selected]);
 }
 
@@ -744,6 +754,14 @@ function wooco_selected($selected, $selection, $component) {
         $component.attr('data-id', 0);
     }
 
+    // Store selected product display name for selected summary
+    var selectedName = jQuery.trim(
+        $selected.attr('data-name')
+        || $selected.text()
+        || ''
+    );
+    $component.attr('data-selected-name', selectedName);
+
     $component.attr('data-price', price);
     $component.attr('data-price-html', price_html);
     $component.attr('data-regular-price', regular_price);
@@ -884,4 +902,201 @@ function wooco_price_html(regular_price, sale_price) {
     }
 
     return price_html;
+}
+
+/**
+ * Update the .wooco-selected summary div with a list of all selected products across steps.
+ * If the container doesn't exist yet (stale cache), it is injected before .wooco-total.
+ */
+function wooco_step_update_selected($wrap) {
+    var $container = $wrap.find('.wooco-selected');
+
+    // Inject container if PHP cache served old HTML without it
+    if (!$container.length) {
+        var $summary = $wrap.find('.wooco_summary, .wooco-summary').first();
+
+        if ($summary.length) {
+            $summary.before('<div class="wooco-selected"></div>');
+            $container = $wrap.find('.wooco-selected');
+        }
+
+        if (!$container.length) {
+            return;
+        }
+    }
+
+    var $steps = $wrap.find('.wooco-components').children('.wooco_component');
+
+    if (!$steps.length) {
+        $container.hide();
+        return;
+    }
+
+    var rows = [];
+
+    $steps.each(function () {
+        var $step     = jQuery(this);
+        var $product  = $step.find('.wooco_component_product').first();
+        var labelEl   = $step.find('.wooco_component_name').first().text().trim();
+        var name      = wooco_step_get_selected_name($product);
+
+        // Skip components with no selection
+        if (!name || !labelEl) {
+            return;
+        }
+
+        rows.push(
+            '<div class="wooco-selected-row">'
+            + '<span class="wooco-selected-label">' + labelEl + ':</span> '
+            + '<span class="wooco-selected-name">' + name + '</span>'
+            + '</div>'
+        );
+    });
+
+    if (rows.length === 0) {
+        $container.html('').hide();
+    } else {
+        $container.html(rows.join('')).show();
+    }
+}
+
+/**
+ * Get the display name of the currently selected product inside a .wooco_component_product element.
+ * Returns null when nothing is selected (id <= 0).
+ * Prepend quantity (qty × name) if custom quantity is enabled or qty > 1.
+ */
+function wooco_step_get_selected_name($product) {
+    var isMultiple = $product.attr('data-multiple') === 'yes';
+    var isCustomQty = $product.attr('data-custom-qty') === 'yes';
+
+    // --- Multiple selection: collect all selected item names ---
+    if (isMultiple) {
+        var names = [];
+
+        $product.find('.wooco_item_selected').each(function () {
+            var $item = jQuery(this);
+            var name  = jQuery.trim(
+                $item.find('.wooco_component_product_selection_list_item_name').first().text()
+                || $item.find('.wooco_component_product_selection_grid_item_name').first().text()
+                || $item.attr('data-name')
+                || ''
+            );
+
+            if (name) {
+                var itemQty = parseFloat($item.find('.wooco_qty, .qty').first().val())
+                    || parseFloat($item.attr('data-qty'))
+                    || parseFloat($product.attr('data-qty'))
+                    || 1;
+
+                if (isCustomQty || itemQty > 1) {
+                    name = itemQty + ' &times; ' + name;
+                }
+
+                names.push(name);
+            }
+        });
+
+        return names.length > 0 ? names.join('; ') : null;
+    }
+
+    // --- Single selection ---
+    var selectedId = parseInt($product.attr('data-id') || 0);
+
+    if (selectedId <= 0) {
+        return null;
+    }
+
+    var name = null;
+
+    // 1. Check cached name stored by wooco_selected()
+    var cachedName = jQuery.trim($product.attr('data-selected-name') || '');
+    if (cachedName) {
+        name = cachedName;
+    }
+
+    if (!name) {
+        // --- Dropdown selectors (select / ddslick / select2) ---
+        var $select = $product.find('.wooco_component_product_select');
+
+        if ($select.length) {
+            // Option with matching value
+            var $opt = $select.find('option[value="' + selectedId + '"]');
+            if ($opt.length) {
+                name = jQuery.trim($opt.text());
+            }
+
+            if (!name) {
+                // Option with matching data-id attribute
+                $opt = $select.find('option').filter(function () {
+                    return parseInt(jQuery(this).attr('data-id') || 0) === selectedId;
+                });
+                if ($opt.length) {
+                    name = jQuery.trim($opt.first().text());
+                }
+            }
+
+            if (!name) {
+                // Whatever option is marked :selected
+                var $chosen = $select.find('option:selected');
+                if ($chosen.length && parseInt($chosen.val()) > 0) {
+                    name = jQuery.trim($chosen.text());
+                }
+            }
+        }
+    }
+
+    if (!name) {
+        // ddslick selected label text
+        var $ddText = $product.find('.dd-selected-text');
+        if ($ddText.length) {
+            var ddName = jQuery.trim($ddText.text());
+            if (ddName) {
+                name = ddName;
+            }
+        }
+    }
+
+    if (!name) {
+        // --- List layout ---
+        var $listName = $product.find('.wooco_item_selected .wooco_component_product_selection_list_item_name').first();
+        if ($listName.length) {
+            name = jQuery.trim($listName.text());
+        }
+    }
+
+    if (!name) {
+        // --- Grid layout ---
+        var $gridName = $product.find('.wooco_item_selected .wooco_component_product_selection_grid_item_name').first();
+        if ($gridName.length) {
+            name = jQuery.trim($gridName.text());
+        }
+    }
+
+    if (!name) {
+        // --- Generic fallback: data-name on any selected item ---
+        var $anyItem = $product.find('.wooco_item_selected').first();
+        if ($anyItem.length && $anyItem.attr('data-name')) {
+            name = jQuery.trim($anyItem.attr('data-name'));
+        }
+    }
+
+    if (!name) {
+        return null;
+    }
+
+    // Prepend quantity for single selection
+    var $selectedItem = $product.find('.wooco_item_selected').first();
+    var $qtyInput = $selectedItem.length
+        ? $selectedItem.find('.wooco_qty, .qty').first()
+        : $product.find('.wooco_component_product_qty_input, .wooco_qty, .qty').first();
+
+    var qty = parseFloat($qtyInput.val())
+        || parseFloat($product.attr('data-qty'))
+        || 1;
+
+    if (isCustomQty || qty > 1) {
+        name = qty + ' &times; ' + name;
+    }
+
+    return name;
 }
