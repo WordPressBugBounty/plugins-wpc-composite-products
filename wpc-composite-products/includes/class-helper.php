@@ -96,7 +96,9 @@ if ( ! class_exists( 'WPCleverWooco_Helper' ) ) {
 
 		public static function get_new_price( float $old_price, string $new_price ): float {
 			if ( str_contains( $new_price, '%' ) ) {
-				return ( (float) $new_price * $old_price ) / 100;
+				$decimals = function_exists( 'wc_get_price_decimals' ) ? wc_get_price_decimals() : 2;
+
+				return (float) round( ( (float) $new_price * $old_price ) / 100, $decimals );
 			}
 
 			return (float) $new_price;

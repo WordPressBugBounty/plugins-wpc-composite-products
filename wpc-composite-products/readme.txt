@@ -3,8 +3,8 @@ Contributors: wpclever
 Donate link: https://wpclever.net
 Tags: woocommerce, wpc, composite, component, kits
 Tested up to: 7.0
-Version: 8.0.0
-Stable tag: 8.0.0
+Version: 8.0.1
+Stable tag: 8.0.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -63,6 +63,9 @@ Please try other plugins from us:
 5. Almost done! Click Save and see the result
 
 == Changelog ==
+
+= 8.0.1 =
+* Fixed: Incorrect rounding price for component products
 
 = 8.0.0 =
 * Added: The "Selected Products" section allows you to easily review all products selected across the components
