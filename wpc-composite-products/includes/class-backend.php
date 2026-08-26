@@ -1245,7 +1245,7 @@ if ( ! class_exists( 'WPCleverWooco_Backend' ) ) {
                                     </td>
                                 </tr>
                                 <tr>
-                                    <th><?php esc_html_e( 'Edit link (Beta)', 'wpc-composite-products' ); ?></th>
+                                    <th><?php esc_html_e( 'Edit link', 'wpc-composite-products' ); ?></th>
                                     <td>
                                         <label> <select name="wooco_settings[edit_link]">
                                                 <option value="yes" <?php selected( $edit_link, 'yes' ); ?>>

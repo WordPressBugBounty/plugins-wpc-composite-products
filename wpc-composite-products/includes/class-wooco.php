@@ -1487,9 +1487,10 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
 
                                         foreach ( $component_products as $component_product ) {
                                             if ( $component_product_obj = wc_get_product( $component_product['id'] ) ) {
-                                                $item_selected = apply_filters( 'wooco_component_product_selected', isset( $component['default'] ) && ( $component['default'] == $component_product['id'] ), $component_product, $component );
-
                                                 if ( ! empty( $edit_ids ) ) {
+                                                    // When editing from cart, use edit selections instead of defaults
+                                                    $item_selected = false;
+
                                                     foreach ( $edit_ids as $edit_id ) {
                                                         if ( str_contains( $edit_id, '/' . $key ) ) {
                                                             $edit_id_arr  = explode( '/', $edit_id );
@@ -1503,6 +1504,8 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                                                             }
                                                         }
                                                     }
+                                                } else {
+                                                    $item_selected = apply_filters( 'wooco_component_product_selected', isset( $component['default'] ) && ( $component['default'] == $component_product['id'] ), $component_product, $component );
                                                 }
 
                                                 echo '<div class="wooco_component_product_selection_list_item wooco_component_product_selection_item ' . ( $item_selected || $one_required ? 'wooco_item_selected' : '' ) . '" ' . WPCleverWooco_Helper::data_attributes( $component_product ) . '>';
@@ -1583,9 +1586,10 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
 
                                         foreach ( $component_products as $component_product ) {
                                             if ( $component_product_obj = wc_get_product( $component_product['id'] ) ) {
-                                                $item_selected = apply_filters( 'wooco_component_product_selected', isset( $component['default'] ) && ( $component['default'] == $component_product['id'] ), $component_product, $component );
-
                                                 if ( ! empty( $edit_ids ) ) {
+                                                    // When editing from cart, use edit selections instead of defaults
+                                                    $item_selected = false;
+
                                                     foreach ( $edit_ids as $edit_id ) {
                                                         if ( str_contains( $edit_id, '/' . $key ) ) {
                                                             $edit_id_arr  = explode( '/', $edit_id );
@@ -1599,6 +1603,8 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                                                             }
                                                         }
                                                     }
+                                                } else {
+                                                    $item_selected = apply_filters( 'wooco_component_product_selected', isset( $component['default'] ) && ( $component['default'] == $component_product['id'] ), $component_product, $component );
                                                 }
 
                                                 echo '<div class="wooco_component_product_selection_grid_item wooco_component_product_selection_item ' . ( $item_selected || $one_required ? 'wooco_item_selected' : '' ) . '" ' . WPCleverWooco_Helper::data_attributes( $component_product ) . '>';
@@ -1685,9 +1691,10 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                                         }
 
                                         foreach ( $component_products as $component_product ) {
-                                            $item_selected = apply_filters( 'wooco_component_product_selected', isset( $component['default'] ) && ( $component['default'] == $component_product['id'] ), $component_product, $component );
-
                                             if ( ! empty( $edit_ids ) ) {
+                                                // When editing from cart, use edit selections instead of defaults
+                                                $item_selected = false;
+
                                                 foreach ( $edit_ids as $edit_id ) {
                                                     if ( str_contains( $edit_id, '/' . $key ) ) {
                                                         $edit_id_arr  = explode( '/', $edit_id );
@@ -1701,6 +1708,8 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                                                         }
                                                     }
                                                 }
+                                            } else {
+                                                $item_selected = apply_filters( 'wooco_component_product_selected', isset( $component['default'] ) && ( $component['default'] == $component_product['id'] ), $component_product, $component );
                                             }
 
                                             echo '<option value="' . esc_attr( $component_product['purchasable'] === 'yes' ? $component_product['id'] : 0 ) . '" ' . WPCleverWooco_Helper::data_attributes( $component_product ) . ' ' . esc_attr( $component_product['purchasable'] !== 'yes' ? 'disabled' : '' ) . ' ' . esc_attr( $item_selected ? 'selected' : '' ) . '>' . esc_html( $component_product['name'] ) . '</option>';
