@@ -2,14 +2,14 @@
 # This file is distributed under the GPLv2 or later.
 msgid ""
 msgstr ""
-"Project-Id-Version: WPC Composite Products for WooCommerce 8.0.2\n"
+"Project-Id-Version: WPC Composite Products for WooCommerce 8.0.3\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/wpc-composite-products\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-08-26T02:36:43+00:00\n"
+"POT-Creation-Date: 2026-09-16T08:16:49+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: wpc-composite-products\n"
@@ -674,7 +674,7 @@ msgid "Option none (optional component)"
 msgstr ""
 
 #: includes/class-backend.php:1296
-#: includes/class-wooco.php:1420
+#: includes/class-wooco.php:1423
 msgid "No, thanks. I don't need this"
 msgstr ""
 
@@ -688,7 +688,7 @@ msgid "Option none (required component)"
 msgstr ""
 
 #: includes/class-backend.php:1309
-#: includes/class-wooco.php:1420
+#: includes/class-wooco.php:1423
 msgid "Please make your choice here"
 msgstr ""
 
@@ -761,8 +761,8 @@ msgstr ""
 #: includes/class-backend.php:1394
 #: includes/class-backend.php:1400
 #: includes/class-backend.php:1825
-#: includes/class-wooco.php:903
-#: includes/class-wooco.php:928
+#: includes/class-wooco.php:906
+#: includes/class-wooco.php:931
 msgid "Components"
 msgstr ""
 
@@ -770,7 +770,7 @@ msgstr ""
 #: includes/class-backend.php:1406
 #: includes/class-backend.php:1413
 #: includes/class-backend.php:1788
-#: includes/class-wooco.php:1007
+#: includes/class-wooco.php:1010
 #, php-format
 msgid "Components: %s"
 msgstr ""
@@ -780,8 +780,8 @@ msgstr ""
 #: includes/class-backend.php:1426
 #: includes/class-backend.php:1794
 #: includes/class-backend.php:1796
-#: includes/class-wooco.php:1013
-#: includes/class-wooco.php:1015
+#: includes/class-wooco.php:1016
+#: includes/class-wooco.php:1018
 #, php-format
 msgid "Composite: %s"
 msgstr ""
@@ -794,7 +794,7 @@ msgstr ""
 
 #: includes/class-backend.php:1442
 #: includes/class-backend.php:1448
-#: includes/class-wooco.php:1080
+#: includes/class-wooco.php:1083
 msgid "Update"
 msgstr ""
 
@@ -1088,31 +1088,31 @@ msgstr ""
 msgid "Missing a required component product."
 msgstr ""
 
-#: includes/class-wooco.php:1167
-#: includes/class-wooco.php:1169
+#: includes/class-wooco.php:1170
+#: includes/class-wooco.php:1172
 msgid "From"
 msgstr ""
 
-#: includes/class-wooco.php:2123
+#: includes/class-wooco.php:2128
 msgid "Before container"
 msgstr ""
 
-#: includes/class-wooco.php:2124
+#: includes/class-wooco.php:2129
 msgid "After container"
 msgstr ""
 
-#: includes/class-wooco.php:2125
+#: includes/class-wooco.php:2130
 msgid "Before component list"
 msgstr ""
 
-#: includes/class-wooco.php:2126
+#: includes/class-wooco.php:2131
 msgid "After component list"
 msgstr ""
 
-#: includes/class-wooco.php:2127
+#: includes/class-wooco.php:2132
 msgid "Before component"
 msgstr ""
 
-#: includes/class-wooco.php:2128
+#: includes/class-wooco.php:2133
 msgid "After component"
 msgstr ""

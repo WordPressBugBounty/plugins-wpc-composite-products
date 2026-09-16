@@ -787,6 +787,7 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                     if ( $parent_product && $parent_product->is_type( 'composite' ) && method_exists( $parent_product, 'get_pricing' ) ) {
                         if ( $parent_product->get_pricing() === 'only' ) {
                             $cart_item['data']->set_price( 0 );
+                            $cart_item['data']->get_price(); // resynchronize the price cache
                         } else {
                             $new_price = false;
                             $_product  = apply_filters( 'wooco_product_original', wc_get_product( $cart_item['variation_id'] ?: $cart_item['product_id'] ), $cart_item );
@@ -805,6 +806,7 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                             if ( $new_price ) {
                                 // set new price for child product
                                 $cart_item['data']->set_price( (float) apply_filters( 'wooco_component_product_price', $_price, $cart_item ) );
+                                $cart_item['data']->get_price(); // resynchronize the price cache
                             }
                         }
                     }
@@ -840,6 +842,7 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
 
                     if ( $cart_item['data']->get_pricing() === 'exclude' ) {
                         $cart_item['data']->set_price( 0 );
+                        $cart_item['data']->get_price(); // resynchronize the price cache
                     }
                 }
             }
@@ -1770,7 +1773,9 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                     echo '</div><!-- /.wooco-components -->';
 
                     if ( WPCleverWooco_Helper::get_setting( 'show_selected', 'yes' ) === 'yes' ) {
+                        do_action( 'wooco_before_selected', $product );
                         echo '<div class="wooco-selected"></div>';
+                        do_action( 'wooco_after_selected', $product );
                     }
 
                     echo '<div class="wooco_summary wooco-summary wooco-text"><div class="wooco_total wooco-total"></div><div class="wooco_count wooco-count"></div></div>';

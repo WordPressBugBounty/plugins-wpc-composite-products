@@ -3,8 +3,7 @@ Contributors: wpclever
 Donate link: https://wpclever.net
 Tags: woocommerce, wpc, composite, component, kits
 Tested up to: 7.1
-Version: 8.0.2
-Stable tag: 8.0.2
+Stable tag: 8.0.3
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -63,6 +62,10 @@ Please try other plugins from us:
 5. Almost done! Click Save and see the result
 
 == Changelog ==
+
+= 8.0.3 =
+* Updated: Optimized the code
+* Updated: Compatible with WP 7.1 & Woo 11.1
 
 = 8.0.2 =
 * Fixed: Edit link on the cart page
