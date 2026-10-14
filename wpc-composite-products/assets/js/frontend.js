@@ -562,13 +562,23 @@ function wooco_check_ready($wrap, context = null, $selected = null) {
             $alert.addClass('alert-total-max').html(wooco_vars.alert_total_max.replace('[max]', wooco_format_price(total_max)).replace('[total]', wooco_format_price(total)));
         }
 
-        $alert.slideDown();
+        // only slide down if the alert is not visible yet (or is currently animating)
+        if (!$alert.is(':visible') || $alert.is(':animated')) {
+            $alert.stop(true).slideDown();
+        }
 
         jQuery(document).trigger('wooco_check_ready', [false, is_selection, is_same, is_min, is_max, $wrap, context, $selected]);
     } else {
-        $alert.removeClass('alert-active alert-selection alert-min alert-max alert-total-min alert-total-max').slideUp(300, function () {
-            $alert.html('');
-        });
+        $alert.removeClass('alert-active alert-selection alert-min alert-max alert-total-min alert-total-max');
+
+        // only slide up if the alert is currently visible, otherwise just keep it hidden and clear it
+        if ($alert.is(':visible')) {
+            $alert.stop(true).slideUp(300, function () {
+                $alert.html('');
+            });
+        } else {
+            $alert.stop(true).css('display', 'none').html('');
+        }
         $btn.removeClass('wooco-disabled');
 
         // ready
@@ -617,9 +627,13 @@ function wooco_show_alert($wrap, context = null, $selected = null) {
     var $alert = $wrap.find('.wooco-alert');
 
     if ($alert.hasClass('alert-active')) {
-        $alert.slideDown();
+        if (!$alert.is(':visible') || $alert.is(':animated')) {
+            $alert.stop(true).slideDown();
+        }
+    } else if ($alert.is(':visible')) {
+        $alert.stop(true).slideUp();
     } else {
-        $alert.slideUp();
+        $alert.stop(true).css('display', 'none');
     }
 
     jQuery(document).trigger('wooco_show_alert', [$wrap, context, $selected]);

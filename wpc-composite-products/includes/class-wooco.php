@@ -791,7 +791,7 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                         } else {
                             $new_price = false;
                             $_product  = apply_filters( 'wooco_product_original', wc_get_product( $cart_item['variation_id'] ?: $cart_item['product_id'] ), $cart_item );
-                            $_price    = apply_filters( 'wooco_product_original_price', ( WPCleverWooco_Helper::get_setting( 'product_price', 'sale_price' ) === 'regular_price' ) ? $_product->get_regular_price( 'edit' ) : $_product->get_price( 'edit' ), $cart_item['data'] );
+                            $_price    = apply_filters( 'wooco_product_original_price', ( WPCleverWooco_Helper::get_setting( 'product_price', 'sale_price' ) === 'regular_price' ) ? $_product->get_regular_price( 'edit' ) : $_product->get_price( 'edit' ), $cart_item['data'], 'before_calculate_totals' );
 
                             if ( isset( $cart_item['wooco_price'] ) && ( $cart_item['wooco_price'] !== '' ) ) {
                                 $new_price = true;
@@ -820,7 +820,7 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                         foreach ( $cart_item['wooco_keys'] as $key ) {
                             if ( isset( $cart_contents[ $key ] ) ) {
                                 $_product = apply_filters( 'wooco_product_original', wc_get_product( $cart_contents[ $key ]['variation_id'] ?: $cart_contents[ $key ]['product_id'] ), $cart_contents[ $key ] );
-                                $_price   = apply_filters( 'wooco_product_original_price', ( WPCleverWooco_Helper::get_setting( 'product_price', 'sale_price' ) === 'regular_price' ) ? $_product->get_regular_price( 'edit' ) : $_product->get_price( 'edit' ), $cart_contents[ $key ]['data'] );
+                                $_price   = apply_filters( 'wooco_product_original_price', ( WPCleverWooco_Helper::get_setting( 'product_price', 'sale_price' ) === 'regular_price' ) ? $_product->get_regular_price( 'edit' ) : $_product->get_price( 'edit' ), $cart_contents[ $key ]['data'], 'before_calculate_totals' );
 
                                 if ( isset( $cart_contents[ $key ]['wooco_price'] ) && ( $cart_contents[ $key ]['wooco_price'] !== '' ) ) {
                                     $_price = WPCleverWooco_Helper::get_new_price( $_price, $cart_contents[ $key ]['wooco_price'] );
@@ -2041,7 +2041,7 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                 $img_src = $img_full_src = $img_gallery_src = '';
             }
 
-            $price_ori     = apply_filters( 'wooco_product_original_price', ( WPCleverWooco_Helper::get_setting( 'product_price', 'sale_price' ) === 'regular_price' ) ? $product->get_regular_price() : $product->get_price(), $product );
+            $price_ori     = apply_filters( 'wooco_product_original_price', ( WPCleverWooco_Helper::get_setting( 'product_price', 'sale_price' ) === 'regular_price' ) ? $product->get_regular_price() : $product->get_price(), $product, 'get_product_data' );
             $price_display = wc_get_price_to_display( $product, [ 'price' => $price_ori ] );
             $price_html    = apply_filters( 'wooco_product_original_price_html', $product->get_price_html(), $product );
 
