@@ -144,7 +144,13 @@
             nonce: wooco_vars.nonce,
         };
 
-        $.post(ajaxurl, data, function (response) {
+        $.post(ajaxurl, data).done(function (response) {
+            if (!response || response.success !== true) {
+                alert(wooco_vars.save_error);
+            }
+        }).fail(function () {
+            alert(wooco_vars.save_error);
+        }).always(function () {
             $('.wooco_components').removeClass('wooco_components_loading');
             $this.removeClass('wooco_disabled');
         });
