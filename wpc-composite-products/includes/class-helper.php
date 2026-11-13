@@ -50,6 +50,12 @@ if ( ! class_exists( 'WPCleverWooco_Helper' ) ) {
 		}
 
 		public static function get_product_id( $id = null ): int {
+			// an empty value means "no product" (e.g. a component without default),
+			// it must never be looked up as a SKU, otherwise a product with SKU "0" would match
+			if ( $id === null || $id === false || $id === '' || $id === 0 || $id === '0' ) {
+				return 0;
+			}
+
 			$is_sku_key = is_string( $id ) && str_starts_with( $id, '_sku_' );
 
 			if ( $is_sku_key || ! ( is_numeric( $id ) && (int) $id == $id ) ) {

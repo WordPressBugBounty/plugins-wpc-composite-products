@@ -1959,7 +1959,7 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                     }
                 }
 
-                if ( ! $has_default && ( $product_default = wc_get_product( $default_id ) ) ) {
+                if ( ! $has_default && $default_id > 0 && ( $product_default = wc_get_product( $default_id ) ) ) {
                     // add default product
                     if ( $product_default->is_type( 'variable' ) ) {
                         // select a available variation
