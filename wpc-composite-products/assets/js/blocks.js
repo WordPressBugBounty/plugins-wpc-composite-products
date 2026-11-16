@@ -9,6 +9,11 @@ const woocoCartItemClass = (defaultValue, extensions, args) => {
 
     if (args?.cartItem?.wooco_composite) {
         defaultValue += ' wooco-composite';
+
+        // the composite total is displayed instead of the original prices
+        if (args?.cartItem?.wooco_price) {
+            defaultValue += ' wooco-composite-total';
+        }
     }
 
     if (args?.cartItem?.wooco_component) {

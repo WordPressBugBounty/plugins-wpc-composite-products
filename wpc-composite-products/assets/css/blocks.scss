@@ -1,5 +1,6 @@
 .wc-block-cart-items__row, .wc-block-components-order-summary-item {
-  &.wooco-composite {
+  // hide the original prices only when the composite total is displayed instead
+  &.wooco-composite.wooco-composite-total {
     .wc-block-cart-item__prices, .wc-block-components-product-badge, .wc-block-components-product-price__value {
       display: none !important;
     }

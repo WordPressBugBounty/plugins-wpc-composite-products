@@ -200,7 +200,8 @@ if ( ! class_exists( 'WPCleverWooco_Blocks' ) ) {
 						}
 					}
 
-					if ( ! empty( $cart_item['wooco_price'] ) ) {
+					// the blocks only display the composite total when 'wooco_price' is exposed
+					if ( ! empty( $cart_item['wooco_price'] ) && ( empty( $cart_item['wooco_ids'] ) || WPCleverWooco()->display_composite_total( $cart_item ) ) ) {
 						$item_data['wooco_price'] = $cart_item['wooco_price'];
 					}
 				} elseif ( is_object( $item_data ) ) {
@@ -224,7 +225,8 @@ if ( ! class_exists( 'WPCleverWooco_Blocks' ) ) {
 						}
 					}
 
-					if ( ! empty( $cart_item['wooco_price'] ) ) {
+					// the blocks only display the composite total when 'wooco_price' is exposed
+					if ( ! empty( $cart_item['wooco_price'] ) && ( empty( $cart_item['wooco_ids'] ) || WPCleverWooco()->display_composite_total( $cart_item ) ) ) {
 						$item_data->wooco_price = $cart_item['wooco_price'];
 					}
 				}

@@ -344,8 +344,20 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
             return $name;
         }
 
+        /**
+         * Whether the main (composite) product displays the calculated total of its components
+         * in the cart, mini-cart and order. When disabled, the default price of the main product is displayed.
+         *
+         * @param array|object $item Cart item or order item.
+         *
+         * @return bool
+         */
+        public function display_composite_total( $item ): bool {
+            return (bool) apply_filters( 'wooco_display_composite_total', true, $item );
+        }
+
         public function formatted_line_subtotal( $subtotal, $item ) {
-            if ( ! empty( $item['wooco_ids'] ) && isset( $item['wooco_price'] ) && ( $item['wooco_price'] !== '' ) ) {
+            if ( ! empty( $item['wooco_ids'] ) && isset( $item['wooco_price'] ) && ( $item['wooco_price'] !== '' ) && $this->display_composite_total( $item ) ) {
                 return apply_filters( 'wooco_order_item_subtotal', wc_price( (float) $item['wooco_price'] * $item['quantity'] ), $subtotal, $item );
             }
 
@@ -353,7 +365,7 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
         }
 
         public function cart_item_price( $price, $cart_item ) {
-            if ( isset( $cart_item['wooco_ids'], $cart_item['wooco_keys'], $cart_item['wooco_price'] ) && method_exists( $cart_item['data'], 'get_pricing' ) && ( $cart_item['data']->get_pricing() !== 'only' ) ) {
+            if ( isset( $cart_item['wooco_ids'], $cart_item['wooco_keys'], $cart_item['wooco_price'] ) && method_exists( $cart_item['data'], 'get_pricing' ) && ( $cart_item['data']->get_pricing() !== 'only' ) && $this->display_composite_total( $cart_item ) ) {
                 // composite
                 return apply_filters( 'wooco_cart_item_price', wc_price( $cart_item['wooco_price'] ), $price, $cart_item );
             }
@@ -374,7 +386,7 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
         }
 
         public function cart_item_subtotal( $subtotal, $cart_item = null ) {
-            if ( isset( $cart_item['wooco_ids'], $cart_item['wooco_keys'], $cart_item['wooco_price'] ) && method_exists( $cart_item['data'], 'get_pricing' ) && ( $cart_item['data']->get_pricing() !== 'only' ) ) {
+            if ( isset( $cart_item['wooco_ids'], $cart_item['wooco_keys'], $cart_item['wooco_price'] ) && method_exists( $cart_item['data'], 'get_pricing' ) && ( $cart_item['data']->get_pricing() !== 'only' ) && $this->display_composite_total( $cart_item ) ) {
                 // composite
                 return apply_filters( 'wooco_cart_item_subtotal', wc_price( $cart_item['wooco_price'] * $cart_item['quantity'] ), $subtotal, $cart_item );
             }
