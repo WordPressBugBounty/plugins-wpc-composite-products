@@ -3,7 +3,7 @@ Contributors: wpclever
 Donate link: https://wpclever.net
 Tags: woocommerce, wpc, composite, component, kits
 Tested up to: 7.1
-Stable tag: 8.0.7
+Stable tag: 8.0.8
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,6 +62,9 @@ Please try other plugins from us:
 5. Almost done! Click Save and see the result
 
 == Changelog ==
+
+= 8.0.8 =
+* Fixed: Component products remained in the cart without their parent when the composite was removed by WooCommerce during session restoration (e.g. out of stock)
 
 = 8.0.7 =
 * Added: Filter `wooco_display_composite_total` to show the base price on the main product instead of the calculated total

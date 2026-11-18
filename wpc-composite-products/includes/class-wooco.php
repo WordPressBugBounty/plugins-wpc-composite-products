@@ -39,6 +39,7 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
             add_action( 'woocommerce_add_to_cart', [ $this, 'add_to_cart' ], 9, 6 );
             add_filter( 'woocommerce_add_cart_item_data', [ $this, 'add_cart_item_data' ], 9, 2 );
             add_filter( 'woocommerce_get_cart_item_from_session', [ $this, 'get_cart_item_from_session' ], 9, 2 );
+            add_action( 'woocommerce_cart_loaded_from_session', [ $this, 'remove_orphaned_components' ], 20 );
 
             // Undo remove
             add_action( 'woocommerce_restore_cart_item', [ $this, 'restore_cart_item' ] );
@@ -1051,6 +1052,49 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
             return $cart_item;
         }
 
+
+        /**
+         * WooCommerce silently drops unavailable products (e.g. the composite is out of stock) while restoring
+         * the cart from the session, without firing 'woocommerce_cart_item_removed', so the component products
+         * are left in the cart without their parent. Remove those orphaned components here.
+         *
+         * @param WC_Cart $cart
+         */
+        public function remove_orphaned_components( $cart ) {
+            if ( ! $cart instanceof WC_Cart || empty( $cart->cart_contents ) ) {
+                return;
+            }
+
+            // keys that identify an existing composite: its current cart key and the key saved in 'wooco_key'
+            $parent_keys = [];
+
+            foreach ( $cart->cart_contents as $cart_item_key => $cart_item ) {
+                if ( ! empty( $cart_item['wooco_ids'] ) ) {
+                    $parent_keys[ $cart_item_key ] = true;
+
+                    if ( ! empty( $cart_item['wooco_key'] ) ) {
+                        $parent_keys[ $cart_item['wooco_key'] ] = true;
+                    }
+                }
+            }
+
+            $removed = false;
+
+            foreach ( $cart->cart_contents as $cart_item_key => $cart_item ) {
+                // legacy items without a parent key are kept to avoid removing valid items
+                if ( ! empty( $cart_item['wooco_parent_id'] ) && ! empty( $cart_item['wooco_parent_key'] ) && ! isset( $parent_keys[ $cart_item['wooco_parent_key'] ] ) ) {
+                    unset( $cart->cart_contents[ $cart_item_key ] );
+                    $removed = true;
+                }
+            }
+
+            if ( $removed && WC()->session ) {
+                // save the cleaned cart to the session, and force WooCommerce to recalculate the totals
+                // (which also updates the persistent cart of logged-in customers)
+                WC()->session->set( 'cart', $cart->get_cart_for_session() );
+                WC()->session->set( 'cart_totals', null );
+            }
+        }
 
         public function cart_item_remove_link( $link, $cart_item_key ) {
             if ( isset( WC()->cart->cart_contents[ $cart_item_key ]['wooco_parent_key'] ) ) {
