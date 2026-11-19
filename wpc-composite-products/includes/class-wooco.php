@@ -493,6 +493,213 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
             return $found_in_cart;
         }
 
+        /**
+         * Check whether a product (or variation) belongs to the source of a component
+         * (selected products, or terms/combination conditions, honoring the exclude list).
+         * The submitted 'wooco_ids' must never be trusted, the selector UI is only a presentation.
+         *
+         * @param array      $component    Component settings.
+         * @param WC_Product $item_product Product or variation submitted for this component.
+         *
+         * @return bool
+         */
+        public function is_component_product( $component, $item_product ): bool {
+            $type = (string) ( $component['type'] ?? '' );
+
+            if ( $type === '' || ! $item_product instanceof WC_Product ) {
+                return false;
+            }
+
+            $item_id   = $item_product->get_id();
+            $parent_id = $item_product->is_type( 'variation' ) ? $item_product->get_parent_id() : $item_id;
+            $allowed   = false;
+
+            if ( get_post_status( $parent_id ) !== 'publish' ) {
+                return false;
+            }
+
+            // the default product is always an option of the component
+            $default_id = WPCleverWooco_Helper::get_product_id( $component['default'] ?? 0 );
+
+            if ( $default_id && in_array( $default_id, [ $item_id, $parent_id ], true ) ) {
+                $allowed = true;
+            } elseif ( $type === 'products' ) {
+                $products = $component['products'] ?? [];
+                $products = is_array( $products ) ? $products : explode( ',', (string) $products );
+                $ids      = array_map( [ 'WPCleverWooco_Helper', 'get_product_id' ], array_map( 'trim', $products ) );
+                $allowed  = in_array( $item_id, $ids, true ) || in_array( $parent_id, $ids, true );
+            } else {
+                $exclude = $component['exclude'] ?? [];
+                $exclude = is_array( $exclude ) ? $exclude : explode( ',', (string) $exclude );
+                $exclude = array_map( [ 'WPCleverWooco_Helper', 'get_product_id' ], array_map( 'trim', $exclude ) );
+
+                if ( in_array( $item_id, $exclude, true ) || in_array( $parent_id, $exclude, true ) ) {
+                    $allowed = false;
+                } else {
+                    $other      = $component['other'] ?? [];
+                    $other      = is_array( $other ) ? $other : explode( ',', (string) $other );
+                    $conditions = [ [ 'apply' => $type, 'compare' => 'is', 'terms' => array_map( 'trim', $other ) ] ];
+
+                    $allowed = ! empty( $conditions );
+
+                    foreach ( $conditions as $condition ) {
+                        $taxonomy = $condition['apply'];
+                        $include  = $condition['compare'] !== 'is_not';
+
+                        if ( ! taxonomy_exists( $taxonomy ) ) {
+                            $allowed = false;
+                            break;
+                        }
+
+                        // product level, same as the tax_query used to build the component (children terms included)
+                        $slugs = [];
+                        $terms = wp_get_post_terms( $parent_id, $taxonomy );
+
+                        if ( ! is_wp_error( $terms ) ) {
+                            foreach ( $terms as $term ) {
+                                $slugs[] = $term->slug;
+
+                                if ( is_taxonomy_hierarchical( $taxonomy ) ) {
+                                    foreach ( get_ancestors( $term->term_id, $taxonomy, 'taxonomy' ) as $ancestor_id ) {
+                                        if ( $ancestor = get_term( $ancestor_id, $taxonomy ) ) {
+                                            $slugs[] = $ancestor->slug;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        if ( ( count( array_intersect( $condition['terms'], $slugs ) ) > 0 ) !== $include ) {
+                            $allowed = false;
+                            break;
+                        }
+
+                        // variation level
+                        if ( $item_product->is_type( 'variation' ) ) {
+                            if ( ( $taxonomy === 'product_tag' ) && apply_filters( 'wooco_check_variation_tag', false ) ) {
+                                if ( (bool) has_term( $condition['terms'], 'product_tag', $item_id ) !== $include ) {
+                                    $allowed = false;
+                                    break;
+                                }
+                            }
+
+                            if ( str_starts_with( $taxonomy, 'pa_' ) && apply_filters( 'wooco_check_variation_attribute', true ) ) {
+                                $attrs     = $item_product->get_attributes();
+                                $has_value = isset( $attrs[ $taxonomy ] ) && in_array( $attrs[ $taxonomy ], $condition['terms'] );
+
+                                if ( $has_value !== $include ) {
+                                    $allowed = false;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            return (bool) apply_filters( 'wooco_is_component_product', $allowed, $item_product, $component );
+        }
+
+        /**
+         * Validate the limits of the whole composite on the server (same rules as the front-end):
+         * same products, total quantity and total price. The front-end check must never be trusted.
+         *
+         * @param WC_Product $product    Composite product.
+         * @param array      $components Component settings.
+         * @param array      $items      Submitted items (id, qty, key).
+         *
+         * @return bool
+         */
+        public function check_composite_limits( $product, $components, $items ): bool {
+            if ( empty( $items ) ) {
+                return true;
+            }
+
+            $product_id = $product->get_id();
+
+            // same products
+            if ( get_post_meta( $product_id, 'wooco_same_products', true ) === 'do_not_allow' ) {
+                if ( count( array_unique( array_column( $items, 'id' ) ) ) < count( $items ) ) {
+                    wc_add_notice( wp_kses_post( WPCleverWooco_Helper::localization( 'alert_same', esc_html__( 'Please select a different product for each component.', 'wpc-composite-products' ) ) ), 'error' );
+
+                    return false;
+                }
+            }
+
+            // total quantity
+            $total_qty = array_sum( array_column( $items, 'qty' ) );
+            $qty_min   = (float) get_post_meta( $product_id, 'wooco_qty_min', true );
+            $qty_max   = (float) get_post_meta( $product_id, 'wooco_qty_max', true );
+
+            if ( ( $qty_min > 0 ) && ( $total_qty < $qty_min ) ) {
+                wc_add_notice( wp_kses_post( str_replace( '[min]', (string) $qty_min, WPCleverWooco_Helper::localization( 'alert_min', esc_html__( 'Please choose at least a total quantity of [min] products before adding this composite to the cart.', 'wpc-composite-products' ) ) ) ), 'error' );
+
+                return false;
+            }
+
+            if ( ( $qty_max > 0 ) && ( $total_qty > $qty_max ) ) {
+                wc_add_notice( wp_kses_post( str_replace( '[max]', (string) $qty_max, WPCleverWooco_Helper::localization( 'alert_max', esc_html__( 'Sorry, you can only choose at max a total quantity of [max] products before adding this composite to the cart.', 'wpc-composite-products' ) ) ) ), 'error' );
+
+                return false;
+            }
+
+            // total price (not applied when only the composite price is used)
+            $pricing = $product->get_pricing();
+
+            if ( ( $pricing !== 'only' ) && ( get_post_meta( $product_id, 'wooco_total_limits', true ) === 'on' ) ) {
+                $total_min = (float) get_post_meta( $product_id, 'wooco_total_limits_min', true );
+                $total_max = (float) get_post_meta( $product_id, 'wooco_total_limits_max', true );
+
+                if ( ( $total_min > 0 ) || ( $total_max > 0 ) ) {
+                    $total = 0;
+
+                    foreach ( $items as $item ) {
+                        $component    = $components[ $item['key'] ] ?? null;
+                        $item_product = wc_get_product( $item['id'] );
+
+                        if ( ! $component || ! $item_product ) {
+                            continue;
+                        }
+
+                        $component_price = isset( $component['price'] ) ? WPCleverWooco_Helper::format_price( (string) $component['price'] ) : '';
+                        $default_id      = WPCleverWooco_Helper::get_product_id( $component['default'] ?? 0 );
+                        $item_data       = $this->get_product_data( $item_product, $item['qty'], $component_price, false, $default_id );
+                        $item_price      = (float) ( $item_data['price'] ?? 0 );
+
+                        if ( ( $item_price > 0 ) && ( $item['qty'] > 0 ) ) {
+                            $total += $item_price * $item['qty'];
+                        }
+                    }
+
+                    $percent = (float) $product->get_discount();
+
+                    if ( ( $percent > 0 ) && ( $percent < 100 ) ) {
+                        $total = $total * ( 100 - $percent ) / 100;
+                    }
+
+                    if ( $pricing === 'include' ) {
+                        $total += (float) wc_get_price_to_display( $product );
+                    }
+
+                    $total = round( $total, wc_get_price_decimals() );
+
+                    if ( ( $total_min > 0 ) && ( $total < $total_min ) ) {
+                        wc_add_notice( wp_kses_post( str_replace( [ '[min]', '[total]' ], [ wp_strip_all_tags( wc_price( $total_min ) ), wp_strip_all_tags( wc_price( $total ) ) ], WPCleverWooco_Helper::localization( 'alert_total_min', esc_html__( 'The total must meet the minimum amount of [min].', 'wpc-composite-products' ) ) ) ), 'error' );
+
+                        return false;
+                    }
+
+                    if ( ( $total_max > 0 ) && ( $total > $total_max ) ) {
+                        wc_add_notice( wp_kses_post( str_replace( [ '[max]', '[total]' ], [ wp_strip_all_tags( wc_price( $total_max ) ), wp_strip_all_tags( wc_price( $total ) ) ], WPCleverWooco_Helper::localization( 'alert_total_max', esc_html__( 'The total must meet the maximum amount of [max].', 'wpc-composite-products' ) ) ) ), 'error' );
+
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        }
+
         public function add_to_cart_validation( $passed, $product_id, $qty ) {
             if ( ( $_product = wc_get_product( $product_id ) ) && $_product->is_type( 'composite' ) && ( $components = $_product->get_components() ) ) {
                 $ids   = '';
@@ -503,6 +710,9 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                 }
 
                 if ( ! empty( $ids ) && ( $items = WPCleverWooco_Helper::get_items( $ids ) ) ) {
+                    // number of submitted items of each component
+                    $key_counts = array_count_values( array_column( $items, 'key' ) );
+
                     foreach ( $items as $item ) {
                         $item_id      = $item['id'];
                         $item_key     = $item['key'];
@@ -510,6 +720,14 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                         $item_product = wc_get_product( $item_id );
 
                         if ( ! isset( $components[ $item_key ] ) ) {
+                            wc_add_notice( esc_html__( 'You cannot add this composite products to the cart.', 'wpc-composite-products' ), 'error' );
+
+                            return false;
+                        }
+
+                        // a component without multiple selection accepts only one product
+                        if ( ( ( $components[ $item_key ]['multiple'] ?? 'no' ) !== 'yes' ) && ( $key_counts[ $item_key ] > 1 ) ) {
+                            wc_add_notice( esc_html__( 'You can only select one product for this component.', 'wpc-composite-products' ), 'error' );
                             wc_add_notice( esc_html__( 'You cannot add this composite products to the cart.', 'wpc-composite-products' ), 'error' );
 
                             return false;
@@ -555,6 +773,14 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
 
                         if ( ! $item_product->is_in_stock() || ! $item_product->is_purchasable() ) {
                             wc_add_notice( sprintf( /* translators: product name */ esc_html__( '"%s" is un-purchasable.', 'wpc-composite-products' ), esc_html( $item_product->get_name() ) ), 'error' );
+                            wc_add_notice( esc_html__( 'You cannot add this composite products to the cart.', 'wpc-composite-products' ), 'error' );
+
+                            return false;
+                        }
+
+                        // the product must belong to the source of the component
+                        if ( ! $this->is_component_product( $components[ $item_key ], $item_product ) ) {
+                            wc_add_notice( sprintf( /* translators: product name */ esc_html__( '"%s" is not available for this component.', 'wpc-composite-products' ), esc_html( $item_product->get_name() ) ), 'error' );
                             wc_add_notice( esc_html__( 'You cannot add this composite products to the cart.', 'wpc-composite-products' ), 'error' );
 
                             return false;
@@ -615,6 +841,49 @@ if ( ! class_exists( 'WPCleverWooco' ) && class_exists( 'WC_Product' ) ) {
                             return false;
                         }
                     }
+                }
+
+                // check the total quantity limit of components with multiple selection (do not rely on the front-end)
+                if ( ! empty( $items ) ) {
+                    $component_qtys = [];
+
+                    foreach ( $items as $item ) {
+                        $component_qtys[ $item['key'] ] = ( $component_qtys[ $item['key'] ] ?? 0 ) + (float) $item['qty'];
+                    }
+
+                    foreach ( $component_qtys as $ck => $component_qty ) {
+                        $component = $components[ $ck ] ?? null;
+
+                        if ( ! $component || ( ( $component['multiple'] ?? 'no' ) !== 'yes' ) ) {
+                            continue;
+                        }
+
+                        $m_min = (float) ( $component['m_min'] ?? 0 );
+                        $m_max = ! empty( $component['m_max'] ) ? (float) $component['m_max'] : 10000;
+
+                        if ( $component_qty < $m_min ) {
+                            /* translators: 1: minimum total quantity, 2: component name */
+                            wc_add_notice( sprintf( esc_html__( 'Please choose at least a total quantity of %1$s products for the component "%2$s".', 'wpc-composite-products' ), esc_html( $m_min ), esc_html( wp_strip_all_tags( $component['name'] ?? '' ) ) ), 'error' );
+                            wc_add_notice( esc_html__( 'You cannot add this composite products to the cart.', 'wpc-composite-products' ), 'error' );
+
+                            return false;
+                        }
+
+                        if ( $component_qty > $m_max ) {
+                            /* translators: 1: maximum total quantity, 2: component name */
+                            wc_add_notice( sprintf( esc_html__( 'Sorry, you can only choose at max a total quantity of %1$s products for the component "%2$s".', 'wpc-composite-products' ), esc_html( $m_max ), esc_html( wp_strip_all_tags( $component['name'] ?? '' ) ) ), 'error' );
+                            wc_add_notice( esc_html__( 'You cannot add this composite products to the cart.', 'wpc-composite-products' ), 'error' );
+
+                            return false;
+                        }
+                    }
+                }
+
+                // check the limits of the whole composite
+                if ( ! $this->check_composite_limits( $_product, $components, $items ) ) {
+                    wc_add_notice( esc_html__( 'You cannot add this composite products to the cart.', 'wpc-composite-products' ), 'error' );
+
+                    return false;
                 }
 
                 // check required
